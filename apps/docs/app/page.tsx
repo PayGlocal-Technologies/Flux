@@ -4,135 +4,6 @@ import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Check, Copy, Github, Plus } from "lucide-react";
 
-/* ════════════════════════════════════════
-   PLUS GRID — cursor repel
-════════════════════════════════════════ */
-function PlusGrid({
-  cols = 26,
-  rows = 14,
-  opacity = 0.45,
-  className = "",
-}: {
-  cols?: number;
-  rows?: number;
-  opacity?: number;
-  className?: string;
-}) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const rafRef = useRef<number>(0);
-  const activeRef = useRef(false);
-  const mouseRef = useRef({ x: 0, y: 0 });
-
-  const dots = Array.from({ length: cols * rows }, (_, i) => {
-    const col = i % cols;
-    const row = Math.floor(i / cols);
-    return {
-      cx: ((col + 0.5) / cols) * 100,
-      cy: ((row + 0.5) / rows) * 100,
-    };
-  });
-
-  useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-
-    function tick() {
-      const spans = container!.querySelectorAll<HTMLSpanElement>("[data-plus]");
-      const rect = container!.getBoundingClientRect();
-      const mx = mouseRef.current.x;
-      const my = mouseRef.current.y;
-      const RADIUS = 90;
-      const STRENGTH = 32;
-
-      spans.forEach((span) => {
-        const pctX = parseFloat(span.dataset.cx!);
-        const pctY = parseFloat(span.dataset.cy!);
-        const dotX = (pctX / 100) * rect.width;
-        const dotY = (pctY / 100) * rect.height;
-        const dx = dotX - mx;
-        const dy = dotY - my;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-
-        if (dist < RADIUS && dist > 0) {
-          const force = (1 - dist / RADIUS) * STRENGTH;
-          const tx = (dx / dist) * force;
-          const ty = (dy / dist) * force;
-          const fade = 0.08 + (dist / RADIUS) * (opacity - 0.08);
-          span.style.transform = `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px))`;
-          span.style.opacity = String(fade);
-        } else {
-          span.style.transform = "translate(-50%, -50%)";
-          span.style.opacity = String(opacity);
-        }
-      });
-
-      if (activeRef.current) {
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    }
-
-    function onMouseMove(e: MouseEvent) {
-      const rect = container!.getBoundingClientRect();
-      mouseRef.current = { x: e.clientX - rect.left, y: e.clientY - rect.top };
-      if (!activeRef.current) {
-        activeRef.current = true;
-        rafRef.current = requestAnimationFrame(tick);
-      }
-    }
-
-    function onMouseLeave() {
-      activeRef.current = false;
-      cancelAnimationFrame(rafRef.current);
-      const spans = container!.querySelectorAll<HTMLSpanElement>("[data-plus]");
-      spans.forEach((span) => {
-        span.style.transform = "translate(-50%, -50%)";
-        span.style.opacity = String(opacity);
-      });
-    }
-
-    container.addEventListener("mousemove", onMouseMove);
-    container.addEventListener("mouseleave", onMouseLeave);
-    return () => {
-      container.removeEventListener("mousemove", onMouseMove);
-      container.removeEventListener("mouseleave", onMouseLeave);
-      cancelAnimationFrame(rafRef.current);
-    };
-  }, [opacity]);
-
-  return (
-    <div
-      ref={containerRef}
-      className={`absolute inset-0 overflow-hidden ${className}`}
-      style={{ pointerEvents: "auto" }}
-    >
-      {dots.map((d, i) => (
-        <span
-          key={i}
-          data-plus
-          data-cx={d.cx}
-          data-cy={d.cy}
-          style={{
-            position: "absolute",
-            left: `${d.cx}%`,
-            top: `${d.cy}%`,
-            fontFamily: "monospace",
-            fontSize: 11,
-            color: "white",
-            opacity,
-            pointerEvents: "none",
-            userSelect: "none",
-            willChange: "transform",
-            transform: "translate(-50%, -50%)",
-            transition: "transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s ease",
-          }}
-        >
-          +
-        </span>
-      ))}
-    </div>
-  );
-}
-
 /* ─── font stacks — Flux system fonts ─── */
 const serif = { fontFamily: "var(--font-geist-sans), system-ui, sans-serif" } as const; // headings — Geist Sans
 const mono  = { fontFamily: "var(--font-geist-mono), monospace" } as const;             // labels, nav, tags, code
@@ -145,7 +16,7 @@ const NPM_URL = "https://www.npmjs.com/package/@payglocal_ui/flux-ui";
    MARQUEE  (+ dividers, full-width dark)
 ════════════════════════════════════════ */
 const MARQUEE = [
-  "Design system",
+  "Make your app AI-ready",
   "68+ components",
   "Tailwind v4",
   "Open source",
@@ -171,175 +42,6 @@ function Marquee() {
         ))}
       </div>
       <style>{`@keyframes marquee{from{transform:translateX(0)}to{transform:translateX(-50%)}}`}</style>
-    </div>
-  );
-}
-
-/* ════════════════════════════════════════
-   HERO TERMINAL — realistic npm install
-════════════════════════════════════════ */
-const HERO_LINES: { text: string; color: string; delay?: number; prefix?: string }[] = [
-  { text: "npm install @payglocal_ui/flux-ui", color: "#e2e8f0", prefix: "❯ " },
-  { text: "", color: "" },
-  { text: "npm warn deprecated inflight@1.0.6", color: "#6b7280" },
-  { text: "added 68 packages in 3.2s", color: "#6b7280" },
-  { text: "", color: "" },
-  { text: "4 packages are looking for funding", color: "#6b7280" },
-  { text: "  run `npm fund` for details", color: "#4b5563" },
-  { text: "", color: "" },
-  { text: "+ @payglocal_ui/flux-ui@0.2.1", color: "#34d399" },
-  { text: "", color: "" },
-  { text: "importing components...", color: "#6b7280", prefix: "❯ " },
-  { text: "", color: "" },
-  { text: 'import { Button, Card, DataTable } from "@payglocal_ui/flux-ui"', color: "#93c5fd" },
-  { text: "", color: "" },
-  { text: "✓ Button         — 6 variants, 3 sizes", color: "#34d399" },
-  { text: "✓ Card           — with header, footer slots", color: "#34d399" },
-  { text: "✓ DataTable      — pagination, density, skeletons", color: "#34d399" },
-  { text: "✓ StatusBadge    — payment workflow states", color: "#34d399" },
-  { text: "✓ CurrencyInput  — 7 currencies supported", color: "#34d399" },
-  { text: "  ... 63 more components available", color: "#6b7280" },
-  { text: "", color: "" },
-  { text: "✓ ready in 0ms", color: "#34d399" },
-];
-
-function HeroTerminal() {
-  const [visibleLines, setVisibleLines] = useState(0);
-  const [charCount, setCharCount] = useState(0);
-  const rafRef = useRef<number>(0);
-  const stateRef = useRef({ line: 0, char: 0, pause: 0 });
-  const scrollRef = useRef<HTMLDivElement>(null);
-
-  // Auto-scroll to bottom as lines appear
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [visibleLines, charCount]);
-
-  useEffect(() => {
-    const CHAR_DELAY = 28;
-    const LINE_PAUSE = 80;
-    const FAST_PAUSE = 30;
-    const END_PAUSE = 3000;
-    let last = performance.now();
-
-    const tick = (now: number) => {
-      const dt = now - last;
-      const s = stateRef.current;
-
-      if (s.pause > 0) {
-        s.pause -= dt;
-        last = now;
-        rafRef.current = requestAnimationFrame(tick);
-        return;
-      }
-
-      const line = HERO_LINES[s.line];
-      const fullText = (line.prefix || "") + line.text;
-
-      if (s.char < fullText.length) {
-        const steps = Math.floor(dt / CHAR_DELAY);
-        if (steps > 0) {
-          s.char = Math.min(s.char + steps, fullText.length);
-          setCharCount(s.char);
-          last = now;
-        }
-      } else {
-        s.line++;
-        s.char = 0;
-        setCharCount(0);
-        if (s.line >= HERO_LINES.length) {
-          s.pause = END_PAUSE;
-          s.line = 0;
-          setVisibleLines(0);
-        } else {
-          const isEmpty = HERO_LINES[s.line].text === "";
-          s.pause = isEmpty ? FAST_PAUSE : LINE_PAUSE;
-          setVisibleLines(s.line);
-        }
-        last = now;
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, []);
-
-  return (
-    <div className="flex h-full w-full flex-col overflow-hidden rounded-xl bg-[#0d1117] font-mono text-[13px]" style={{ ...mono, border: "1px solid rgba(255,255,255,0.08)" }}>
-      {/* Title bar */}
-      <div className="flex shrink-0 items-center gap-2 border-b border-white/[0.06] bg-[#161b22] px-4 py-3">
-        <div className="flex gap-1.5">
-          <div className="h-3 w-3 rounded-full bg-[#ff5f57]" />
-          <div className="h-3 w-3 rounded-full bg-[#febc2e]" />
-          <div className="h-3 w-3 rounded-full bg-[#28c840]" />
-        </div>
-        <span className="text-[11px] uppercase tracking-[0.2em] text-white/30" style={mono}>Terminal</span>
-      </div>
-
-      {/* Terminal body */}
-      <div ref={scrollRef} className="min-h-0 flex-1 overflow-y-auto p-5 leading-[1.7]" style={{ scrollbarWidth: "none" }}>
-        {/* Prompt line at top */}
-        <div className="mb-1 flex items-center gap-2 text-[11px] text-white/20">
-          <span className="text-emerald-500/60">user</span>
-          <span className="text-white/15">@</span>
-          <span className="text-blue-400/60">payglocal</span>
-          <span className="text-white/15">~</span>
-          <span className="text-white/15">%</span>
-        </div>
-
-        {HERO_LINES.map((line, i) => {
-          const fullText = (line.prefix || "") + line.text;
-          const isPrefix = !!line.prefix;
-
-          if (i < visibleLines) {
-            return (
-              <div key={i} style={{ color: line.color || "transparent", minHeight: "1.7em" }}>
-                {isPrefix ? (
-                  <>
-                    <span className="text-emerald-400">{line.prefix}</span>
-                    <span>{line.text}</span>
-                  </>
-                ) : fullText}
-              </div>
-            );
-          }
-
-          if (i === visibleLines) {
-            const partial = fullText.slice(0, charCount);
-            const prefixLen = (line.prefix || "").length;
-            const prefixPart = partial.slice(0, prefixLen);
-            const textPart = partial.slice(prefixLen);
-
-            return (
-              <div key={i} style={{ color: line.color || "transparent", minHeight: "1.7em" }}>
-                {isPrefix ? (
-                  <>
-                    <span className="text-emerald-400">{prefixPart}</span>
-                    <span>{textPart}</span>
-                  </>
-                ) : partial}
-                <span
-                  className="inline-block align-middle"
-                  style={{
-                    width: 2,
-                    height: "0.9em",
-                    background: "#e2e8f0",
-                    marginLeft: 1,
-                    animation: "blink 1s step-end infinite",
-                  }}
-                />
-              </div>
-            );
-          }
-
-          return null;
-        })}
-      </div>
-
-      <style>{`@keyframes blink{0%,100%{opacity:1}50%{opacity:0}}`}</style>
     </div>
   );
 }
@@ -511,101 +213,6 @@ function DotGrid({ cols = 26, rows = 14 }: { cols?: number; rows?: number }) {
 }
 
 /* ════════════════════════════════════════
-   PAYGLOCAL PIXEL WORDMARK
-════════════════════════════════════════ */
-
-// Each letter: 5 cols × 7 rows bitmap
-// Block sizes vary per row to match reference aesthetic
-const PG_FONT: Record<string, number[]> = {
-  P: [0b11110, 0b10001, 0b10001, 0b11110, 0b10000, 0b10000, 0b10000],
-  A: [0b01110, 0b10001, 0b10001, 0b11111, 0b10001, 0b10001, 0b10001],
-  Y: [0b10001, 0b10001, 0b01010, 0b00100, 0b00100, 0b00100, 0b00100],
-  G: [0b01111, 0b10000, 0b10000, 0b10111, 0b10001, 0b10001, 0b01111],
-  L: [0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b10001, 0b11111],
-  O: [0b01110, 0b10001, 0b10001, 0b10001, 0b10001, 0b10001, 0b01110],
-  C: [0b01111, 0b10000, 0b10000, 0b10000, 0b10000, 0b10000, 0b01111],
-};
-
-// Row height varies to create visual interest like the reference
-const ROW_HEIGHTS = [18, 22, 20, 16, 20, 22, 18];
-const ROW_VGAP = 5;
-
-function PixelWordmark() {
-  const WORD = "PAYGLOCAL";
-  const COLS = 5;
-  const BW = 18;      // block width — wide rectangles
-  const HGAP = 6;     // horizontal gap
-  const HSTEP = BW + HGAP;
-  const LETTER_SPACE = 24;
-  const MARGIN_X = 0;
-  const MARGIN_Y = 12;
-
-  // Pre-compute total height
-  const totalH = ROW_HEIGHTS.reduce((s, h) => s + h + ROW_VGAP, 0) + MARGIN_Y * 2;
-
-  // Pre-compute letter widths and total width to scale viewBox
-  const letterW = COLS * HSTEP - HGAP;
-  const totalW = WORD.length * (letterW + LETTER_SPACE) - LETTER_SPACE + MARGIN_X * 2;
-
-  // Build rects with staggered animation delays
-  const rects: React.ReactNode[] = [];
-  let xCursor = MARGIN_X;
-
-  WORD.split("").forEach((ch, li) => {
-    const rows = PG_FONT[ch] ?? [];
-    let yCursor = MARGIN_Y;
-
-    rows.forEach((row, ri) => {
-      const bh = ROW_HEIGHTS[ri];
-      for (let bit = COLS - 1; bit >= 0; bit--) {
-        if ((row >> bit) & 1) {
-          const x = xCursor + (COLS - 1 - bit) * HSTEP;
-          const animDelay = `${((li * 7 + ri + (COLS - 1 - bit)) * 0.04).toFixed(2)}s`;
-          rects.push(
-            <rect
-              key={`${li}-${ri}-${bit}`}
-              x={x} y={yCursor}
-              width={BW} height={bh}
-              rx="3"
-              fill="white"
-              fillOpacity="0"
-            >
-              <animate
-                attributeName="fill-opacity"
-                values="0;0.35;0.22;0.35"
-                dur="4s"
-                begin={animDelay}
-                repeatCount="indefinite"
-                calcMode="spline"
-                keySplines="0.4 0 0.2 1; 0.4 0 0.2 1; 0.4 0 0.2 1"
-              />
-            </rect>
-          );
-        }
-      }
-      yCursor += bh + ROW_VGAP;
-    });
-
-    xCursor += letterW + LETTER_SPACE;
-  });
-
-  return (
-    <div className="overflow-hidden border-t border-white/[0.04] w-full py-16 lg:py-24">
-      <svg
-        viewBox={`0 0 ${totalW} ${totalH}`}
-        xmlns="http://www.w3.org/2000/svg"
-        className="w-full"
-        preserveAspectRatio="xMidYMid meet"
-        aria-label="PayGlocal"
-        style={{ display: "block" }}
-      >
-        {rects}
-      </svg>
-    </div>
-  );
-}
-
-/* ════════════════════════════════════════
    FAQ ACCORDION
 ════════════════════════════════════════ */
 const FAQS = [
@@ -669,7 +276,7 @@ function InstallCommand() {
   };
 
   return (
-    <div className="mt-6 inline-flex w-fit items-center gap-4 rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3">
+    <div className="mt-10 flex max-w-md items-center justify-between rounded-lg border border-white/10 bg-white/[0.04] px-4 py-3">
       <code className="text-[13px] text-white/60" style={mono}>
         npm i <span className="text-white">@payglocal_ui/flux-ui</span>
       </code>
@@ -696,8 +303,10 @@ export default function LandingPage() {
       <header className="sticky top-0 z-30 flex h-14 items-center justify-between border-b border-white/[0.07] bg-[#0a0a0a]/95 px-6 backdrop-blur lg:px-10">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/flux-logo.svg" alt="Flux UI" className="h-7 w-7 shrink-0" />
+          <svg viewBox="0 0 32 32" className="h-7 w-7" fill="none">
+            <rect width="32" height="32" rx="7" fill="#2563eb"/>
+            <path d="M8 9h16M8 16h10M8 23h13" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+          </svg>
           <span className="text-[11px] uppercase tracking-[0.2em] text-white/80" style={mono}>Flux UI</span>
           <span className="rounded border border-blue-500/40 bg-blue-600/20 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.14em] text-blue-400" style={mono}>v0.2</span>
         </Link>
@@ -737,11 +346,11 @@ export default function LandingPage() {
         {/* Blue glow top-left only */}
         <div className="pointer-events-none absolute -left-40 -top-20 h-[400px] w-[500px] rounded-full bg-blue-600/10 blur-[100px]" />
 
-        <div className="relative mx-auto grid max-w-[1400px] grid-cols-1 gap-0 border-x border-white/[0.06] lg:grid-cols-[1fr_1px_1fr]" style={{ height: "calc(100dvh - 56px - 36px - 80px - 48px)", minHeight: 420 }}>
+        <div className="relative mx-auto grid max-w-[1400px] min-h-[420px] grid-cols-1 gap-0 border-x border-white/[0.06] lg:grid-cols-[1fr_1px_1fr]">
           {/* Left — copy */}
-          <div className="flex flex-col justify-center px-8 py-8 lg:px-14">
+          <div className="flex flex-col justify-center px-8 py-12 lg:px-14">
             {/* Eyebrow */}
-            <div className="mb-5 inline-flex w-fit items-center gap-2 rounded border border-white/10 bg-white/[0.04] px-3 py-1.5">
+            <div className="mb-8 inline-flex w-fit items-center gap-2 rounded border border-white/10 bg-white/[0.04] px-3 py-1.5">
               <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400" />
               <span className="text-[9px] uppercase tracking-[0.22em] text-white/50" style={mono}>
                 Now live · Open source design system
@@ -753,7 +362,7 @@ export default function LandingPage() {
               we ship in product.
             </h1>
 
-            <p className="mt-4 max-w-[400px] text-[14px] leading-relaxed text-white/45" style={sans}>
+            <p className="mt-6 max-w-[400px] text-[14px] leading-relaxed text-white/45" style={sans}>
               Flux UI delivers 68+ production-grade components, semantic design tokens,
               and patterns — same system PayGlocal uses in the merchant dashboard.
             </p>
@@ -762,7 +371,7 @@ export default function LandingPage() {
             <InstallCommand />
 
             {/* CTAs */}
-            <div className="mt-3 flex items-center gap-3">
+            <div className="mt-5 flex items-center gap-3">
               <Link href="/docs/installation"
                 className="inline-flex h-10 items-center gap-2 rounded-lg bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors hover:bg-[var(--primary-hover)]"
                 style={sans}>
@@ -775,69 +384,27 @@ export default function LandingPage() {
               </a>
             </div>
 
-            {/* Compatible with — logos */}
-            <div className="mt-5 flex items-center gap-3">
-              <span className="text-[10px] uppercase tracking-[0.18em] text-white/25 shrink-0" style={mono}>Works with:</span>
-              {/* Next.js */}
-              <svg className="h-5 w-auto opacity-100 transition-opacity" viewBox="0 0 180 180" fill="none" aria-label="Next.js">
-                <mask id="nxt" style={{maskType:"alpha"}} maskUnits="userSpaceOnUse" x="0" y="0" width="180" height="180">
-                  <circle cx="90" cy="90" r="90" fill="black"/>
-                </mask>
-                <g mask="url(#nxt)">
-                  <circle cx="90" cy="90" r="90" fill="white"/>
-                  <path d="M149.508 157.52L69.142 54H54V125.97H66.1136V69.3836L140.999 164.845C143.926 162.425 146.778 159.843 149.508 157.52Z" fill="url(#nxt-g1)"/>
-                  <rect x="115" y="54" width="12" height="72" fill="url(#nxt-g2)"/>
-                </g>
-                <defs>
-                  <linearGradient id="nxt-g1" x1="109" y1="116.5" x2="144.5" y2="160.5" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="black"/><stop offset="1" stopColor="black" stopOpacity="0"/>
-                  </linearGradient>
-                  <linearGradient id="nxt-g2" x1="115" y1="54" x2="115.5" y2="106.5" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="black"/><stop offset="1" stopColor="black" stopOpacity="0"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-              {/* Vite */}
-              <svg className="h-5 w-auto opacity-100 transition-opacity" viewBox="0 0 410 404" fill="none" aria-label="Vite">
-                <path d="M399.641 59.5246L215.643 388.545C211.844 395.338 202.084 395.378 198.228 388.618L10.5817 59.5246C6.38087 52.1904 12.6802 43.2652 21.0281 44.7341L205.965 77.2197C207.6 77.5028 209.27 77.5028 210.905 77.2197L391.092 44.7341C399.44 43.2652 405.739 52.1904 399.641 59.5246Z" fill="url(#vite-g1)"/>
-                <path d="M292.965 1.5744L156.801 28.2552C154.563 28.6937 152.906 30.5903 152.771 32.8664L144.395 174.33C144.198 177.662 147.258 180.248 150.51 179.498L188.42 170.749C191.967 169.931 195.172 172.928 194.671 176.54L182.368 263.009C181.853 266.677 185.173 269.686 188.741 268.752L210.513 263.041C214.087 262.105 217.411 265.127 216.878 268.799L198.819 390.893C198.124 395.457 204.354 397.842 207.166 394.02L209.198 391.237L323.071 149.166C324.922 145.308 321.816 140.93 317.578 141.74L278.281 149.445C274.59 150.166 271.499 146.981 272.351 143.313L308.915 30.2581C309.768 26.5842 306.664 23.3981 302.966 24.132L292.965 1.5744Z" fill="url(#vite-g2)"/>
-                <defs>
-                  <linearGradient id="vite-g1" x1="6" y1="32.9909" x2="235" y2="344.991" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#41D1FF"/><stop offset="1" stopColor="#BD34FE"/>
-                  </linearGradient>
-                  <linearGradient id="vite-g2" x1="194.651" y1="8.81818" x2="236.076" y2="292.989" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#FF3E00"/><stop offset="1" stopColor="#FFD438"/>
-                  </linearGradient>
-                </defs>
-              </svg>
-              {/* Remix — wordmark R */}
-              <svg className="h-5 w-auto opacity-100 transition-opacity" viewBox="0 0 78 65" fill="white" aria-label="Remix">
-                <path fillRule="evenodd" clipRule="evenodd" d="M55.5 64.9998H77.7813C77.7813 64.9998 77.5226 57.6372 72.4306 52.5452C67.9636 48.0782 62.3979 47.7052 59.781 47.7052V47.6984C59.781 47.6984 71.3574 46.0836 71.3574 32.3562C71.3574 18.6288 60.0948 13 41.7258 13H0V64.9998H22.752V50.5978H40.038C40.038 50.5978 55.5 50.5978 55.5 64.9998ZM22.752 30.1098V37.0428H39.6218C45.6116 37.0428 49.2372 35.1682 49.2372 30.4468C49.2372 25.7254 45.6116 23.8508 39.6218 23.8508H22.752V30.1098Z"/>
-              </svg>
-              {/* Turbopack — simple T wordmark */}
-              <svg className="h-5 w-auto opacity-100 transition-opacity" viewBox="0 0 64 64" fill="none" aria-label="Turbopack">
-                <path d="M32 4L56 16V40L32 60L8 40V16L32 4Z" fill="url(#turbo-g)"/>
-                <text x="50%" y="56%" dominantBaseline="middle" textAnchor="middle" fontSize="22" fontWeight="700" fill="white" fontFamily="sans-serif">T</text>
-                <defs>
-                  <linearGradient id="turbo-g" x1="8" y1="4" x2="56" y2="60" gradientUnits="userSpaceOnUse">
-                    <stop stopColor="#FF1E56"/><stop offset="1" stopColor="#FF6B00"/>
-                  </linearGradient>
-                </defs>
-              </svg>
+            {/* Compatible with */}
+            <div className="mt-8 flex items-center gap-4">
+              <span className="text-[10px] uppercase tracking-[0.18em] text-white/25" style={mono}>Works with:</span>
+              {["Next.js", "Vite", "Remix", "Turbopack"].map(f => (
+                <span key={f} className="text-[10px] text-white/35" style={mono}>{f}</span>
+              ))}
             </div>
           </div>
 
           {/* Divider */}
           <div className="hidden bg-white/[0.06] lg:block" />
 
-          {/* Right — hero terminal centred with + grid bg */}
-          <div className="relative hidden lg:flex lg:items-center lg:justify-center" style={{ background: "#0a0a0a", overflow: "hidden" }}>
-            {/* + grid fills the full flex cell — inset-0 stretches to parent height */}
-            <PlusGrid cols={38} rows={22} opacity={0.18} className="z-0" />
-            {/* Terminal card — centred */}
-            <div className="relative z-10 w-[92%] max-w-[624px] my-12" style={{ height: 408, boxShadow: "0 32px 80px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.06)" }}>
-              <HeroTerminal />
-            </div>
+          {/* Right — hero image, edge-to-edge */}
+          <div className="relative hidden overflow-hidden lg:block">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/hero-doc.png"
+              alt="Flux UI design system"
+              className="h-full w-full object-cover object-center"
+              style={{ minHeight: 420 }}
+            />
           </div>
 
         </div>
@@ -849,9 +416,9 @@ export default function LandingPage() {
             { label: "Tailwind CSS version", val: "v4_"  },
             { label: "Open source license",  val: "MIT_" },
           ].map((s, i) => (
-            <div key={s.label} className={`px-8 py-4 ${i < 2 ? "border-r border-white/[0.06]" : ""}`}>
+            <div key={s.label} className={`px-8 py-7 ${i < 2 ? "border-r border-white/[0.06]" : ""}`}>
               <p className="text-[9px] uppercase tracking-[0.2em] text-white/25 mb-2" style={mono}>{s.label}</p>
-              <p className="text-[1.5rem] font-semibold text-white" style={serif}>{s.val}</p>
+              <p className="text-[2rem] font-semibold text-white" style={serif}>{s.val}</p>
             </div>
           ))}
         </div>
@@ -912,25 +479,34 @@ export default function LandingPage() {
       </section>
 
       {/* ── ALTERNATING FEATURES ── */}
-      <section className="border-t border-white/[0.06] bg-[#0a0a0a] px-6 py-20 lg:px-10 lg:py-24">
-        <div className="mx-auto max-w-[1400px]">
-          <div className="grid gap-16 lg:grid-cols-2 lg:items-center">
-            <div>
-              <p className="mb-3 text-[9px] uppercase tracking-[0.22em] text-blue-400" style={mono}>Developer experience</p>
+      {[
+        { cat: "Developer experience",
+          title: "Install in one command.\nStart building immediately.",
+          body: "Configure Tailwind v4 with two @source lines, paste the CSS token block, add transpilePackages. Works with Turbopack, Webpack, and Vite.",
+          href: "/docs/installation", cta: "Installation guide",
+          visual: <TypewriterCode />,
+        },
+      ].map((feat, i) => (
+        <section key={i} className="border-t border-white/[0.06] bg-[#0a0a0a] px-6 py-20 lg:px-10 lg:py-24">
+          <div className="mx-auto max-w-[1400px]">
+            <div className={`grid gap-16 lg:grid-cols-2 lg:items-center ${i % 2 === 1 ? "" : ""}`}>
+              <div className={i % 2 === 1 ? "lg:order-2" : ""}>
+                <p className="mb-3 text-[9px] uppercase tracking-[0.22em] text-blue-400" style={mono}>{feat.cat}</p>
                 <h2 className="text-[clamp(1.8rem,3vw,2.6rem)] font-normal leading-[1.06] tracking-tight text-white whitespace-pre-line" style={serif}>
-                  {"Install in one command.\nStart building immediately."}
+                  {feat.title}
                 </h2>
-                <p className="mt-5 text-[14px] leading-relaxed text-white/40" style={sans}>Configure Tailwind v4 with two @source lines, paste the CSS token block, add transpilePackages. Works with Turbopack, Webpack, and Vite.</p>
-                <Link href="/docs/installation"
+                <p className="mt-5 text-[14px] leading-relaxed text-white/40" style={sans}>{feat.body}</p>
+                <Link href={feat.href}
                   className="mt-8 inline-flex items-center gap-1.5 text-[11px] uppercase tracking-[0.16em] text-white/50 underline-offset-4 hover:text-white"
                   style={mono}>
-                  Installation guide <ArrowUpRight className="size-3.5" />
+                  {feat.cta} <ArrowUpRight className="size-3.5" />
                 </Link>
               </div>
-              <div><TypewriterCode /></div>
+              <div className={i % 2 === 1 ? "lg:order-1" : ""}>{feat.visual}</div>
             </div>
           </div>
         </section>
+      ))}
 
       {/* ── FAQ — light ── */}
       <section className="border-t border-zinc-200 bg-white px-6 py-20 lg:px-10 lg:py-28">
@@ -958,28 +534,22 @@ export default function LandingPage() {
       {/* ── FOOTER ── */}
       <footer className="border-t border-white/[0.06] bg-[#0a0a0a] px-6 py-14 lg:px-10">
         <div className="mx-auto max-w-[1400px]">
-          <div className="flex flex-col gap-12 pb-8 lg:flex-row lg:justify-between">
+          <div className="flex flex-col gap-12 lg:flex-row lg:justify-between">
             <div className="max-w-xs space-y-5">
               <div className="flex items-center gap-2.5">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/flux-logo.svg" alt="Flux UI" className="h-8 w-8 shrink-0" />
+                <svg viewBox="0 0 32 32" className="h-7 w-7" fill="none">
+                  <rect width="32" height="32" rx="7" fill="#2563eb"/>
+                  <path d="M8 9h16M8 16h10M8 23h13" stroke="white" strokeWidth="2.5" strokeLinecap="round"/>
+                </svg>
                 <span className="text-[13px] uppercase tracking-[0.2em] text-white/70" style={mono}>Flux UI</span>
               </div>
               <p className="text-[15px] leading-relaxed text-white/40" style={sans}>
                 Open design system by PayGlocal Technologies. MIT licensed.
                 Built with React, Tailwind CSS v4, and Radix UI.
               </p>
-              <div className="flex gap-3">
-                <a href={GH_URL} target="_blank" rel="noreferrer"
-                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 text-[11px] uppercase tracking-[0.14em] text-white/50 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white/80"
-                  style={mono}>
-                  <Github className="size-3" /> GitHub
-                </a>
-                <a href={NPM_URL} target="_blank" rel="noreferrer"
-                  className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-white/10 bg-white/[0.04] px-3 text-[11px] uppercase tracking-[0.14em] text-white/50 transition-colors hover:border-white/20 hover:bg-white/[0.08] hover:text-white/80"
-                  style={mono}>
-                  ↗ npm
-                </a>
+              <div className="flex gap-5">
+                <a href={GH_URL}  target="_blank" rel="noreferrer" className="text-[11px] uppercase tracking-[0.18em] text-white/35 hover:text-white/70" style={mono}>GitHub ↗</a>
+                <a href={NPM_URL} target="_blank" rel="noreferrer" className="text-[11px] uppercase tracking-[0.18em] text-white/35 hover:text-white/70" style={mono}>npm ↗</a>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-10 sm:grid-cols-3">
@@ -1022,15 +592,10 @@ export default function LandingPage() {
               ))}
             </div>
           </div>
-        </div>
-
-        {/* PAYGLOCAL pixel wordmark */}
-        <PixelWordmark />
-
-        {/* Copyright bar — bottom of everything */}
-        <div className="flex items-center justify-between border-t border-white/[0.06] px-6 py-3 lg:px-10">
-          <span className="text-[13px] text-white/30" style={sans}>© 2026 PayGlocal Technologies</span>
-          <span className="text-[11px] uppercase tracking-[0.18em] text-white/20" style={mono}>MIT License</span>
+          <div className="mt-12 flex items-center justify-between border-t border-white/[0.06] pt-8">
+            <span className="text-[13px] text-white/30" style={sans}>© 2026 PayGlocal Technologies</span>
+            <span className="text-[11px] uppercase tracking-[0.18em] text-white/20" style={mono}>MIT License</span>
+          </div>
         </div>
       </footer>
 
