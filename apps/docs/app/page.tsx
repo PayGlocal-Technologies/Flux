@@ -400,9 +400,10 @@ export default function LandingPage() {
           {/* Right — hero image, edge-to-edge */}
           <div className="relative hidden overflow-hidden lg:block">
             <Image
-              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/hero-doc.png`}
+              src="/hero-doc.png"
               alt="Flux UI design system"
               fill
+              unoptimized
               className="object-cover object-center"
               style={{ minHeight: 420 }}
             />
