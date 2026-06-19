@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
-    "build:cf": "opennextjs-cloudflare build",
+    "build:cf": "opennextjs-cloudflare build && node -e \"const fs=require('fs');const w=fs.readFileSync('.open-next/worker.js','utf8');const patch='if(env.ASSETS&&url.pathname.startsWith(\\\"/flux-ui/_next/static/\\\")){return env.ASSETS.fetch(request);}';const patched=w.replace('const url = new URL(request.url);','const url = new URL(request.url);\\n            '+patch);fs.writeFileSync('.open-next/assets/_worker.js',patched);\" && cp -r .open-next/cloudflare .open-next/assets/ && cp -r .open-next/middleware .open-next/assets/ && cp -r .open-next/server-functions .open-next/assets/ && ([ -d .open-next/.build ] && cp -r .open-next/.build .open-next/assets/ || true)",
     "start": "next start",
     "lint": "next lint"
   },
