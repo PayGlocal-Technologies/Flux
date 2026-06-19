@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Check, Copy, Github, Plus } from "lucide-react";
@@ -398,11 +399,11 @@ export default function LandingPage() {
 
           {/* Right — hero image, edge-to-edge */}
           <div className="relative hidden overflow-hidden lg:block">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/hero-doc.png"
+            <Image
+              src={`${process.env.NEXT_PUBLIC_BASE_PATH ?? ""}/hero-doc.png`}
               alt="Flux UI design system"
-              className="h-full w-full object-cover object-center"
+              fill
+              className="object-cover object-center"
               style={{ minHeight: 420 }}
             />
           </div>
