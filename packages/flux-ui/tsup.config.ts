@@ -6,6 +6,9 @@ export default defineConfig({
   dts: true,
   sourcemap: true,
   clean: true,
+  // All exports are React client components — tell Next.js App Router that
+  // this bundle must be treated as a client module.
+  banner: { js: '"use client";' },
   external: [
     "react",
     "react-dom",
