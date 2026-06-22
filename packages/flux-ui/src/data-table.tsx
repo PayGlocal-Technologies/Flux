@@ -60,10 +60,31 @@ interface DataTableProps<T> {
     label: string;
     onClick?: (row: T) => void;
   };
+  /**
+   * Custom action revealed on row hover — typically a `<Button>` or
+   * `<ButtonGroup>`, but any `ReactNode` is accepted. Pass a **function** to
+   * render per-row: it receives `(row, index)`, so the action always has the
+   * record for its row (e.g. to navigate or open a drawer for that row).
+   *
+   * It is not a real column: it floats as an overlay **pinned to the right edge
+   * of the viewport**, so it stays in view as the table scrolls horizontally
+   * (no scrolling to the end to reach it) while the last data column stays
+   * flush with nothing trailing it. Takes precedence over `rowCta`.
+   */
+  rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
   /** Row / cell vertical rhythm and horizontal gutters */
   density?: DataTableDensity;
-  /** `auto` lets columns breathe; `fixed` uses `colgroup` hints */
-  tableLayout?: "auto" | "fixed";
+  /**
+   * Column-sizing strategy:
+   * - `fixed` — widths come only from `colgroup` hints (`width`/`minWidth`/
+   *   `maxWidth`); content is ignored and overflow is clipped. Table fills 100%.
+   * - `auto` — columns size to content but the table still fills 100%, so any
+   *   leftover space is distributed into the columns (they stretch).
+   * - `content` — columns size to their content's intrinsic width and the table
+   *   shrinks to fit. Leftover space stays empty to the right of the last
+   *   column; it scrolls horizontally only once content exceeds the container.
+   */
+  tableLayout?: "auto" | "fixed" | "content";
   theadClassName?: string;
   headerStyle?: DataTableHeaderStyle;
   /** Footer: paginated range vs simple `n items` */
@@ -88,6 +109,7 @@ export function DataTable<T>({
   className,
   rowKey,
   rowCta,
+  rowAction,
   density = "default",
   tableLayout = "fixed",
   theadClassName,
@@ -102,6 +124,17 @@ export function DataTable<T>({
   const setPage = isControlled
     ? (p: number) => onPageChange?.(p)
     : (p: number) => setInternalPage(p);
+
+  // The right-pinned row action. `rowAction` takes precedence over `rowCta`.
+  // It is NOT a real column: it renders as a per-row overlay floating at the
+  // right edge of the viewport (sticky), so the last data column stays flush
+  // and there's no reserved/empty trailing column when scrolled to the end.
+  const hasAction = rowAction != null || rowCta != null;
+
+  // `content` layout: a greedy, empty trailing column that absorbs leftover
+  // horizontal space so the data columns stay at their content (minimum)
+  // width while the table still spans the full container width.
+  const hasSpacer = tableLayout === "content";
 
   const total = totalRows ?? data.length;
   const totalPages = Math.ceil(total / pageSize);
@@ -139,7 +172,9 @@ export function DataTable<T>({
     : compact
       ? "text-[11px] font-semibold text-muted-foreground"
       : "text-[11px] font-semibold text-foreground/75 dark:text-foreground/85";
-  const rowCtaColWidth = compact ? 108 : 130;
+  // Action overlay geometry: the action floats this many px in from the right
+  // edge of the viewport (it has no reserved column — it overlays the row).
+  const actionGutter = comfortable ? 20 : compact ? 12 : 16;
 
   return (
     <div
@@ -160,7 +195,13 @@ export function DataTable<T>({
       >
         <table
           className={cn(tableLayout === "auto" && "min-w-[920px]")}
-          style={{ tableLayout, width: "100%" }}
+          style={{
+            // `content` uses the automatic algorithm but stays 100% wide; a
+            // greedy spacer column (below) soaks up the slack so the data
+            // columns collapse to their content width while the table fills.
+            tableLayout: tableLayout === "fixed" ? "fixed" : "auto",
+            width: "100%",
+          }}
         >
           {tableLayout === "fixed" && (
             <colgroup>
@@ -174,7 +215,9 @@ export function DataTable<T>({
                   }}
                 />
               ))}
-              {rowCta ? <col style={{ width: rowCtaColWidth }} /> : null}
+              {/* Zero-width column: the action floats out of it as an overlay,
+                  so the last data column stays flush and nothing trails it. */}
+              {hasAction ? <col style={{ width: 0 }} /> : null}
             </colgroup>
           )}
 
@@ -209,7 +252,10 @@ export function DataTable<T>({
                   {col.header}
                 </th>
               ))}
-              {rowCta ? <th className={cn(headPad, "w-[1%]")} aria-hidden /> : null}
+              {hasSpacer ? <th className="w-full p-0" aria-hidden /> : null}
+              {hasAction ? (
+                <th className="sticky right-0 z-[1] w-0 p-0" aria-hidden />
+              ) : null}
             </tr>
           </thead>
 
@@ -218,14 +264,14 @@ export function DataTable<T>({
               Array.from({ length: skeletonRows }).map((_, i) => (
                 <TableRowSkeleton
                   key={i}
-                  cols={columns.length + (rowCta ? 1 : 0)}
+                  cols={columns.length}
                   density={density}
                   snug={snug}
                 />
               ))
             ) : paginated.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + (rowCta ? 1 : 0)}>
+                <td colSpan={columns.length + (hasSpacer ? 1 : 0) + (hasAction ? 1 : 0)}>
                   <EmptyState title={emptyTitle} description={emptyDescription} />
                 </td>
               </tr>
@@ -238,7 +284,7 @@ export function DataTable<T>({
                     comfortable && "min-h-[56px]",
                     compact && "min-h-[44px]",
                     "hover:bg-muted/40 dark:hover:bg-muted/25",
-                    rowCta &&
+                    hasAction &&
                       "hover:shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-none"
                   )}
                 >
@@ -272,32 +318,44 @@ export function DataTable<T>({
                     </td>
                   ))}
 
-                  {rowCta ? (
-                    <td
-                      className={cn(
-                        cellPad,
-                        "text-left align-middle whitespace-nowrap",
-                        comfortable
-                          ? "pl-2 pr-5"
-                          : compact
-                            ? snug
-                              ? "pl-1.5 pr-2"
-                              : "pl-1.5 pr-3"
-                            : "pl-3 pr-4"
-                      )}
-                    >
-                      <button
-                        type="button"
-                        onClick={() => rowCta.onClick?.(row)}
-                        className={cn(
-                          "opacity-0 group-hover:opacity-100 transition-opacity duration-150 inline-flex items-center font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap shadow-sm",
-                          compact
-                            ? "px-2.5 py-1 text-[11px]"
-                            : "px-3 py-1.5 text-[12px]"
-                        )}
+                  {hasSpacer ? <td className="p-0" aria-hidden /> : null}
+
+                  {hasAction ? (
+                    // Zero-width sticky cell pinned to the right edge of the
+                    // viewport. Its children are positioned absolutely so they
+                    // float over the row (out of the 0-width cell) — the action
+                    // stays in view while scrolling and nothing trails the last
+                    // data column. Everything is revealed on hover only.
+                    <td className="sticky right-0 z-[1] w-0 p-0 align-middle">
+                      {/* The action itself — `rowAction(row, i)` so it always
+                          receives this row's record. Vertically centered in the
+                          row and anchored `actionGutter`px from the right edge,
+                          overflowing left over the row content. Revealed on hover. */}
+                      <span
+                        className="absolute top-1/2 -translate-y-1/2 z-[1] inline-flex items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+                        style={{ right: actionGutter }}
                       >
-                        {rowCta.label}
-                      </button>
+                        {rowAction != null ? (
+                          typeof rowAction === "function" ? (
+                            rowAction(row, i)
+                          ) : (
+                            rowAction
+                          )
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => rowCta?.onClick?.(row)}
+                            className={cn(
+                              "inline-flex items-center font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap shadow-sm",
+                              compact
+                                ? "px-2.5 py-1 text-[11px]"
+                                : "px-3 py-1.5 text-[12px]"
+                            )}
+                          >
+                            {rowCta?.label}
+                          </button>
+                        )}
+                      </span>
                     </td>
                   ) : null}
                 </tr>
