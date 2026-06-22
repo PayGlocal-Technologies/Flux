@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import {
   DataTable,
+  Button,
   type Column,
   type DataTableFooterSummary,
   type DataTableHeaderStyle,
@@ -40,14 +41,16 @@ export function DataTablePlayground() {
   const [pageSize, setPageSize] = useState("5");
   const [headerStyle, setHeaderStyle] = useState<DataTableHeaderStyle>("surface");
   const [footerSummary, setFooterSummary] = useState<DataTableFooterSummary>("range");
-  const [tableLayout, setTableLayout] = useState<"auto" | "fixed">("fixed");
+  const [tableLayout, setTableLayout] = useState<"auto" | "fixed" | "content">("fixed");
+  const [showRowAction, setShowRowAction] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCode, setShowCode] = useState(false);
 
   const code = useMemo(() => {
-    return `const columns: Column<Row>[] = [
-  { key: "name", header: "Merchant", render: (r) => r.name },
-];
+    const rowActionProp = showRowAction
+      ? `\n  rowAction={(row) => (\n    <Button variant="outline" size="sm" onClick={() => openDetails(row)}>\n      View details\n    </Button>\n  )}`
+      : "";
+    return `import { DataTable, Button, type Column } from "@payglocal_ui/flux-ui";
 
 <DataTable
   rowKey={(r) => r.id}
@@ -58,9 +61,9 @@ export function DataTablePlayground() {
   headerStyle="${headerStyle}"
   footerSummary="${footerSummary}"
   tableLayout="${tableLayout}"
-  isLoading={${isLoading}}
+  isLoading={${isLoading}}${rowActionProp}
 />`;
-  }, [density, pageSize, headerStyle, footerSummary, tableLayout, isLoading]);
+  }, [density, pageSize, headerStyle, footerSummary, tableLayout, isLoading, showRowAction]);
 
   return (
     <div className="w-full space-y-4">
@@ -110,10 +113,21 @@ export function DataTablePlayground() {
         <DocsVariantField label="Table layout">
           <DocsVariantSelect
             value={tableLayout}
-            onChange={(v) => setTableLayout(v as "auto" | "fixed")}
+            onChange={(v) => setTableLayout(v as "auto" | "fixed" | "content")}
             options={[
               { value: "fixed", label: "Fixed" },
               { value: "auto", label: "Auto" },
+              { value: "content", label: "Content" },
+            ]}
+          />
+        </DocsVariantField>
+        <DocsVariantField label="Row action">
+          <DocsVariantSelect
+            value={showRowAction ? "yes" : "no"}
+            onChange={(v) => setShowRowAction(v === "yes")}
+            options={[
+              { value: "no", label: "None" },
+              { value: "yes", label: "View details" },
             ]}
           />
         </DocsVariantField>
@@ -150,6 +164,15 @@ export function DataTablePlayground() {
         tableLayout={tableLayout}
         isLoading={isLoading}
         skeletonRows={4}
+        rowAction={showRowAction ? (row) => (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => console.log("view", row)}
+          >
+            View details
+          </Button>
+        ) : undefined}
       />
     </div>
   );

@@ -154,12 +154,36 @@ const [amount, setAmount] = useState("");
     slug: "data-table",
     title: "Data table",
     description: "Column-driven table with pagination, loading skeleton, and empty state.",
-    importSnippet: `import { DataTable, type Column } from "@payglocal_ui/flux-ui";`,
+    importSnippet: `import { DataTable, Button, type Column } from "@payglocal_ui/flux-ui";`,
     usageSnippet: `const columns: Column<Row>[] = [
   { key: "name", header: "Name", render: (r) => r.name },
 ];
 
-<DataTable rowKey={(r) => r.id} columns={columns} data={rows} />`,
+// Basic usage
+<DataTable rowKey={(r) => r.id} columns={columns} data={rows} />
+
+// Content layout — columns shrink to their intrinsic width; leftover
+// space stays empty to the right instead of stretching the columns.
+<DataTable
+  rowKey={(r) => r.id}
+  columns={columns}
+  data={rows}
+  tableLayout="content"
+/>
+
+// Row action — a render-prop button revealed on row hover, pinned to
+// the right edge of the viewport. Prefer this over rowCta when you
+// need per-row navigation or a custom button style.
+<DataTable
+  rowKey={(r) => r.id}
+  columns={columns}
+  data={rows}
+  rowAction={(row) => (
+    <Button variant="outline" size="sm" onClick={() => openDetails(row)}>
+      View details
+    </Button>
+  )}
+/>`,
     toc: baseToc,
   },
   {
