@@ -1,3 +1,5 @@
+"use client";
+
 // src/utils.ts
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
@@ -3605,6 +3607,7 @@ function DataTable({
   className,
   rowKey,
   rowCta,
+  rowAction,
   density = "default",
   tableLayout = "fixed",
   theadClassName,
@@ -3617,9 +3620,18 @@ function DataTable({
   const [internalPage, setInternalPage] = useState6(1);
   const page = isControlled ? controlledPage : internalPage;
   const setPage = isControlled ? (p) => onPageChange?.(p) : (p) => setInternalPage(p);
+  const hasAction = rowAction != null || rowCta != null;
+  const hasSpacer = tableLayout === "content";
   const total = totalRows ?? data.length;
   const totalPages = Math.ceil(total / pageSize);
   const paginated = isControlled ? data : data.slice((page - 1) * pageSize, page * pageSize);
+  const seenKeys = /* @__PURE__ */ new Map();
+  const rowKeys = paginated.map((row) => {
+    const base = rowKey(row);
+    const seen = seenKeys.get(base) ?? 0;
+    seenKeys.set(base, seen + 1);
+    return seen === 0 ? base : `${base}__${seen}`;
+  });
   const comfortable = density === "comfortable";
   const compact = density === "compact";
   const compactCellPad = compact ? snug ? "pl-1.5 pr-2.5 py-2.5" : "px-3 py-2.5" : "px-4 py-3.5";
@@ -3627,7 +3639,7 @@ function DataTable({
   const headPad = comfortable ? "px-5 py-4" : compactCellPad;
   const footerPad = comfortable ? "px-5 py-4" : compact ? "px-4 py-2.5" : "px-4 py-3.5";
   const headText = comfortable ? "text-[12px] font-medium text-muted-foreground tracking-normal" : compact ? "text-[11px] font-semibold text-muted-foreground" : "text-[11px] font-semibold text-foreground/75 dark:text-foreground/85";
-  const rowCtaColWidth = compact ? 108 : 130;
+  const actionGutter = comfortable ? 20 : compact ? 12 : 16;
   return /* @__PURE__ */ jsxs30(
     "div",
     {
@@ -3650,7 +3662,13 @@ function DataTable({
               "table",
               {
                 className: cn(tableLayout === "auto" && "min-w-[920px]"),
-                style: { tableLayout, width: "100%" },
+                style: {
+                  // `content` uses the automatic algorithm but stays 100% wide; a
+                  // greedy spacer column (below) soaks up the slack so the data
+                  // columns collapse to their content width while the table fills.
+                  tableLayout: tableLayout === "fixed" ? "fixed" : "auto",
+                  width: "100%"
+                },
                 children: [
                   tableLayout === "fixed" && /* @__PURE__ */ jsxs30("colgroup", { children: [
                     columns.map((col) => /* @__PURE__ */ jsx49(
@@ -3664,7 +3682,7 @@ function DataTable({
                       },
                       col.key
                     )),
-                    rowCta ? /* @__PURE__ */ jsx49("col", { style: { width: rowCtaColWidth } }) : null
+                    hasAction ? /* @__PURE__ */ jsx49("col", { style: { width: 0 } }) : null
                   ] }),
                   /* @__PURE__ */ jsx49(
                     "thead",
@@ -3696,7 +3714,8 @@ function DataTable({
                               },
                               col.key
                             )),
-                            rowCta ? /* @__PURE__ */ jsx49("th", { className: cn(headPad, "w-[1%]"), "aria-hidden": true }) : null
+                            hasSpacer ? /* @__PURE__ */ jsx49("th", { className: "w-full p-0", "aria-hidden": true }) : null,
+                            hasAction ? /* @__PURE__ */ jsx49("th", { className: "sticky right-0 z-[1] w-0 p-0", "aria-hidden": true }) : null
                           ]
                         }
                       )
@@ -3705,12 +3724,12 @@ function DataTable({
                   /* @__PURE__ */ jsx49("tbody", { children: isLoading ? Array.from({ length: skeletonRows }).map((_, i) => /* @__PURE__ */ jsx49(
                     TableRowSkeleton,
                     {
-                      cols: columns.length + (rowCta ? 1 : 0),
+                      cols: columns.length,
                       density,
                       snug
                     },
                     i
-                  )) : paginated.length === 0 ? /* @__PURE__ */ jsx49("tr", { children: /* @__PURE__ */ jsx49("td", { colSpan: columns.length + (rowCta ? 1 : 0), children: /* @__PURE__ */ jsx49(EmptyState, { title: emptyTitle, description: emptyDescription }) }) }) : paginated.map((row, i) => /* @__PURE__ */ jsxs30(
+                  )) : paginated.length === 0 ? /* @__PURE__ */ jsx49("tr", { children: /* @__PURE__ */ jsx49("td", { colSpan: columns.length + (hasSpacer ? 1 : 0) + (hasAction ? 1 : 0), children: /* @__PURE__ */ jsx49(EmptyState, { title: emptyTitle, description: emptyDescription }) }) }) : paginated.map((row, i) => /* @__PURE__ */ jsxs30(
                     "tr",
                     {
                       className: cn(
@@ -3718,7 +3737,7 @@ function DataTable({
                         comfortable && "min-h-[56px]",
                         compact && "min-h-[44px]",
                         "hover:bg-muted/40 dark:hover:bg-muted/25",
-                        rowCta && "hover:shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-none"
+                        hasAction && "hover:shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-none"
                       ),
                       children: [
                         columns.map((col) => /* @__PURE__ */ jsx49(
@@ -3742,31 +3761,36 @@ function DataTable({
                           },
                           col.key
                         )),
-                        rowCta ? /* @__PURE__ */ jsx49(
-                          "td",
-                          {
-                            className: cn(
-                              cellPad,
-                              "text-left align-middle whitespace-nowrap",
-                              comfortable ? "pl-2 pr-5" : compact ? snug ? "pl-1.5 pr-2" : "pl-1.5 pr-3" : "pl-3 pr-4"
-                            ),
-                            children: /* @__PURE__ */ jsx49(
-                              "button",
-                              {
-                                type: "button",
-                                onClick: () => rowCta.onClick?.(row),
-                                className: cn(
-                                  "opacity-0 group-hover:opacity-100 transition-opacity duration-150 inline-flex items-center font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap shadow-sm",
-                                  compact ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5 text-[12px]"
-                                ),
-                                children: rowCta.label
-                              }
-                            )
-                          }
+                        hasSpacer ? /* @__PURE__ */ jsx49("td", { className: "p-0", "aria-hidden": true }) : null,
+                        hasAction ? (
+                          // Zero-width sticky cell pinned to the right edge of the
+                          // viewport. Its children are positioned absolutely so they
+                          // float over the row (out of the 0-width cell) — the action
+                          // stays in view while scrolling and nothing trails the last
+                          // data column. Everything is revealed on hover only.
+                          /* @__PURE__ */ jsx49("td", { className: "sticky right-0 z-[1] w-0 p-0 align-middle", children: /* @__PURE__ */ jsx49(
+                            "span",
+                            {
+                              className: "absolute top-1/2 -translate-y-1/2 z-[1] inline-flex items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
+                              style: { right: actionGutter },
+                              children: rowAction != null ? typeof rowAction === "function" ? rowAction(row, i) : rowAction : /* @__PURE__ */ jsx49(
+                                "button",
+                                {
+                                  type: "button",
+                                  onClick: () => rowCta?.onClick?.(row),
+                                  className: cn(
+                                    "inline-flex items-center font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap shadow-sm",
+                                    compact ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5 text-[12px]"
+                                  ),
+                                  children: rowCta?.label
+                                }
+                              )
+                            }
+                          ) })
                         ) : null
                       ]
                     },
-                    rowKey(row)
+                    rowKeys[i]
                   )) })
                 ]
               }

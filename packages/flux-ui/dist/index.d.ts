@@ -777,10 +777,31 @@ interface DataTableProps<T> {
         label: string;
         onClick?: (row: T) => void;
     };
+    /**
+     * Custom action revealed on row hover — typically a `<Button>` or
+     * `<ButtonGroup>`, but any `ReactNode` is accepted. Pass a **function** to
+     * render per-row: it receives `(row, index)`, so the action always has the
+     * record for its row (e.g. to navigate or open a drawer for that row).
+     *
+     * It is not a real column: it floats as an overlay **pinned to the right edge
+     * of the viewport**, so it stays in view as the table scrolls horizontally
+     * (no scrolling to the end to reach it) while the last data column stays
+     * flush with nothing trailing it. Takes precedence over `rowCta`.
+     */
+    rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
     /** Row / cell vertical rhythm and horizontal gutters */
     density?: DataTableDensity;
-    /** `auto` lets columns breathe; `fixed` uses `colgroup` hints */
-    tableLayout?: "auto" | "fixed";
+    /**
+     * Column-sizing strategy:
+     * - `fixed` — widths come only from `colgroup` hints (`width`/`minWidth`/
+     *   `maxWidth`); content is ignored and overflow is clipped. Table fills 100%.
+     * - `auto` — columns size to content but the table still fills 100%, so any
+     *   leftover space is distributed into the columns (they stretch).
+     * - `content` — columns size to their content's intrinsic width and the table
+     *   shrinks to fit. Leftover space stays empty to the right of the last
+     *   column; it scrolls horizontally only once content exceeds the container.
+     */
+    tableLayout?: "auto" | "fixed" | "content";
     theadClassName?: string;
     headerStyle?: DataTableHeaderStyle;
     /** Footer: paginated range vs simple `n items` */
@@ -793,7 +814,7 @@ interface DataTableProps<T> {
     /** With `density="compact"`, use tighter cell gutters (`pl-1.5 pr-2.5` vs `px-3`). Footer keeps normal horizontal padding. */
     snug?: boolean;
 }
-declare function DataTable<T>({ columns, data, isLoading, skeletonRows, emptyTitle, emptyDescription, pageSize, page: controlledPage, onPageChange, totalRows, className, rowKey, rowCta, density, tableLayout, theadClassName, headerStyle, footerSummary, footerCountLabels, snug, }: DataTableProps<T>): React$1.JSX.Element;
+declare function DataTable<T>({ columns, data, isLoading, skeletonRows, emptyTitle, emptyDescription, pageSize, page: controlledPage, onPageChange, totalRows, className, rowKey, rowCta, rowAction, density, tableLayout, theadClassName, headerStyle, footerSummary, footerCountLabels, snug, }: DataTableProps<T>): React$1.JSX.Element;
 
 interface EmptyStateProps {
     icon?: LucideIcon;

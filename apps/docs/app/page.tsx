@@ -697,7 +697,7 @@ export default function LandingPage() {
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5">
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/flux-logo.svg" alt="Flux UI" className="h-7 w-7 shrink-0" />
+          <img src="/flux-ui/flux-logo.svg" alt="Flux UI" className="h-7 w-7 shrink-0" />
           <span className="text-[11px] uppercase tracking-[0.2em] text-white/80" style={mono}>Flux UI</span>
           <span className="rounded border border-blue-500/40 bg-blue-600/20 px-1.5 py-0.5 text-[9px] uppercase tracking-[0.14em] text-blue-400" style={mono}>v0.2</span>
         </Link>
@@ -962,7 +962,7 @@ export default function LandingPage() {
             <div className="max-w-xs space-y-5">
               <div className="flex items-center gap-2.5">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/flux-logo.svg" alt="Flux UI" className="h-8 w-8 shrink-0" />
+                <img src="/flux-ui/flux-logo.svg" alt="Flux UI" className="h-8 w-8 shrink-0" />
                 <span className="text-[13px] uppercase tracking-[0.2em] text-white/70" style={mono}>Flux UI</span>
               </div>
               <p className="text-[15px] leading-relaxed text-white/40" style={sans}>

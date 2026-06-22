@@ -16,7 +16,7 @@ export function FluxLogo({ className, size = "md" }: FluxLogoProps) {
   return (
     // eslint-disable-next-line @next/next/no-img-element
     <img
-      src="/flux-logo.svg"
+      src="/flux-ui/flux-logo.svg"
       alt="Flux UI"
       className={cn("shrink-0", sizeClass[size], className)}
     />

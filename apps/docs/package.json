@@ -5,21 +5,24 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:cf": "opennextjs-cloudflare build && node -e \"const fs=require('fs');const w=fs.readFileSync('.open-next/worker.js','utf8');const patch='if(env.ASSETS){const ar=await env.ASSETS.fetch(request.clone());if(ar.status!==404)return ar;}';const patched=w.replace('const url = new URL(request.url);','const url = new URL(request.url);\\n            '+patch);fs.writeFileSync('.open-next/assets/_worker.js',patched);\" && cp -r .open-next/cloudflare .open-next/assets/ && cp -r .open-next/middleware .open-next/assets/ && cp -r .open-next/server-functions .open-next/assets/ && ([ -d .open-next/.build ] && cp -r .open-next/.build .open-next/assets/ || true)",
     "start": "next start",
     "lint": "next lint"
   },
   "dependencies": {
-    "@payglocal_ui/flux-ui": "^0.1.0",
+    "@payglocal_ui/flux-ui": "^0.2.3",
     "next": "^15.0.0",
     "react": "^19.0.0",
     "react-dom": "^19.0.0"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.19.11",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^22",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "typescript": "^5",
+    "esbuild": "^0.28.1",
     "tailwindcss": "^4",
-    "@tailwindcss/postcss": "^4"
+    "typescript": "^5"
   }
 }
