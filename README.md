@@ -18,7 +18,7 @@ Flux UI is an open component library and design system shipped by the PayGlocal 
 
 ## Live docs
 
-**[flux-docs-dusky.vercel.app](https://flux-docs-dusky.vercel.app)**
+**(https://payglocal.in/flux-ui)**
 
 Every component has a live interactive preview, import snippet, and usage example. Foundations pages cover design tokens, color palette, spacing, grid, typography, motion, and content guidelines.
 
