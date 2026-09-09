@@ -789,6 +789,22 @@ interface DataTableProps<T> {
      * flush with nothing trailing it. Takes precedence over `rowCta`.
      */
     rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
+    /**
+     * Makes the whole row a click target — the row itself opens a drawer, a
+     * detail page, whatever the table drills into — instead of that living in a
+     * per-cell wrapper or a hover-revealed button.
+     *
+     * The handler sits on the `<tr>`, so the entire row including cell padding
+     * and the empty space between columns is clickable, and the row gets
+     * `cursor-pointer` plus keyboard access (focusable, Enter / Space).
+     *
+     * Clicks that originate inside something interactive — a `<button>`, `<a>`,
+     * a form control, a Radix trigger, or anything marked
+     * `data-row-click-ignore` — do NOT fire this. Copy buttons, per-row menus
+     * and the `rowAction` overlay therefore keep doing only their own job
+     * without each having to stop propagation.
+     */
+    onRowClick?: (row: T, index: number) => void;
     /** Row / cell vertical rhythm and horizontal gutters */
     density?: DataTableDensity;
     /**
@@ -814,7 +830,7 @@ interface DataTableProps<T> {
     /** With `density="compact"`, use tighter cell gutters (`pl-1.5 pr-2.5` vs `px-3`). Footer keeps normal horizontal padding. */
     snug?: boolean;
 }
-declare function DataTable<T>({ columns, data, isLoading, skeletonRows, emptyTitle, emptyDescription, pageSize, page: controlledPage, onPageChange, totalRows, className, rowKey, rowCta, rowAction, density, tableLayout, theadClassName, headerStyle, footerSummary, footerCountLabels, snug, }: DataTableProps<T>): React$1.JSX.Element;
+declare function DataTable<T>({ columns, data, isLoading, skeletonRows, emptyTitle, emptyDescription, pageSize, page: controlledPage, onPageChange, totalRows, className, rowKey, rowCta, rowAction, onRowClick, density, tableLayout, theadClassName, headerStyle, footerSummary, footerCountLabels, snug, }: DataTableProps<T>): React$1.JSX.Element;
 
 interface EmptyStateProps {
     icon?: LucideIcon;

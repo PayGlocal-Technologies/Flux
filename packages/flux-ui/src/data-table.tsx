@@ -72,6 +72,22 @@ interface DataTableProps<T> {
    * flush with nothing trailing it. Takes precedence over `rowCta`.
    */
   rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
+  /**
+   * Makes the whole row a click target — the row itself opens a drawer, a
+   * detail page, whatever the table drills into — instead of that living in a
+   * per-cell wrapper or a hover-revealed button.
+   *
+   * The handler sits on the `<tr>`, so the entire row including cell padding
+   * and the empty space between columns is clickable, and the row gets
+   * `cursor-pointer` plus keyboard access (focusable, Enter / Space).
+   *
+   * Clicks that originate inside something interactive — a `<button>`, `<a>`,
+   * a form control, a Radix trigger, or anything marked
+   * `data-row-click-ignore` — do NOT fire this. Copy buttons, per-row menus
+   * and the `rowAction` overlay therefore keep doing only their own job
+   * without each having to stop propagation.
+   */
+  onRowClick?: (row: T, index: number) => void;
   /** Row / cell vertical rhythm and horizontal gutters */
   density?: DataTableDensity;
   /**
@@ -110,6 +126,7 @@ export function DataTable<T>({
   rowKey,
   rowCta,
   rowAction,
+  onRowClick,
   density = "default",
   tableLayout = "fixed",
   theadClassName,
@@ -175,6 +192,30 @@ export function DataTable<T>({
   // Action overlay geometry: the action floats this many px in from the right
   // edge of the viewport (it has no reserved column — it overlays the row).
   const actionGutter = comfortable ? 20 : compact ? 12 : 16;
+
+  /**
+   * Selector for everything a row-level click must keep its hands off. A click
+   * landing inside one of these belongs to that control alone — a copy button,
+   * a per-row menu, a link, a checkbox, the `rowAction` overlay — so the row
+   * handler ignores it rather than firing as well.
+   *
+   * `data-row-click-ignore` is the escape hatch for anything not covered here
+   * (a custom widget in a cell, a drag handle) without it needing to stop
+   * propagation itself.
+   */
+  const ROW_CLICK_IGNORE =
+    'button, a, input, select, textarea, label, [role="button"], [role="link"], ' +
+    '[role="checkbox"], [role="menuitem"], [role="menu"], [role="dialog"], ' +
+    "[data-row-click-ignore]";
+
+  /** Whether a click/keypress inside a row should reach `onRowClick`. */
+  const isRowClickTarget = (target: EventTarget | null, rowEl: HTMLElement) => {
+    if (!(target instanceof Element)) return false;
+    const interactive = target.closest(ROW_CLICK_IGNORE);
+    // `closest` can walk out of the row entirely (a portalled menu, say); only
+    // a match inside THIS row means the click belonged to that control.
+    return !(interactive && rowEl.contains(interactive));
+  };
 
   return (
     <div
@@ -285,8 +326,39 @@ export function DataTable<T>({
                     compact && "min-h-[44px]",
                     "hover:bg-muted/40 dark:hover:bg-muted/25",
                     hasAction &&
-                      "hover:shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-none"
+                      "hover:shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-none",
+                    // Clickable rows read as clickable, and show a focus ring
+                    // when reached by keyboard. `focus-visible` only, so a
+                    // mouse click does not leave a ring behind on the row.
+                    onRowClick &&
+                      "cursor-pointer focus-visible:outline-none focus-visible:bg-muted/40 dark:focus-visible:bg-muted/25"
                   )}
+                  // Keyboard parity with the mouse: the row is reachable by
+                  // Tab and activated by Enter / Space, which a bare <tr> with
+                  // an onClick would not be. No role override — the row stays a
+                  // row for assistive tech rather than claiming to be a button.
+                  tabIndex={onRowClick ? 0 : undefined}
+                  onClick={
+                    onRowClick
+                      ? (e) => {
+                          if (!isRowClickTarget(e.target, e.currentTarget)) return;
+                          onRowClick(row, i);
+                        }
+                      : undefined
+                  }
+                  onKeyDown={
+                    onRowClick
+                      ? (e) => {
+                          if (e.key !== "Enter" && e.key !== " ") return;
+                          // Only the row's own focus activates it; a keypress
+                          // inside a control in the row belongs to that control.
+                          if (e.target !== e.currentTarget) return;
+                          // Space scrolls the page by default.
+                          e.preventDefault();
+                          onRowClick(row, i);
+                        }
+                      : undefined
+                  }
                 >
                   {columns.map((col) => (
                     <td

@@ -183,6 +183,19 @@ const [amount, setAmount] = useState("");
       View details
     </Button>
   )}
+/>
+
+// Row click — the whole row is the target, including cell padding and
+// the gaps between columns. The row gets cursor-pointer and keyboard
+// access (focusable, Enter / Space). Clicks that start inside a button,
+// link, form control or anything marked data-row-click-ignore do not
+// fire it, so per-row buttons and copy controls keep working on their
+// own without stopping propagation.
+<DataTable
+  rowKey={(r) => r.id}
+  columns={columns}
+  data={rows}
+  onRowClick={(row) => openDetails(row)}
 />`,
     toc: baseToc,
   },
