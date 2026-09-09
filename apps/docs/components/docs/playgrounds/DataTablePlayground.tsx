@@ -43,13 +43,17 @@ export function DataTablePlayground() {
   const [footerSummary, setFooterSummary] = useState<DataTableFooterSummary>("range");
   const [tableLayout, setTableLayout] = useState<"auto" | "fixed" | "content">("fixed");
   const [showRowAction, setShowRowAction] = useState(false);
+  const [rowClickable, setRowClickable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCode, setShowCode] = useState(false);
+  /** Last row clicked, so the toggle below has a visible effect. */
+  const [clickedRow, setClickedRow] = useState<string | null>(null);
 
   const code = useMemo(() => {
     const rowActionProp = showRowAction
       ? `\n  rowAction={(row) => (\n    <Button variant="outline" size="sm" onClick={() => openDetails(row)}>\n      View details\n    </Button>\n  )}`
       : "";
+    const rowClickProp = rowClickable ? `\n  onRowClick={(row) => openDetails(row)}` : "";
     return `import { DataTable, Button, type Column } from "@payglocal_ui/flux-ui";
 
 <DataTable
@@ -61,9 +65,18 @@ export function DataTablePlayground() {
   headerStyle="${headerStyle}"
   footerSummary="${footerSummary}"
   tableLayout="${tableLayout}"
-  isLoading={${isLoading}}${rowActionProp}
+  isLoading={${isLoading}}${rowActionProp}${rowClickProp}
 />`;
-  }, [density, pageSize, headerStyle, footerSummary, tableLayout, isLoading, showRowAction]);
+  }, [
+    density,
+    pageSize,
+    headerStyle,
+    footerSummary,
+    tableLayout,
+    isLoading,
+    showRowAction,
+    rowClickable,
+  ]);
 
   return (
     <div className="w-full space-y-4">
@@ -131,6 +144,16 @@ export function DataTablePlayground() {
             ]}
           />
         </DocsVariantField>
+        <DocsVariantField label="Row click">
+          <DocsVariantSelect
+            value={rowClickable ? "yes" : "no"}
+            onChange={(v) => setRowClickable(v === "yes")}
+            options={[
+              { value: "no", label: "None" },
+              { value: "yes", label: "Whole row" },
+            ]}
+          />
+        </DocsVariantField>
         <DocsVariantField label="Loading">
           <DocsVariantSelect
             value={isLoading ? "yes" : "no"}
@@ -150,6 +173,9 @@ export function DataTablePlayground() {
         >
           {showCode ? "Hide generated code" : "Show generated code"}
         </button>
+        {rowClickable && clickedRow ? (
+          <span className="text-sm text-muted-foreground">Row clicked: {clickedRow}</span>
+        ) : null}
       </div>
       {showCode ? <CodeBlock code={code} /> : null}
       <DataTable
@@ -173,6 +199,7 @@ export function DataTablePlayground() {
             View details
           </Button>
         ) : undefined}
+        onRowClick={rowClickable ? (row) => setClickedRow(row.name) : undefined}
       />
     </div>
   );

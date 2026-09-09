@@ -3608,6 +3608,7 @@ function DataTable({
   rowKey,
   rowCta,
   rowAction,
+  onRowClick,
   density = "default",
   tableLayout = "fixed",
   theadClassName,
@@ -3640,6 +3641,12 @@ function DataTable({
   const footerPad = comfortable ? "px-5 py-4" : compact ? "px-4 py-2.5" : "px-4 py-3.5";
   const headText = comfortable ? "text-[12px] font-medium text-muted-foreground tracking-normal" : compact ? "text-[11px] font-semibold text-muted-foreground" : "text-[11px] font-semibold text-foreground/75 dark:text-foreground/85";
   const actionGutter = comfortable ? 20 : compact ? 12 : 16;
+  const ROW_CLICK_IGNORE = 'button, a, input, select, textarea, label, [role="button"], [role="link"], [role="checkbox"], [role="menuitem"], [role="menu"], [role="dialog"], [data-row-click-ignore]';
+  const isRowClickTarget = (target, rowEl) => {
+    if (!(target instanceof Element)) return false;
+    const interactive = target.closest(ROW_CLICK_IGNORE);
+    return !(interactive && rowEl.contains(interactive));
+  };
   return /* @__PURE__ */ jsxs30(
     "div",
     {
@@ -3737,8 +3744,23 @@ function DataTable({
                         comfortable && "min-h-[56px]",
                         compact && "min-h-[44px]",
                         "hover:bg-muted/40 dark:hover:bg-muted/25",
-                        hasAction && "hover:shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-none"
+                        hasAction && "hover:shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-none",
+                        // Clickable rows read as clickable, and show a focus ring
+                        // when reached by keyboard. `focus-visible` only, so a
+                        // mouse click does not leave a ring behind on the row.
+                        onRowClick && "cursor-pointer focus-visible:outline-none focus-visible:bg-muted/40 dark:focus-visible:bg-muted/25"
                       ),
+                      tabIndex: onRowClick ? 0 : void 0,
+                      onClick: onRowClick ? (e) => {
+                        if (!isRowClickTarget(e.target, e.currentTarget)) return;
+                        onRowClick(row, i);
+                      } : void 0,
+                      onKeyDown: onRowClick ? (e) => {
+                        if (e.key !== "Enter" && e.key !== " ") return;
+                        if (e.target !== e.currentTarget) return;
+                        e.preventDefault();
+                        onRowClick(row, i);
+                      } : void 0,
                       children: [
                         columns.map((col) => /* @__PURE__ */ jsx49(
                           "td",
