@@ -19,7 +19,9 @@ const DropdownMenuSubTrigger = React.forwardRef<
   <DropdownMenuPrimitive.SubTrigger
     ref={ref}
     className={cn(
-      "flex cursor-default select-none items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] outline-none",
+      // Matches DropdownMenuItem: a submenu row sits in the same list as the
+      // plain rows, so it cannot be a different size from them.
+      "flex cursor-default select-none items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] outline-none",
       "focus:bg-muted data-[state=open]:bg-muted",
       inset && "pl-8",
       className
@@ -94,7 +96,9 @@ const DropdownMenuCheckboxItem = React.forwardRef<
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-lg py-2 pl-8 pr-2 text-sm outline-none transition-colors",
+      // Matches DropdownMenuItem. `pl-8` stays: that gutter is the check /
+      // dot indicator's, not padding.
+      "relative flex cursor-default select-none items-center rounded-lg py-1.5 pl-8 pr-2.5 text-[13px] outline-none transition-colors",
       "focus:bg-muted focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}
@@ -118,7 +122,9 @@ const DropdownMenuRadioItem = React.forwardRef<
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center rounded-lg py-2 pl-8 pr-2 text-sm outline-none transition-colors",
+      // Matches DropdownMenuItem. `pl-8` stays: that gutter is the check /
+      // dot indicator's, not padding.
+      "relative flex cursor-default select-none items-center rounded-lg py-1.5 pl-8 pr-2.5 text-[13px] outline-none transition-colors",
       "focus:bg-muted focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     )}

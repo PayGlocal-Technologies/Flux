@@ -239,6 +239,16 @@ export function DataTable<T>({
     return seen === 0 ? base : `${base}__${seen}`;
   });
 
+  /**
+   * No rows to show. The width hints are dropped in this state: a grid whose
+   * columns carry minimums (via `colgroup` in fixed layout, or `cellClassName`
+   * in the others) would otherwise have its HEADER row alone force the table
+   * past the container and raise a horizontal scrollbar — over an empty region
+   * with nothing to scroll to. Headers still render, at their natural width, so
+   * the shape of the missing data is still legible.
+   */
+  const isEmpty = !isLoading && paginated.length === 0;
+
   const comfortable = density === "comfortable";
   const compact = density === "compact";
   const compactCellPad = compact
@@ -331,7 +341,7 @@ export function DataTable<T>({
             width: "100%",
           }}
         >
-          {tableLayout === "fixed" && (
+          {tableLayout === "fixed" && !isEmpty && (
             <colgroup>
               {hasExpand ? <col style={{ width: 40 }} /> : null}
               {columns.map((col) => (
@@ -376,7 +386,8 @@ export function DataTable<T>({
                       : col.align === "center"
                         ? "text-center"
                         : "text-left",
-                    col.cellClassName
+                    // Width hints live in `cellClassName`; see `isEmpty`.
+                    !isEmpty && col.cellClassName
                   )}
                 >
                   {col.header}

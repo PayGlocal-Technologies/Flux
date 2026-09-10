@@ -2851,7 +2851,9 @@ var DropdownMenuSubTrigger = React27.forwardRef(({ className, inset, children, .
   {
     ref,
     className: cn(
-      "flex cursor-default select-none items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] outline-none",
+      // Matches DropdownMenuItem: a submenu row sits in the same list as the
+      // plain rows, so it cannot be a different size from them.
+      "flex cursor-default select-none items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] outline-none",
       "focus:bg-muted data-[state=open]:bg-muted",
       inset && "pl-8",
       className
@@ -2913,7 +2915,9 @@ var DropdownMenuCheckboxItem = React27.forwardRef(({ className, children, checke
   {
     ref,
     className: cn(
-      "relative flex cursor-default select-none items-center rounded-lg py-2 pl-8 pr-2 text-sm outline-none transition-colors",
+      // Matches DropdownMenuItem. `pl-8` stays: that gutter is the check /
+      // dot indicator's, not padding.
+      "relative flex cursor-default select-none items-center rounded-lg py-1.5 pl-8 pr-2.5 text-[13px] outline-none transition-colors",
       "focus:bg-muted focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     ),
@@ -2931,7 +2935,9 @@ var DropdownMenuRadioItem = React27.forwardRef(({ className, children, ...props 
   {
     ref,
     className: cn(
-      "relative flex cursor-default select-none items-center rounded-lg py-2 pl-8 pr-2 text-sm outline-none transition-colors",
+      // Matches DropdownMenuItem. `pl-8` stays: that gutter is the check /
+      // dot indicator's, not padding.
+      "relative flex cursor-default select-none items-center rounded-lg py-1.5 pl-8 pr-2.5 text-[13px] outline-none transition-colors",
       "focus:bg-muted focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       className
     ),
@@ -3656,6 +3662,7 @@ function DataTable({
     seenKeys.set(base, seen + 1);
     return seen === 0 ? base : `${base}__${seen}`;
   });
+  const isEmpty = !isLoading && paginated.length === 0;
   const comfortable = density === "comfortable";
   const compact = density === "compact";
   const compactCellPad = compact ? snug ? "pl-1.5 pr-2.5 py-2.5" : "px-3 py-2.5" : "px-4 py-3.5";
@@ -3703,7 +3710,7 @@ function DataTable({
                   width: "100%"
                 },
                 children: [
-                  tableLayout === "fixed" && /* @__PURE__ */ jsxs30("colgroup", { children: [
+                  tableLayout === "fixed" && !isEmpty && /* @__PURE__ */ jsxs30("colgroup", { children: [
                     hasExpand ? /* @__PURE__ */ jsx49("col", { style: { width: 40 } }) : null,
                     columns.map((col) => /* @__PURE__ */ jsx49(
                       "col",
@@ -3743,7 +3750,8 @@ function DataTable({
                                   headText,
                                   "whitespace-nowrap align-middle",
                                   col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left",
-                                  col.cellClassName
+                                  // Width hints live in `cellClassName`; see `isEmpty`.
+                                  !isEmpty && col.cellClassName
                                 ),
                                 children: col.header
                               },
