@@ -9,14 +9,31 @@ const Select = SelectPrimitive.Root;
 const SelectGroup = SelectPrimitive.Group;
 const SelectValue = SelectPrimitive.Value;
 
+/**
+ * `md` (default) is the form-field trigger. `sm` is for dense furniture — a
+ * rows-per-page picker in a table footer, a control inside a toolbar — where
+ * the full-height field towers over everything beside it.
+ *
+ * This is a size prop rather than a job for `className` because the base sets
+ * `min-h-11`, which beats an `h-8` utility: every caller wanting a short
+ * trigger had to override min-height, padding, gap and text size together.
+ */
+export type SelectTriggerSize = "sm" | "md";
+
+const selectTriggerSizes: Record<SelectTriggerSize, string> = {
+  md: "h-11 min-h-11 gap-2.5 px-4 py-2 text-[15px]",
+  sm: "h-7 min-h-7 w-auto gap-1 px-2 py-0 text-[12px]",
+};
+
 const SelectTrigger = React.forwardRef<
   React.ElementRef<typeof SelectPrimitive.Trigger>,
-  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger>
->(({ className, children, ...props }, ref) => (
+  React.ComponentPropsWithoutRef<typeof SelectPrimitive.Trigger> & { size?: SelectTriggerSize }
+>(({ className, children, size = "md", ...props }, ref) => (
   <SelectPrimitive.Trigger
     ref={ref}
     className={cn(
-      "flex h-11 min-h-11 w-full items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-4 py-2 text-[15px] text-foreground shadow-sm outline-none",
+      "flex w-full items-center justify-between rounded-lg border border-border bg-card text-foreground shadow-sm outline-none",
+      selectTriggerSizes[size],
       "ring-ring/50 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50",
       "[&>span]:line-clamp-1",
       className

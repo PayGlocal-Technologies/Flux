@@ -194,6 +194,7 @@ export {
   SelectScrollUpButton,
   SelectScrollDownButton,
 } from "./select";
+export type { SelectTriggerSize } from "./select";
 export { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandSeparator, CommandShortcut } from "./command";
 export type {
   CommandProps,
@@ -232,7 +233,7 @@ export { Shimmer, StatCardSkeleton, TableRowSkeleton, ChartSkeleton } from "./sk
 
 // Data display
 export { DataTable } from "./data-table";
-export type { Column, DataTableDensity, DataTableFooterSummary, DataTableHeaderStyle } from "./data-table";
+export type { Column, DataTableDensity, DataTableExpandable, DataTableFooterSummary, DataTableHeaderStyle } from "./data-table";
 export { EmptyState } from "./empty-state";
 export { PageHeader } from "./page-header";
 export { Code, CodeBlock } from "./code";

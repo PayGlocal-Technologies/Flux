@@ -600,7 +600,19 @@ declare function DropdownMenuShortcut({ className, ...props }: React$1.HTMLAttri
 declare const Select: React$1.FC<SelectPrimitive.SelectProps>;
 declare const SelectGroup: React$1.ForwardRefExoticComponent<SelectPrimitive.SelectGroupProps & React$1.RefAttributes<HTMLDivElement>>;
 declare const SelectValue: React$1.ForwardRefExoticComponent<SelectPrimitive.SelectValueProps & React$1.RefAttributes<HTMLSpanElement>>;
-declare const SelectTrigger: React$1.ForwardRefExoticComponent<Omit<SelectPrimitive.SelectTriggerProps & React$1.RefAttributes<HTMLButtonElement>, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
+/**
+ * `md` (default) is the form-field trigger. `sm` is for dense furniture — a
+ * rows-per-page picker in a table footer, a control inside a toolbar — where
+ * the full-height field towers over everything beside it.
+ *
+ * This is a size prop rather than a job for `className` because the base sets
+ * `min-h-11`, which beats an `h-8` utility: every caller wanting a short
+ * trigger had to override min-height, padding, gap and text size together.
+ */
+type SelectTriggerSize = "sm" | "md";
+declare const SelectTrigger: React$1.ForwardRefExoticComponent<Omit<SelectPrimitive.SelectTriggerProps & React$1.RefAttributes<HTMLButtonElement>, "ref"> & {
+    size?: SelectTriggerSize;
+} & React$1.RefAttributes<HTMLButtonElement>>;
 declare const SelectScrollUpButton: React$1.ForwardRefExoticComponent<Omit<SelectPrimitive.SelectScrollUpButtonProps & React$1.RefAttributes<HTMLDivElement>, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 declare const SelectScrollDownButton: React$1.ForwardRefExoticComponent<Omit<SelectPrimitive.SelectScrollDownButtonProps & React$1.RefAttributes<HTMLDivElement>, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 declare const SelectContent: React$1.ForwardRefExoticComponent<Omit<SelectPrimitive.SelectContentProps & React$1.RefAttributes<HTMLDivElement>, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
@@ -742,6 +754,37 @@ declare function ChartSkeleton({ height }: {
 type DataTableDensity = "default" | "comfortable" | "compact";
 type DataTableHeaderStyle = "surface" | "minimal";
 type DataTableFooterSummary = "range" | "count";
+/**
+ * Row expansion: a disclosure column plus a full-width panel rendered directly
+ * beneath the expanded row. Use it when the detail belongs *with* the row in
+ * the flow of the table (a request's headers, a payload, a breakdown) rather
+ * than in a drawer that covers it.
+ *
+ * Leave `expandedKeys` unset for uncontrolled behaviour (the table remembers
+ * which rows are open). Pass `expandedKeys` + `onExpandedChange` to drive it
+ * from outside — needed when opening a row triggers a fetch.
+ */
+type DataTableExpandable<T> = {
+    /** The panel shown under an expanded row. */
+    render: (row: T, index: number) => ReactNode;
+    /**
+     * Which rows can open at all. Rows that cannot get no toggle and no chevron,
+     * keeping the column's width without implying an affordance that isn't there.
+     * Defaults to every row.
+     */
+    isExpandable?: (row: T, index: number) => boolean;
+    /** Controlled open rows, as `rowKey` values. Omit for uncontrolled. */
+    expandedKeys?: string[];
+    /** Fires on every open/close in controlled mode. */
+    onExpandedChange?: (keys: string[]) => void;
+    /**
+     * Fires only when a row opens, in both modes — the hook for lazily fetching
+     * that row's detail. Not called on close.
+     */
+    onExpand?: (row: T, index: number) => void;
+    /** Accessible name for the toggle. Default "Toggle row details". */
+    toggleLabel?: string;
+};
 type Column<T> = {
     key: string;
     header: ReactNode;
@@ -829,8 +872,19 @@ interface DataTableProps<T> {
     };
     /** With `density="compact"`, use tighter cell gutters (`pl-1.5 pr-2.5` vs `px-3`). Footer keeps normal horizontal padding. */
     snug?: boolean;
+    /**
+     * Extra control at the far left of the built-in footer, before the
+     * "Showing x–y of N" summary — a rows-per-page picker, typically.
+     *
+     * Without it a grid that needs a page-size control has to abandon the
+     * built-in footer and hand-roll one, which is how two different pagers end up
+     * in the same app.
+     */
+    footerLeading?: ReactNode;
+    /** Per-row disclosure panel rendered beneath the row. See `DataTableExpandable`. */
+    expandable?: DataTableExpandable<T>;
 }
-declare function DataTable<T>({ columns, data, isLoading, skeletonRows, emptyTitle, emptyDescription, pageSize, page: controlledPage, onPageChange, totalRows, className, rowKey, rowCta, rowAction, onRowClick, density, tableLayout, theadClassName, headerStyle, footerSummary, footerCountLabels, snug, }: DataTableProps<T>): React$1.JSX.Element;
+declare function DataTable<T>({ columns, data, isLoading, skeletonRows, emptyTitle, emptyDescription, pageSize, page: controlledPage, onPageChange, totalRows, className, rowKey, rowCta, rowAction, onRowClick, density, tableLayout, theadClassName, headerStyle, footerSummary, footerCountLabels, snug, expandable, footerLeading, }: DataTableProps<T>): React$1.JSX.Element;
 
 interface EmptyStateProps {
     icon?: LucideIcon;
@@ -1279,4 +1333,4 @@ interface VisuallyHiddenProps extends React$1.HTMLAttributes<HTMLElement> {
 }
 declare const VisuallyHidden: React$1.ForwardRefExoticComponent<VisuallyHiddenProps & React$1.RefAttributes<HTMLElement>>;
 
-export { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Alert, AlertDescription, type AlertProps, AlertTitle, type AttentionListItem, AttentionListTemplate, type AttentionListTemplateProps, Avatar, AvatarFallback, AvatarGroup, type AvatarGroupItem, type AvatarGroupProps, AvatarImage, AvatarTag, type AvatarTagProps, type AvatarTagSize, Badge, type BadgeProps, type BadgeTrailIcon, type BadgeVariant, Banner, type BannerProps, Blanket, type BlanketProps, Box, type BoxProps, Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, type Breakpoint, Button, ButtonGroup, type ButtonGroupProps, type ButtonProps, COUNTRIES, Calendar, CalendarDayButton, type CalendarProps, Callout, CalloutIcon, type CalloutProps, CalloutText, CalloutTitle, type CalloutVariant, Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, CategoryBarChartTemplate, type CategoryBarChartTemplateProps, type CategoryBarPoint, type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartSkeleton, ChartStyle, ChartTooltip, ChartTooltipContent, Checkbox, type CheckboxProps, CheckboxSelect, type CheckboxSelectOption, type CheckboxSelectProps, Code, CodeBlock, type CodeBlockProps, type CodeProps, type Column, Command, CommandEmpty, type CommandEmptyProps, CommandGroup, type CommandGroupProps, CommandInput, type CommandInputProps, CommandItem, type CommandItemProps, CommandList, type CommandListProps, type CommandProps, CommandSeparator, type CommandSeparatorProps, CommandShortcut, type CommandShortcutProps, type Country, CountrySelect, type CountrySelectProps, CurrencyAmountInput, type DashboardAreaChartPoint, DashboardAreaChartTemplate, type DashboardAreaChartTemplateProps, DataTable, type DataTableDensity, type DataTableFooterSummary, type DataTableHeaderStyle, DatePicker, Dialog, DialogClose, DialogContent, DialogDescription, DialogPortal, DialogTitle, DialogTrigger, Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, EmptyState, Field, type FieldConfig, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSeparator, FieldSet, FieldTitle, type FieldsConfig, Flag, type FlagAction, FlagGroup, type FlagGroupPosition, type FlagGroupProps, type FlagProps, type FlagVariant, Flex, type FlexAlign, type FlexDirection, type FlexJustify, type FlexProps, type FlexWrap, Form, FormControl, FormDescription, FormError, type FormErrors, FormField, type FormFieldProps, FormItem, FormLabel, type FormProps, type FormValues, Grid, type GridCols, type GridFlow, type GridProps, GroupedBarChartTemplate, type GroupedBarChartTemplateProps, type GroupedBarSeries, Heading, type HeadingProps, Hide, type HideProps, IconButton, type IconButtonProps, Inline, InlineDialog, InlineDialogContent, type InlineDialogContentProps, type InlineDialogProps, InlineDialogTrigger, InlineEdit, type InlineEditProps, type InlineProps, Input, InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText, InputGroupTextarea, Label, type LayoutSpacing, Link, type LinkProps, Lozenge, type LozengeProps, Menu, MenuDivider, MenuItem, type MenuItemProps, type MenuProps, MenuSection, type MenuSectionProps, MetricSparklineCard, type MetricSparklineCardProps, type MetricSparklinePoint, MetricText, type MetricTextProps, MiniSparklineChartCard, type MiniSparklineChartCardProps, type MiniSparklinePoint, type MiniSparklineStat, OtpInput, type OtpInputProps, PageHeader, Pagination, PaginationContent, type PaginationContentProps, PaginationEllipsis, type PaginationEllipsisProps, PaginationItem, type PaginationItemProps, PaginationLink, type PaginationLinkProps, PaginationNext, type PaginationNextProps, PaginationPrevious, type PaginationPreviousProps, type PaginationProps, PasswordInput, type PasswordInputProps, Popover, PopoverAnchor, PopoverContent, PopoverTrigger, Progress, ProgressIndicator, type ProgressIndicatorProps, type ProgressProps, ProgressTracker, type ProgressTrackerProps, type ProgressTrackerStep, RadioGroup, RadioGroupItem, type RadioGroupItemProps, type RankedBarItem, RankedBarListTemplate, type RankedBarListTemplateProps, type RegisterResult, type ResponsiveCols, ScrollArea, ScrollBar, SectionMessage, SectionMessageActions, SectionMessageContent, type SectionMessageProps, SectionMessageTitle, type SectionMessageVariant, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, SelectValue, Separator, Shimmer, Show, type ShowProps, SideNav, SideNavFooter, SideNavHeader, SideNavItem, type SideNavItemProps, type SideNavProps, SideNavSection, Slider, type SliderProps, Spinner, type SpinnerProps, SplitButton, SplitButtonItem, type SplitButtonItemProps, type SplitButtonProps, Spotlight, SpotlightCard, type SpotlightCardProps, type SpotlightProps, type SpotlightStep, Stack, type StackProps, StatCardSkeleton, StatusBadge, type StatusBadgeProps, Switch, type SwitchProps, TableRowSkeleton, Tabs, TabsContent, TabsList, TabsTrigger, Tag, TagGroup, type TagGroupProps, type TagProps, Text, type TextProps, Textarea, TimePicker, type TimePickerProps, Toaster, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, type UseBreakpointReturn, type UseFlagGroupReturn, type UseFormReturn, type UseSpotlightReturn, type ValidatorRule, VisuallyHidden, type VisuallyHiddenProps, cn, useBreakpoint, useFlagGroup, useForm, useSpotlight };
+export { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Alert, AlertDescription, type AlertProps, AlertTitle, type AttentionListItem, AttentionListTemplate, type AttentionListTemplateProps, Avatar, AvatarFallback, AvatarGroup, type AvatarGroupItem, type AvatarGroupProps, AvatarImage, AvatarTag, type AvatarTagProps, type AvatarTagSize, Badge, type BadgeProps, type BadgeTrailIcon, type BadgeVariant, Banner, type BannerProps, Blanket, type BlanketProps, Box, type BoxProps, Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, type Breakpoint, Button, ButtonGroup, type ButtonGroupProps, type ButtonProps, COUNTRIES, Calendar, CalendarDayButton, type CalendarProps, Callout, CalloutIcon, type CalloutProps, CalloutText, CalloutTitle, type CalloutVariant, Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, CategoryBarChartTemplate, type CategoryBarChartTemplateProps, type CategoryBarPoint, type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartSkeleton, ChartStyle, ChartTooltip, ChartTooltipContent, Checkbox, type CheckboxProps, CheckboxSelect, type CheckboxSelectOption, type CheckboxSelectProps, Code, CodeBlock, type CodeBlockProps, type CodeProps, type Column, Command, CommandEmpty, type CommandEmptyProps, CommandGroup, type CommandGroupProps, CommandInput, type CommandInputProps, CommandItem, type CommandItemProps, CommandList, type CommandListProps, type CommandProps, CommandSeparator, type CommandSeparatorProps, CommandShortcut, type CommandShortcutProps, type Country, CountrySelect, type CountrySelectProps, CurrencyAmountInput, type DashboardAreaChartPoint, DashboardAreaChartTemplate, type DashboardAreaChartTemplateProps, DataTable, type DataTableDensity, type DataTableExpandable, type DataTableFooterSummary, type DataTableHeaderStyle, DatePicker, Dialog, DialogClose, DialogContent, DialogDescription, DialogPortal, DialogTitle, DialogTrigger, Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, EmptyState, Field, type FieldConfig, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSeparator, FieldSet, FieldTitle, type FieldsConfig, Flag, type FlagAction, FlagGroup, type FlagGroupPosition, type FlagGroupProps, type FlagProps, type FlagVariant, Flex, type FlexAlign, type FlexDirection, type FlexJustify, type FlexProps, type FlexWrap, Form, FormControl, FormDescription, FormError, type FormErrors, FormField, type FormFieldProps, FormItem, FormLabel, type FormProps, type FormValues, Grid, type GridCols, type GridFlow, type GridProps, GroupedBarChartTemplate, type GroupedBarChartTemplateProps, type GroupedBarSeries, Heading, type HeadingProps, Hide, type HideProps, IconButton, type IconButtonProps, Inline, InlineDialog, InlineDialogContent, type InlineDialogContentProps, type InlineDialogProps, InlineDialogTrigger, InlineEdit, type InlineEditProps, type InlineProps, Input, InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText, InputGroupTextarea, Label, type LayoutSpacing, Link, type LinkProps, Lozenge, type LozengeProps, Menu, MenuDivider, MenuItem, type MenuItemProps, type MenuProps, MenuSection, type MenuSectionProps, MetricSparklineCard, type MetricSparklineCardProps, type MetricSparklinePoint, MetricText, type MetricTextProps, MiniSparklineChartCard, type MiniSparklineChartCardProps, type MiniSparklinePoint, type MiniSparklineStat, OtpInput, type OtpInputProps, PageHeader, Pagination, PaginationContent, type PaginationContentProps, PaginationEllipsis, type PaginationEllipsisProps, PaginationItem, type PaginationItemProps, PaginationLink, type PaginationLinkProps, PaginationNext, type PaginationNextProps, PaginationPrevious, type PaginationPreviousProps, type PaginationProps, PasswordInput, type PasswordInputProps, Popover, PopoverAnchor, PopoverContent, PopoverTrigger, Progress, ProgressIndicator, type ProgressIndicatorProps, type ProgressProps, ProgressTracker, type ProgressTrackerProps, type ProgressTrackerStep, RadioGroup, RadioGroupItem, type RadioGroupItemProps, type RankedBarItem, RankedBarListTemplate, type RankedBarListTemplateProps, type RegisterResult, type ResponsiveCols, ScrollArea, ScrollBar, SectionMessage, SectionMessageActions, SectionMessageContent, type SectionMessageProps, SectionMessageTitle, type SectionMessageVariant, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, type SelectTriggerSize, SelectValue, Separator, Shimmer, Show, type ShowProps, SideNav, SideNavFooter, SideNavHeader, SideNavItem, type SideNavItemProps, type SideNavProps, SideNavSection, Slider, type SliderProps, Spinner, type SpinnerProps, SplitButton, SplitButtonItem, type SplitButtonItemProps, type SplitButtonProps, Spotlight, SpotlightCard, type SpotlightCardProps, type SpotlightProps, type SpotlightStep, Stack, type StackProps, StatCardSkeleton, StatusBadge, type StatusBadgeProps, Switch, type SwitchProps, TableRowSkeleton, Tabs, TabsContent, TabsList, TabsTrigger, Tag, TagGroup, type TagGroupProps, type TagProps, Text, type TextProps, Textarea, TimePicker, type TimePickerProps, Toaster, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, type UseBreakpointReturn, type UseFlagGroupReturn, type UseFormReturn, type UseSpotlightReturn, type ValidatorRule, VisuallyHidden, type VisuallyHiddenProps, cn, useBreakpoint, useFlagGroup, useForm, useSpotlight };

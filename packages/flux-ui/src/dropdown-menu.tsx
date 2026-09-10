@@ -74,7 +74,10 @@ const DropdownMenuItem = React.forwardRef<
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
-      "relative flex cursor-default select-none items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] outline-none transition-colors",
+      // 13px / tighter padding: a menu drops out of a toolbar button or a
+      // compact table control, and at 15px with 10px vertical padding it read
+      // as a larger, separate UI than the control that opened it.
+      "relative flex cursor-default select-none items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] outline-none transition-colors",
       "focus:bg-muted focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       inset && "pl-8",
       className

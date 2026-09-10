@@ -2896,7 +2896,10 @@ var DropdownMenuItem = React27.forwardRef(({ className, inset, ...props }, ref) 
   {
     ref,
     className: cn(
-      "relative flex cursor-default select-none items-center gap-2 rounded-lg px-3 py-2.5 text-[15px] outline-none transition-colors",
+      // 13px / tighter padding: a menu drops out of a toolbar button or a
+      // compact table control, and at 15px with 10px vertical padding it read
+      // as a larger, separate UI than the control that opened it.
+      "relative flex cursor-default select-none items-center gap-2 rounded-lg px-2.5 py-1.5 text-[13px] outline-none transition-colors",
       "focus:bg-muted focus:text-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
       inset && "pl-8",
       className
@@ -2963,12 +2966,17 @@ import { jsx as jsx38, jsxs as jsxs21 } from "react/jsx-runtime";
 var Select = SelectPrimitive.Root;
 var SelectGroup = SelectPrimitive.Group;
 var SelectValue = SelectPrimitive.Value;
-var SelectTrigger = React28.forwardRef(({ className, children, ...props }, ref) => /* @__PURE__ */ jsxs21(
+var selectTriggerSizes = {
+  md: "h-11 min-h-11 gap-2.5 px-4 py-2 text-[15px]",
+  sm: "h-7 min-h-7 w-auto gap-1 px-2 py-0 text-[12px]"
+};
+var SelectTrigger = React28.forwardRef(({ className, children, size = "md", ...props }, ref) => /* @__PURE__ */ jsxs21(
   SelectPrimitive.Trigger,
   {
     ref,
     className: cn(
-      "flex h-11 min-h-11 w-full items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-4 py-2 text-[15px] text-foreground shadow-sm outline-none",
+      "flex w-full items-center justify-between rounded-lg border border-border bg-card text-foreground shadow-sm outline-none",
+      selectTriggerSizes[size],
       "ring-ring/50 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50",
       "[&>span]:line-clamp-1",
       className
@@ -3579,7 +3587,7 @@ function EmptyState({
 }
 
 // src/data-table.tsx
-import { ChevronLeft as ChevronLeft3, ChevronRight as ChevronRight5 } from "lucide-react";
+import { ChevronDown as ChevronDown6, ChevronLeft as ChevronLeft3, ChevronRight as ChevronRight5 } from "lucide-react";
 import { useState as useState6 } from "react";
 import { jsx as jsx49, jsxs as jsxs30 } from "react/jsx-runtime";
 function getPageRange(current, total) {
@@ -3615,7 +3623,9 @@ function DataTable({
   headerStyle = "surface",
   footerSummary = "range",
   footerCountLabels = { singular: "item", plural: "items" },
-  snug = false
+  snug = false,
+  expandable,
+  footerLeading
 }) {
   const isControlled = controlledPage !== void 0;
   const [internalPage, setInternalPage] = useState6(1);
@@ -3623,6 +3633,19 @@ function DataTable({
   const setPage = isControlled ? (p) => onPageChange?.(p) : (p) => setInternalPage(p);
   const hasAction = rowAction != null || rowCta != null;
   const hasSpacer = tableLayout === "content";
+  const [internalExpanded, setInternalExpanded] = useState6([]);
+  const isExpandControlled = expandable?.expandedKeys !== void 0;
+  const expandedKeys = isExpandControlled ? expandable.expandedKeys : internalExpanded;
+  const hasExpand = expandable != null;
+  const totalColSpan = columns.length + (hasExpand ? 1 : 0) + (hasSpacer ? 1 : 0) + (hasAction ? 1 : 0);
+  const rowExpanded = (row, index) => hasExpand && (expandable.isExpandable?.(row, index) ?? true) && expandedKeys.includes(rowKeys[index]);
+  const toggleExpanded = (key, row, index) => {
+    const isOpen = expandedKeys.includes(key);
+    const next = isOpen ? expandedKeys.filter((k) => k !== key) : [...expandedKeys, key];
+    if (isExpandControlled) expandable.onExpandedChange?.(next);
+    else setInternalExpanded(next);
+    if (!isOpen) expandable.onExpand?.(row, index);
+  };
   const total = totalRows ?? data.length;
   const totalPages = Math.ceil(total / pageSize);
   const paginated = isControlled ? data : data.slice((page - 1) * pageSize, page * pageSize);
@@ -3640,6 +3663,9 @@ function DataTable({
   const headPad = comfortable ? "px-5 py-4" : compactCellPad;
   const footerPad = comfortable ? "px-5 py-4" : compact ? "px-4 py-2.5" : "px-4 py-3.5";
   const headText = comfortable ? "text-[12px] font-medium text-muted-foreground tracking-normal" : compact ? "text-[11px] font-semibold text-muted-foreground" : "text-[11px] font-semibold text-foreground/75 dark:text-foreground/85";
+  const cellPadLeft = comfortable ? 20 : compact ? snug ? 6 : 12 : 16;
+  const expandIndent = 40 + cellPadLeft;
+  const expandGuideLeft = cellPadLeft + 10;
   const actionGutter = comfortable ? 20 : compact ? 12 : 16;
   const ROW_CLICK_IGNORE = 'button, a, input, select, textarea, label, [role="button"], [role="link"], [role="checkbox"], [role="menuitem"], [role="menu"], [role="dialog"], [data-row-click-ignore]';
   const isRowClickTarget = (target, rowEl) => {
@@ -3678,6 +3704,7 @@ function DataTable({
                 },
                 children: [
                   tableLayout === "fixed" && /* @__PURE__ */ jsxs30("colgroup", { children: [
+                    hasExpand ? /* @__PURE__ */ jsx49("col", { style: { width: 40 } }) : null,
                     columns.map((col) => /* @__PURE__ */ jsx49(
                       "col",
                       {
@@ -3707,6 +3734,7 @@ function DataTable({
                             headerStyle === "surface" ? "border-border" : "border-border/70"
                           ),
                           children: [
+                            hasExpand ? /* @__PURE__ */ jsx49("th", { className: cn(headPad, "w-10 p-0"), "aria-hidden": true }) : null,
                             columns.map((col) => /* @__PURE__ */ jsx49(
                               "th",
                               {
@@ -3731,89 +3759,144 @@ function DataTable({
                   /* @__PURE__ */ jsx49("tbody", { children: isLoading ? Array.from({ length: skeletonRows }).map((_, i) => /* @__PURE__ */ jsx49(
                     TableRowSkeleton,
                     {
-                      cols: columns.length,
+                      cols: columns.length + (hasExpand ? 1 : 0),
                       density,
                       snug
                     },
                     i
-                  )) : paginated.length === 0 ? /* @__PURE__ */ jsx49("tr", { children: /* @__PURE__ */ jsx49("td", { colSpan: columns.length + (hasSpacer ? 1 : 0) + (hasAction ? 1 : 0), children: /* @__PURE__ */ jsx49(EmptyState, { title: emptyTitle, description: emptyDescription }) }) }) : paginated.map((row, i) => /* @__PURE__ */ jsxs30(
-                    "tr",
-                    {
-                      className: cn(
-                        "group transition-colors duration-150 border-b border-border/60 last:border-b-0",
-                        comfortable && "min-h-[56px]",
-                        compact && "min-h-[44px]",
-                        "hover:bg-muted/40 dark:hover:bg-muted/25",
-                        hasAction && "hover:shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-none",
-                        // Clickable rows read as clickable, and show a focus ring
-                        // when reached by keyboard. `focus-visible` only, so a
-                        // mouse click does not leave a ring behind on the row.
-                        onRowClick && "cursor-pointer focus-visible:outline-none focus-visible:bg-muted/40 dark:focus-visible:bg-muted/25"
-                      ),
-                      tabIndex: onRowClick ? 0 : void 0,
-                      onClick: onRowClick ? (e) => {
-                        if (!isRowClickTarget(e.target, e.currentTarget)) return;
-                        onRowClick(row, i);
-                      } : void 0,
-                      onKeyDown: onRowClick ? (e) => {
-                        if (e.key !== "Enter" && e.key !== " ") return;
-                        if (e.target !== e.currentTarget) return;
-                        e.preventDefault();
-                        onRowClick(row, i);
-                      } : void 0,
-                      children: [
-                        columns.map((col) => /* @__PURE__ */ jsx49(
-                          "td",
-                          {
-                            className: cn(
-                              cellPad,
-                              "align-middle",
-                              comfortable ? cn(
-                                "text-[13px] leading-snug",
-                                !col.wrap && "whitespace-nowrap"
-                              ) : compact ? cn(
-                                "text-[13px] leading-tight",
-                                !col.wrap && "whitespace-nowrap",
-                                "overflow-hidden"
-                              ) : "whitespace-nowrap overflow-hidden",
-                              col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left",
-                              col.cellClassName
-                            ),
-                            children: col.render(row, i)
-                          },
-                          col.key
-                        )),
-                        hasSpacer ? /* @__PURE__ */ jsx49("td", { className: "p-0", "aria-hidden": true }) : null,
-                        hasAction ? (
-                          // Zero-width sticky cell pinned to the right edge of the
-                          // viewport. Its children are positioned absolutely so they
-                          // float over the row (out of the 0-width cell) — the action
-                          // stays in view while scrolling and nothing trails the last
-                          // data column. Everything is revealed on hover only.
-                          /* @__PURE__ */ jsx49("td", { className: "sticky right-0 z-[1] w-0 p-0 align-middle", children: /* @__PURE__ */ jsx49(
-                            "span",
+                  )) : paginated.length === 0 ? /* @__PURE__ */ jsx49("tr", { children: /* @__PURE__ */ jsx49("td", { colSpan: totalColSpan, children: /* @__PURE__ */ jsx49(EmptyState, { title: emptyTitle, description: emptyDescription }) }) }) : paginated.flatMap((row, i) => [
+                    /* @__PURE__ */ jsxs30(
+                      "tr",
+                      {
+                        className: cn(
+                          "group transition-colors duration-150 border-b border-border/60 last:border-b-0",
+                          comfortable && "min-h-[56px]",
+                          compact && "min-h-[44px]",
+                          "hover:bg-muted/40 dark:hover:bg-muted/25",
+                          hasAction && "hover:shadow-[0_1px_0_rgba(0,0,0,0.04)] dark:hover:shadow-none",
+                          // Clickable rows read as clickable, and show a focus ring
+                          // when reached by keyboard. `focus-visible` only, so a
+                          // mouse click does not leave a ring behind on the row.
+                          onRowClick && "cursor-pointer focus-visible:outline-none focus-visible:bg-muted/40 dark:focus-visible:bg-muted/25",
+                          // An open row takes its panel's background and drops the
+                          // divider beneath it, so the row and its detail read as one
+                          // block. Hover is pinned to the same value, or moving the
+                          // mouse over an open row would make it flicker away from
+                          // the panel it belongs to.
+                          rowExpanded(row, i) && "border-b-0 bg-muted/40 hover:bg-muted/40 dark:bg-muted/25 dark:hover:bg-muted/25"
+                        ),
+                        tabIndex: onRowClick ? 0 : void 0,
+                        onClick: onRowClick ? (e) => {
+                          if (!isRowClickTarget(e.target, e.currentTarget)) return;
+                          onRowClick(row, i);
+                        } : void 0,
+                        onKeyDown: onRowClick ? (e) => {
+                          if (e.key !== "Enter" && e.key !== " ") return;
+                          if (e.target !== e.currentTarget) return;
+                          e.preventDefault();
+                          onRowClick(row, i);
+                        } : void 0,
+                        children: [
+                          hasExpand ? /* @__PURE__ */ jsx49("td", { className: cn(cellPad, "w-10 align-middle"), children: expandable.isExpandable?.(row, i) ?? true ? /* @__PURE__ */ jsx49(
+                            "button",
                             {
-                              className: "absolute top-1/2 -translate-y-1/2 z-[1] inline-flex items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
-                              style: { right: actionGutter },
-                              children: rowAction != null ? typeof rowAction === "function" ? rowAction(row, i) : rowAction : /* @__PURE__ */ jsx49(
-                                "button",
+                              type: "button",
+                              "aria-expanded": rowExpanded(row, i),
+                              "aria-label": expandable.toggleLabel ?? "Toggle row details",
+                              onClick: () => toggleExpanded(rowKeys[i], row, i),
+                              className: "inline-flex h-5 w-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                              children: /* @__PURE__ */ jsx49(
+                                ChevronDown6,
                                 {
-                                  type: "button",
-                                  onClick: () => rowCta?.onClick?.(row),
                                   className: cn(
-                                    "inline-flex items-center font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap shadow-sm",
-                                    compact ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5 text-[12px]"
-                                  ),
-                                  children: rowCta?.label
+                                    "h-3.5 w-3.5 transition-transform duration-150",
+                                    rowExpanded(row, i) && "rotate-180"
+                                  )
                                 }
                               )
                             }
-                          ) })
-                        ) : null
-                      ]
-                    },
-                    rowKeys[i]
-                  )) })
+                          ) : null }) : null,
+                          columns.map((col) => /* @__PURE__ */ jsx49(
+                            "td",
+                            {
+                              className: cn(
+                                cellPad,
+                                "align-middle",
+                                comfortable ? cn(
+                                  "text-[13px] leading-snug",
+                                  !col.wrap && "whitespace-nowrap"
+                                ) : compact ? cn(
+                                  "text-[13px] leading-tight",
+                                  !col.wrap && "whitespace-nowrap",
+                                  "overflow-hidden"
+                                ) : "whitespace-nowrap overflow-hidden",
+                                col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left",
+                                col.cellClassName
+                              ),
+                              children: col.render(row, i)
+                            },
+                            col.key
+                          )),
+                          hasSpacer ? /* @__PURE__ */ jsx49("td", { className: "p-0", "aria-hidden": true }) : null,
+                          hasAction ? (
+                            // Zero-width sticky cell pinned to the right edge of the
+                            // viewport. Its children are positioned absolutely so they
+                            // float over the row (out of the 0-width cell) — the action
+                            // stays in view while scrolling and nothing trails the last
+                            // data column. Everything is revealed on hover only.
+                            /* @__PURE__ */ jsx49("td", { className: "sticky right-0 z-[1] w-0 p-0 align-middle", children: /* @__PURE__ */ jsx49(
+                              "span",
+                              {
+                                className: "absolute top-1/2 -translate-y-1/2 z-[1] inline-flex items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
+                                style: { right: actionGutter },
+                                children: rowAction != null ? typeof rowAction === "function" ? rowAction(row, i) : rowAction : /* @__PURE__ */ jsx49(
+                                  "button",
+                                  {
+                                    type: "button",
+                                    onClick: () => rowCta?.onClick?.(row),
+                                    className: cn(
+                                      "inline-flex items-center font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap shadow-sm",
+                                      compact ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5 text-[12px]"
+                                    ),
+                                    children: rowCta?.label
+                                  }
+                                )
+                              }
+                            ) })
+                          ) : null
+                        ]
+                      },
+                      rowKeys[i]
+                    ),
+                    // The panel spans every column, including the toggle, spacer and
+                    // action cells, so it reads as one band under its row rather
+                    // than as a cell inside the grid.
+                    rowExpanded(row, i) ? /* @__PURE__ */ jsx49(
+                      "tr",
+                      {
+                        className: "border-b border-border/60 bg-muted/40 last:border-b-0 dark:bg-muted/25",
+                        children: /* @__PURE__ */ jsx49("td", { colSpan: totalColSpan, className: "p-0 align-top", children: /* @__PURE__ */ jsxs30(
+                          "div",
+                          {
+                            className: "relative",
+                            style: { paddingLeft: expandIndent, paddingRight: cellPadLeft },
+                            children: [
+                              /* @__PURE__ */ jsx49(
+                                "span",
+                                {
+                                  "aria-hidden": true,
+                                  className: "absolute top-0 bottom-4 w-px bg-border",
+                                  style: { left: expandGuideLeft }
+                                }
+                              ),
+                              expandable.render(row, i)
+                            ]
+                          }
+                        ) })
+                      },
+                      `${rowKeys[i]}__panel`
+                    ) : null
+                  ]) })
                 ]
               }
             )
@@ -3825,27 +3908,30 @@ function DataTable({
             className: cn(
               "flex items-center gap-4 flex-wrap border-t border-border",
               footerPad,
-              footerSummary === "count" && totalPages <= 1 ? "justify-start" : "justify-between"
+              footerSummary === "count" && totalPages <= 1 && !footerLeading ? "justify-start" : "justify-between"
             ),
             children: [
-              footerSummary === "count" ? /* @__PURE__ */ jsxs30("span", { className: "text-[12px] text-muted-foreground tabular-nums", children: [
-                /* @__PURE__ */ jsx49("span", { className: "font-medium text-foreground", children: total }),
-                " ",
-                total === 1 ? footerCountLabels.singular : footerCountLabels.plural
-              ] }) : /* @__PURE__ */ jsxs30("span", { className: "text-[12px] text-muted-foreground tabular-nums", children: [
-                "Showing",
-                " ",
-                /* @__PURE__ */ jsxs30("span", { className: "text-foreground font-medium", children: [
-                  Math.min((page - 1) * pageSize + 1, total),
-                  "\u2013",
-                  Math.min(page * pageSize, total)
-                ] }),
-                " ",
-                "of",
-                " ",
-                /* @__PURE__ */ jsx49("span", { className: "text-foreground font-medium", children: total.toLocaleString() }),
-                " ",
-                total !== 1 ? "results" : "result"
+              /* @__PURE__ */ jsxs30("div", { className: "flex items-center gap-3", children: [
+                footerLeading,
+                footerSummary === "count" ? /* @__PURE__ */ jsxs30("span", { className: "text-[12px] text-muted-foreground tabular-nums", children: [
+                  /* @__PURE__ */ jsx49("span", { className: "font-medium text-foreground", children: total }),
+                  " ",
+                  total === 1 ? footerCountLabels.singular : footerCountLabels.plural
+                ] }) : /* @__PURE__ */ jsxs30("span", { className: "text-[12px] text-muted-foreground tabular-nums", children: [
+                  "Showing",
+                  " ",
+                  /* @__PURE__ */ jsxs30("span", { className: "text-foreground font-medium", children: [
+                    Math.min((page - 1) * pageSize + 1, total),
+                    "\u2013",
+                    Math.min(page * pageSize, total)
+                  ] }),
+                  " ",
+                  "of",
+                  " ",
+                  /* @__PURE__ */ jsx49("span", { className: "text-foreground font-medium", children: total.toLocaleString() }),
+                  " ",
+                  total !== 1 ? "results" : "result"
+                ] })
               ] }),
               (footerSummary === "range" || footerSummary === "count") && totalPages > 1 && /* @__PURE__ */ jsxs30("div", { className: "flex items-center gap-1", children: [
                 /* @__PURE__ */ jsx49(
@@ -4221,7 +4307,7 @@ AvatarTag.displayName = "AvatarTag";
 
 // src/calendar.tsx
 import * as React40 from "react";
-import { ChevronDown as ChevronDown6, ChevronLeft as ChevronLeft4, ChevronRight as ChevronRight6 } from "lucide-react";
+import { ChevronDown as ChevronDown7, ChevronLeft as ChevronLeft4, ChevronRight as ChevronRight6 } from "lucide-react";
 import {
   DayPicker,
   getDefaultClassNames
@@ -4371,7 +4457,7 @@ function Calendar({
           if (orientation === "right") {
             return /* @__PURE__ */ jsx55(ChevronRight6, { className: cn("size-4", chClass), ...chProps });
           }
-          return /* @__PURE__ */ jsx55(ChevronDown6, { className: cn("size-4", chClass), ...chProps });
+          return /* @__PURE__ */ jsx55(ChevronDown7, { className: cn("size-4", chClass), ...chProps });
         },
         DayButton: CalendarDayButton,
         WeekNumber: ({ children, ...weekProps }) => /* @__PURE__ */ jsx55("th", { ...weekProps, children: /* @__PURE__ */ jsx55("div", { className: "flex h-[var(--cell-size)] w-[var(--cell-size)] min-h-[var(--cell-size)] min-w-[var(--cell-size)] items-center justify-center text-center text-xs tabular-nums", children }) }),
@@ -4418,7 +4504,7 @@ function CalendarDayButton({
 // src/date-picker.tsx
 import { useState as useState8, useRef as useRef4, useEffect as useEffect3 } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft as ChevronLeft5, ChevronRight as ChevronRight7, ChevronDown as ChevronDown7, CalendarDays } from "lucide-react";
+import { ChevronLeft as ChevronLeft5, ChevronRight as ChevronRight7, ChevronDown as ChevronDown8, CalendarDays } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { jsx as jsx56, jsxs as jsxs35 } from "react/jsx-runtime";
 var MONTHS = [
@@ -4597,7 +4683,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
                   className: "flex items-center gap-1 px-2 py-1 rounded-lg text-[14px] font-semibold text-gray-900 hover:bg-gray-100 transition-colors",
                   children: [
                     MONTHS[viewMonth].slice(0, 3),
-                    /* @__PURE__ */ jsx56(ChevronDown7, { className: "w-3 h-3 text-gray-400" })
+                    /* @__PURE__ */ jsx56(ChevronDown8, { className: "w-3 h-3 text-gray-400" })
                   ]
                 }
               ),
@@ -4636,7 +4722,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
                   className: "flex items-center gap-1 px-2 py-1 rounded-lg text-[14px] font-semibold text-gray-900 hover:bg-gray-100 transition-colors",
                   children: [
                     viewYear,
-                    /* @__PURE__ */ jsx56(ChevronDown7, { className: "w-3 h-3 text-gray-400" })
+                    /* @__PURE__ */ jsx56(ChevronDown8, { className: "w-3 h-3 text-gray-400" })
                   ]
                 }
               ),
@@ -4730,7 +4816,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
         children: [
           /* @__PURE__ */ jsx56(CalendarDays, { className: "size-[1.125rem] shrink-0 text-muted-foreground" }),
           /* @__PURE__ */ jsx56("span", { className: cn("flex-1", value ? "text-foreground" : "text-muted-foreground"), children: value ? displayDate(value) : placeholder }),
-          /* @__PURE__ */ jsx56(ChevronDown7, { className: cn("size-[1.125rem] shrink-0 text-muted-foreground transition-transform", open && "rotate-180") })
+          /* @__PURE__ */ jsx56(ChevronDown8, { className: cn("size-[1.125rem] shrink-0 text-muted-foreground transition-transform", open && "rotate-180") })
         ]
       }
     ),
@@ -6037,7 +6123,7 @@ function useBreakpoint() {
 // src/country-select.tsx
 import * as React47 from "react";
 import * as PopoverPrimitive4 from "@radix-ui/react-popover";
-import { Check as Check10, ChevronDown as ChevronDown8, Search as Search3 } from "lucide-react";
+import { Check as Check10, ChevronDown as ChevronDown9, Search as Search3 } from "lucide-react";
 import { Fragment as Fragment9, jsx as jsx64, jsxs as jsxs41 } from "react/jsx-runtime";
 var COUNTRIES = [
   { code: "US", name: "United States", flag: "\u{1F1FA}\u{1F1F8}", dialCode: "+1" },
@@ -6126,7 +6212,7 @@ var CountrySelect = React47.forwardRef(
               showDialCode && /* @__PURE__ */ jsx64("span", { className: "shrink-0 text-muted-foreground", children: selected.dialCode })
             ] }) : /* @__PURE__ */ jsx64("span", { children: placeholder }) }),
             /* @__PURE__ */ jsx64(
-              ChevronDown8,
+              ChevronDown9,
               {
                 className: cn(
                   "h-4 w-4 shrink-0 text-muted-foreground opacity-70 transition-transform duration-pg-fast ease-pg-standard",
@@ -6299,7 +6385,7 @@ IconButton.displayName = "IconButton";
 // src/time-picker.tsx
 import * as React48 from "react";
 import { createPortal as createPortal2 } from "react-dom";
-import { Clock as Clock2, ChevronDown as ChevronDown9, X as X11 } from "lucide-react";
+import { Clock as Clock2, ChevronDown as ChevronDown10, X as X11 } from "lucide-react";
 import { Fragment as Fragment10, jsx as jsx66, jsxs as jsxs42 } from "react/jsx-runtime";
 function pad(n) {
   return String(n).padStart(2, "0");
@@ -6635,7 +6721,7 @@ var TimePicker = React48.forwardRef(
                 onClick: handleClear
               }
             ) : /* @__PURE__ */ jsx66(
-              ChevronDown9,
+              ChevronDown10,
               {
                 className: cn(
                   "size-[1.0625rem] shrink-0 text-muted-foreground transition-transform duration-150",

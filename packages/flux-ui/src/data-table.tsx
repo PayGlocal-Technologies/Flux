@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { cn } from "./utils";
 import { TableRowSkeleton } from "./skeleton";
 import { EmptyState } from "./empty-state";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 import { useState } from "react";
 
 export type DataTableDensity = "default" | "comfortable" | "compact";
@@ -23,6 +23,38 @@ function getPageRange(current: number, total: number): (number | "…")[] {
   pages.push(total);
   return pages;
 }
+
+/**
+ * Row expansion: a disclosure column plus a full-width panel rendered directly
+ * beneath the expanded row. Use it when the detail belongs *with* the row in
+ * the flow of the table (a request's headers, a payload, a breakdown) rather
+ * than in a drawer that covers it.
+ *
+ * Leave `expandedKeys` unset for uncontrolled behaviour (the table remembers
+ * which rows are open). Pass `expandedKeys` + `onExpandedChange` to drive it
+ * from outside — needed when opening a row triggers a fetch.
+ */
+export type DataTableExpandable<T> = {
+  /** The panel shown under an expanded row. */
+  render: (row: T, index: number) => ReactNode;
+  /**
+   * Which rows can open at all. Rows that cannot get no toggle and no chevron,
+   * keeping the column's width without implying an affordance that isn't there.
+   * Defaults to every row.
+   */
+  isExpandable?: (row: T, index: number) => boolean;
+  /** Controlled open rows, as `rowKey` values. Omit for uncontrolled. */
+  expandedKeys?: string[];
+  /** Fires on every open/close in controlled mode. */
+  onExpandedChange?: (keys: string[]) => void;
+  /**
+   * Fires only when a row opens, in both modes — the hook for lazily fetching
+   * that row's detail. Not called on close.
+   */
+  onExpand?: (row: T, index: number) => void;
+  /** Accessible name for the toggle. Default "Toggle row details". */
+  toggleLabel?: string;
+};
 
 export type Column<T> = {
   key: string;
@@ -109,6 +141,17 @@ interface DataTableProps<T> {
   footerCountLabels?: { singular: string; plural: string };
   /** With `density="compact"`, use tighter cell gutters (`pl-1.5 pr-2.5` vs `px-3`). Footer keeps normal horizontal padding. */
   snug?: boolean;
+  /**
+   * Extra control at the far left of the built-in footer, before the
+   * "Showing x–y of N" summary — a rows-per-page picker, typically.
+   *
+   * Without it a grid that needs a page-size control has to abandon the
+   * built-in footer and hand-roll one, which is how two different pagers end up
+   * in the same app.
+   */
+  footerLeading?: ReactNode;
+  /** Per-row disclosure panel rendered beneath the row. See `DataTableExpandable`. */
+  expandable?: DataTableExpandable<T>;
 }
 
 export function DataTable<T>({
@@ -134,6 +177,8 @@ export function DataTable<T>({
   footerSummary = "range",
   footerCountLabels = { singular: "item", plural: "items" },
   snug = false,
+  expandable,
+  footerLeading,
 }: DataTableProps<T>) {
   const isControlled = controlledPage !== undefined;
   const [internalPage, setInternalPage] = useState(1);
@@ -152,6 +197,31 @@ export function DataTable<T>({
   // horizontal space so the data columns stay at their content (minimum)
   // width while the table still spans the full container width.
   const hasSpacer = tableLayout === "content";
+
+  // Row expansion. Uncontrolled by default; `expandedKeys` hands control to the
+  // caller, which is what a row whose panel fetches its own data needs.
+  // `onExpand` fires only on open, in both modes.
+  const [internalExpanded, setInternalExpanded] = useState<string[]>([]);
+  const isExpandControlled = expandable?.expandedKeys !== undefined;
+  const expandedKeys = isExpandControlled ? expandable!.expandedKeys! : internalExpanded;
+  const hasExpand = expandable != null;
+  /** Every column the expansion panel has to span. */
+  const totalColSpan =
+    columns.length + (hasExpand ? 1 : 0) + (hasSpacer ? 1 : 0) + (hasAction ? 1 : 0);
+
+  /** Whether this row is open — drives both its own styling and the panel. */
+  const rowExpanded = (row: T, index: number) =>
+    hasExpand &&
+    (expandable!.isExpandable?.(row, index) ?? true) &&
+    expandedKeys.includes(rowKeys[index]);
+
+  const toggleExpanded = (key: string, row: T, index: number) => {
+    const isOpen = expandedKeys.includes(key);
+    const next = isOpen ? expandedKeys.filter((k) => k !== key) : [...expandedKeys, key];
+    if (isExpandControlled) expandable!.onExpandedChange?.(next);
+    else setInternalExpanded(next);
+    if (!isOpen) expandable!.onExpand?.(row, index);
+  };
 
   const total = totalRows ?? data.length;
   const totalPages = Math.ceil(total / pageSize);
@@ -189,6 +259,23 @@ export function DataTable<T>({
     : compact
       ? "text-[11px] font-semibold text-muted-foreground"
       : "text-[11px] font-semibold text-foreground/75 dark:text-foreground/85";
+  /**
+   * Expansion geometry, in px, derived from the same padding the cells use:
+   *
+   * - `expandIndent` lines the panel's content up with the first DATA column
+   *   (past the 40px disclosure column), so the detail reads as hanging off the
+   *   row rather than starting outside it.
+   * - `expandGuideLeft` is the centre of the chevron, where the vertical
+   *   connector runs — the cue that the panel belongs to the row above.
+   *
+   * Both live here rather than in each consumer's panel: a hardcoded indent in
+   * a feature silently drifts the moment this padding or the column width
+   * changes.
+   */
+  const cellPadLeft = comfortable ? 20 : compact ? (snug ? 6 : 12) : 16;
+  const expandIndent = 40 + cellPadLeft;
+  const expandGuideLeft = cellPadLeft + 10;
+
   // Action overlay geometry: the action floats this many px in from the right
   // edge of the viewport (it has no reserved column — it overlays the row).
   const actionGutter = comfortable ? 20 : compact ? 12 : 16;
@@ -246,6 +333,7 @@ export function DataTable<T>({
         >
           {tableLayout === "fixed" && (
             <colgroup>
+              {hasExpand ? <col style={{ width: 40 }} /> : null}
               {columns.map((col) => (
                 <col
                   key={col.key}
@@ -275,6 +363,7 @@ export function DataTable<T>({
                 headerStyle === "surface" ? "border-border" : "border-border/70"
               )}
             >
+              {hasExpand ? <th className={cn(headPad, "w-10 p-0")} aria-hidden /> : null}
               {columns.map((col) => (
                 <th
                   key={col.key}
@@ -305,19 +394,19 @@ export function DataTable<T>({
               Array.from({ length: skeletonRows }).map((_, i) => (
                 <TableRowSkeleton
                   key={i}
-                  cols={columns.length}
+                  cols={columns.length + (hasExpand ? 1 : 0)}
                   density={density}
                   snug={snug}
                 />
               ))
             ) : paginated.length === 0 ? (
               <tr>
-                <td colSpan={columns.length + (hasSpacer ? 1 : 0) + (hasAction ? 1 : 0)}>
+                <td colSpan={totalColSpan}>
                   <EmptyState title={emptyTitle} description={emptyDescription} />
                 </td>
               </tr>
             ) : (
-              paginated.map((row, i) => (
+              paginated.flatMap((row, i) => [
                 <tr
                   key={rowKeys[i]}
                   className={cn(
@@ -331,7 +420,14 @@ export function DataTable<T>({
                     // when reached by keyboard. `focus-visible` only, so a
                     // mouse click does not leave a ring behind on the row.
                     onRowClick &&
-                      "cursor-pointer focus-visible:outline-none focus-visible:bg-muted/40 dark:focus-visible:bg-muted/25"
+                      "cursor-pointer focus-visible:outline-none focus-visible:bg-muted/40 dark:focus-visible:bg-muted/25",
+                    // An open row takes its panel's background and drops the
+                    // divider beneath it, so the row and its detail read as one
+                    // block. Hover is pinned to the same value, or moving the
+                    // mouse over an open row would make it flicker away from
+                    // the panel it belongs to.
+                    rowExpanded(row, i) &&
+                      "border-b-0 bg-muted/40 hover:bg-muted/40 dark:bg-muted/25 dark:hover:bg-muted/25"
                   )}
                   // Keyboard parity with the mouse: the row is reachable by
                   // Tab and activated by Enter / Space, which a bare <tr> with
@@ -360,6 +456,26 @@ export function DataTable<T>({
                       : undefined
                   }
                 >
+                  {hasExpand ? (
+                    <td className={cn(cellPad, "w-10 align-middle")}>
+                      {(expandable!.isExpandable?.(row, i) ?? true) ? (
+                        <button
+                          type="button"
+                          aria-expanded={rowExpanded(row, i)}
+                          aria-label={expandable!.toggleLabel ?? "Toggle row details"}
+                          onClick={() => toggleExpanded(rowKeys[i], row, i)}
+                          className="inline-flex h-5 w-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                        >
+                          <ChevronDown
+                            className={cn(
+                              "h-3.5 w-3.5 transition-transform duration-150",
+                              rowExpanded(row, i) && "rotate-180"
+                            )}
+                          />
+                        </button>
+                      ) : null}
+                    </td>
+                  ) : null}
                   {columns.map((col) => (
                     <td
                       key={col.key}
@@ -430,8 +546,38 @@ export function DataTable<T>({
                       </span>
                     </td>
                   ) : null}
-                </tr>
-              ))
+                </tr>,
+
+                // The panel spans every column, including the toggle, spacer and
+                // action cells, so it reads as one band under its row rather
+                // than as a cell inside the grid.
+                rowExpanded(row, i) ? (
+                  <tr
+                    key={`${rowKeys[i]}__panel`}
+                    className="border-b border-border/60 bg-muted/40 last:border-b-0 dark:bg-muted/25"
+                  >
+                    <td colSpan={totalColSpan} className="p-0 align-top">
+                      <div
+                        className="relative"
+                        style={{ paddingLeft: expandIndent, paddingRight: cellPadLeft }}
+                      >
+                        {/* Connector: a hairline dropping from the chevron down
+                            the panel. The row and its detail share a background
+                            so they read as one block, which on its own leaves
+                            nothing to say the lower half is derived rather than
+                            more row content — this is that cue. Stops short of
+                            the bottom so it reads as hanging, not as a border. */}
+                        <span
+                          aria-hidden
+                          className="absolute top-0 bottom-4 w-px bg-border"
+                          style={{ left: expandGuideLeft }}
+                        />
+                        {expandable!.render(row, i)}
+                      </div>
+                    </td>
+                  </tr>
+                ) : null,
+              ])
             )}
           </tbody>
         </table>
@@ -442,32 +588,38 @@ export function DataTable<T>({
           className={cn(
             "flex items-center gap-4 flex-wrap border-t border-border",
             footerPad,
-            footerSummary === "count" && totalPages <= 1
+            footerSummary === "count" && totalPages <= 1 && !footerLeading
               ? "justify-start"
               : "justify-between"
           )}
         >
-          {footerSummary === "count" ? (
-            <span className="text-[12px] text-muted-foreground tabular-nums">
-              <span className="font-medium text-foreground">{total}</span>{" "}
-              {total === 1
-                ? footerCountLabels.singular
-                : footerCountLabels.plural}
-            </span>
-          ) : (
-            <span className="text-[12px] text-muted-foreground tabular-nums">
-              Showing{" "}
-              <span className="text-foreground font-medium">
-                {Math.min((page - 1) * pageSize + 1, total)}–
-                {Math.min(page * pageSize, total)}
-              </span>{" "}
-              of{" "}
-              <span className="text-foreground font-medium">
-                {total.toLocaleString()}
-              </span>{" "}
-              {total !== 1 ? "results" : "result"}
-            </span>
-          )}
+          {/* `footerLeading` (a rows-per-page picker, typically) groups with the
+              summary on the left rather than becoming a third item the
+              justify-between would fling to its own corner. */}
+          <div className="flex items-center gap-3">
+            {footerLeading}
+            {footerSummary === "count" ? (
+              <span className="text-[12px] text-muted-foreground tabular-nums">
+                <span className="font-medium text-foreground">{total}</span>{" "}
+                {total === 1
+                  ? footerCountLabels.singular
+                  : footerCountLabels.plural}
+              </span>
+            ) : (
+              <span className="text-[12px] text-muted-foreground tabular-nums">
+                Showing{" "}
+                <span className="text-foreground font-medium">
+                  {Math.min((page - 1) * pageSize + 1, total)}–
+                  {Math.min(page * pageSize, total)}
+                </span>{" "}
+                of{" "}
+                <span className="text-foreground font-medium">
+                  {total.toLocaleString()}
+                </span>{" "}
+                {total !== 1 ? "results" : "result"}
+              </span>
+            )}
+          </div>
 
           {(footerSummary === "range" || footerSummary === "count") &&
             totalPages > 1 && (
