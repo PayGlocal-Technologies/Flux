@@ -153,14 +153,100 @@ const [amount, setAmount] = useState("");
   {
     slug: "data-table",
     title: "Data table",
-    description: "Column-driven table with pagination, loading skeleton, and empty state.",
+    description:
+      "Column-driven table with page and cursor pagination, sortable headers, a rows-per-page picker, loading skeleton, and empty state.",
     importSnippet: `import { DataTable, Button, type Column } from "@payglocal_ui/flux-ui";`,
     usageSnippet: `const columns: Column<Row>[] = [
   { key: "name", header: "Name", render: (r) => r.name },
 ];
 
-// Basic usage
+// Basic usage — client-side paging at 10 rows a page.
 <DataTable rowKey={(r) => r.id} columns={columns} data={rows} />
+
+// ── Pagination ────────────────────────────────────────────────────────
+// One \`pagination\` prop covers every mode, so which one an endpoint needs
+// is the only thing that differs between two tables.
+
+// The response carries a row TOTAL: a full numbered strip with ellipses,
+// and "Showing 1–15 of 141 results".
+<DataTable
+  rowKey={(r) => r.id}
+  columns={columns}
+  data={page.rows}
+  pagination={{
+    mode: "page",
+    page,
+    pageSize: 15,
+    total: page.totalCount,
+    onPageChange: setPage,
+  }}
+/>
+
+// The response carries NO total (a nextCursor / exclusiveStartKey API).
+// "Showing 1–15" with no total and no page count, and the strip numbers
+// only the pages a cursor can actually step to: the previous page, this
+// one, and — only when hasNext says so — the next. On page 2 that reads
+// 1 · 2 · 3, so the next page is visible as a number rather than hiding
+// behind an arrow.
+<DataTable
+  rowKey={(r) => r.id}
+  columns={columns}
+  data={page.rows}
+  pagination={{
+    mode: "cursor",
+    page,
+    pageSize: 15,
+    hasNext: !!page.nextCursor,
+    onNext: () => goForward(page.nextCursor),
+    onPrev: () => goBack(),
+  }}
+/>
+
+// Rows per page — one prop pair, drawn at the far left of the footer.
+// No hand-rolled footer, and no second pager in the same app.
+<DataTable
+  rowKey={(r) => r.id}
+  columns={columns}
+  data={rows}
+  pagination={{
+    mode: "page",
+    page,
+    pageSize,
+    total,
+    onPageChange: setPage,
+    pageSizeOptions: [15, 25, 50, 100],
+    onPageSizeChange: (n) => { setPageSize(n); setPage(1); },
+  }}
+/>
+
+// No footer at all.
+<DataTable rowKey={(r) => r.id} columns={columns} data={rows} pagination={{ mode: "none" }} />
+
+// ── Sorting ───────────────────────────────────────────────────────────
+// Modelled on antd's Table: a column opts in with \`sorter\`, and state is
+// reported as { columnKey, order } using antd's "ascend" / "descend".
+// Client and server sorting are told apart by the COLUMN, so one grid can
+// mix them.
+const columns: Column<Row>[] = [
+  // The table sorts these rows itself, before paging.
+  { key: "name", header: "Name", sorter: (a, b) => a.name.localeCompare(b.name), render: (r) => r.name },
+
+  // \`true\` = the caller orders the rows (a server query). The table only
+  // reports the click. sortDirections starts the cycle at descending,
+  // which is the first click money and dates almost always want.
+  { key: "amount", header: "Amount", sorter: true, sortDirections: ["descend", "ascend"], render: (r) => r.amount },
+];
+
+// Uncontrolled: the table remembers. All a client-sorted grid needs.
+<DataTable rowKey={(r) => r.id} columns={columns} data={rows} />
+
+// Controlled: feed the state into the request.
+<DataTable
+  rowKey={(r) => r.id}
+  columns={columns}
+  data={rows}
+  sorting={{ value: sort, onChange: setSort }}
+/>
 
 // Content layout — columns shrink to their intrinsic width; leftover
 // space stays empty to the right instead of stretching the columns.
@@ -200,13 +286,391 @@ const [amount, setAmount] = useState("");
     toc: baseToc,
   },
   {
+    slug: "data-table-card",
+    title: "Data table card",
+    description:
+      "The table surface: one bordered card holding a title, tabs, a filter toolbar, the grid and a footer \u2014 with the same dividers and gutters every time.",
+    importSnippet: `import { DataTableCard, TableToolbarActions } from "@payglocal_ui/flux-ui";`,
+    usageSnippet: `// DataTable is the grid. DataTableCard is everything around it \u2014 which is
+// where tables actually drift: one feature puts its filters above the card,
+// another inside it; one draws a divider under the tabs, another does not.
+<DataTableCard
+  columns={columns}
+  data={rows}
+  rowKey={(r) => r.id}
+  isLoading={isLoading}
+  toolbar={<FilterToolbar search={<RotatingSearchInput \u2026 />} chips={\u2026} />}
+  pagination={{ mode: "page", page, pageSize, total, onPageChange: setPage }}
+  onRowClick={(row) => openDetails(row)}
+  emptyTitle="No transactions found"
+/>
+
+// A named section \u2014 for a grid that titles itself, rather than a page-level
+// grid whose name is the page header.
+<DataTableCard
+  title="Top 10 Merchants by Volume"
+  description="Last 30 days"
+  actions={<ToolbarButton>Refresh</ToolbarButton>}
+  columns={columns}
+  data={rows}
+  rowKey={(r) => r.id}
+  maxBodyHeight="34rem"
+/>
+
+// The body scrolls inside the card by default, so the toolbar and footer stay
+// put and the page does not grow. Pass "none" to let the card grow instead.
+<DataTableCard \u2026 maxBodyHeight="none" />
+
+// \`errorState\` replaces the rows when the request failed, \`emptyState\` when it
+// succeeded and returned none. Keeping them apart matters: column headers over
+// nothing say "we looked and found none", which is wrong for a failed fetch.
+<DataTableCard
+  \u2026
+  errorState={isError ? <PlaceholderState variant="error" \u2026 /> : undefined}
+  emptyState={<PlaceholderState variant="no-transactions" \u2026 />}
+/>
+
+// Below the table's breakpoint, pair it with DataCardList rather than hiding
+// columns: both mount, CSS shows one, and they take the same \`pagination\`
+// object so they cannot disagree about which page they are on.
+<DataTableCard className="hidden lg:block" \u2026 pagination={pagination} />
+<DataCardList className="lg:hidden" \u2026 pagination={pagination} />`,
+    toc: baseToc,
+  },
+  {
+    slug: "data-card-list",
+    title: "Data card list",
+    description:
+      "The narrow-viewport counterpart to the table: the same records as a stack of cards, sharing the table's pagination.",
+    importSnippet: `import { DataCardList } from "@payglocal_ui/flux-ui";`,
+    usageSnippet: `// A card list is not a table with its columns hidden — it picks a handful
+// of fields, gives them a hierarchy and drops the rest. So it is its own
+// component rather than a mode of DataTableCard, which would otherwise
+// carry two layouts and a breakpoint, and make every table pay for props
+// it does not use.
+//
+// It owns the surface: the bordered container, the loading skeletons, the
+// empty and error states, and the pager. The card itself stays with the
+// feature, via renderCard — that is the part that genuinely differs.
+<DataCardList
+  rows={rows}
+  rowKey={(r) => r.id}
+  renderCard={(row) => <TransactionCard row={row} onOpen={open} />}
+  renderSkeleton={() => <TransactionCardSkeleton />}
+  emptyState={<PlaceholderState variant="no-transactions" size="sm" />}
+  errorState={isError ? errorPanel : undefined}
+  pagination={pagination}
+/>
+
+// ── Pair it with the table using CSS, never a breakpoint hook ─────────
+// Both mount; CSS shows one. A JS hook has to guess on the server, so one
+// cohort sees the wrong layout on first paint, and resizing across the
+// breakpoint unmounts the visible half — taking scroll position and any
+// open row with it.
+<DataTableCard className="hidden lg:block" … pagination={pagination} />
+<DataCardList  className="lg:hidden"      … pagination={pagination} />
+
+// Hand both the SAME pagination object and the two surfaces cannot
+// disagree about which page they are on. The list renders it as a compact
+// Prev / Page X of Y / Next — a row of page numbers is the first thing to
+// go wrong on a phone — and shows no "of N" in cursor mode, where there
+// is no total to be honest about.`,
+    toc: baseToc,
+  },
+  {
+    slug: "copyable-cell",
+    title: "Copyable cell",
+    description:
+      "An identifier cell: the value plus a copy button that fades in on the row's hover.",
+    importSnippet: `import { CopyableCell } from "@payglocal_ui/flux-ui";`,
+    usageSnippet: `// Reveal-on-hover is the point. Twelve ids with twelve permanent copy buttons
+// is twelve pieces of chrome competing with the data; the row the pointer is
+// on is the only one whose button is useful.
+<CopyableCell value={row.gid} label="Transaction ID" />
+
+// \`onClick\` makes the id the handle that opens the row. The copy button stops
+// propagation, so copying never also opens it.
+<CopyableCell value={row.gid} label="Transaction ID" accent onClick={() => open(row)} />
+
+// \`display\` shortens what is on SCREEN only \u2014 the clipboard, the tooltip and
+// the accessible name all still carry the full value, so shortening what is
+// shown never shortens what the user walks away with.
+<CopyableCell value={row.utr} display={truncateMiddle(row.utr)} label="UTR" />
+
+// It relies on the row's own \`group\` class, which every DataTable <tr> carries.
+// Outside a DataTable row, put \`className="group"\` on an ancestor.`,
+    toc: baseToc,
+  },
+  {
+    slug: "rotating-search-input",
+    title: "Rotating search input",
+    description:
+      "One search field whose placeholder cycles through the fields it can actually match.",
+    importSnippet: `import { RotatingSearchInput } from "@payglocal_ui/flux-ui";`,
+    usageSnippet: `// A grid search usually spans half a dozen fields, and a static "Search"
+// placeholder names none of them \u2014 so people guess at what is searchable and
+// conclude the box is broken when the guess misses. Naming the fields in turn
+// costs no space and answers it.
+<RotatingSearchInput
+  words={["Amount", "Transaction ID", "Email", "Customer name"]}
+  onSearch={setQuery}
+  ariaLabel="Search transactions"
+  className="w-40 sm:w-56"
+/>
+
+// onSearch is debounced (300ms by default), so a search that hits the network
+// fires once the user pauses rather than once per keystroke.
+<RotatingSearchInput words={words} onSearch={runQuery} debounceDelay={500} />`,
+    toc: baseToc,
+  },
+  {
+    slug: "column-manager",
+    title: "Column manager",
+    description:
+      "Drag to reorder, tick to show or hide, with independently locked and pinned columns and a reset — the one column editor every grid uses.",
+    importSnippet: `import {
+  ColumnManager,
+  useColumnPreferences,
+  applyColumnPreferences,
+  type ManagedColumn,
+} from "@payglocal_ui/flux-ui";`,
+    usageSnippet: `// Plain-text names for the manager's list — a table header can be a node
+// (an icon, a tooltip, a two-line stack), and this list needs text.
+const managed: ManagedColumn[] = [
+  { key: "txn", label: "Transaction ID" },
+  { key: "merchant", label: "Merchant" },
+  { key: "amount", label: "Amount" },
+];
+
+const DEFAULT_ORDER = managed.map((c) => c.key);
+
+// Owns the arrangement. A storageKey remembers it across visits;
+// omit it and the arrangement lasts the session, which is what a grid
+// whose columns depend on the signed-in role wants.
+const prefs = useColumnPreferences(DEFAULT_ORDER, { storageKey: "txn-columns" });
+
+// Rearranges and filters the built column list to match. "action" stays
+// pinned last whatever the saved order says, and a column added in a
+// later release still appears for someone who saved an arrangement
+// before it existed.
+const columns = applyColumnPreferences(allColumns, prefs);
+
+<ColumnManager
+  columns={managed}
+  {...prefs.managerProps}      // order / hidden / reset, already wired
+
+  // Visibility and position are independent, and neither is inferred
+  // from the other. A column the table cannot do without is still one
+  // the user may want to move; a column frozen to the left edge is still
+  // one they may want to hide.
+
+  // Cannot be HIDDEN. Locked tick box, but still draggable.
+  fixedKeys={["txn"]}
+  fixedReason="Every row is identified by its transaction ID."
+
+  // Cannot be MOVED. Dimmed grip, but its tick box still works. The usual
+  // case is a frozen (sticky) column: its left offset is the running
+  // total of the widths of the frozen columns before it, so the block
+  // only works while they stay first and contiguous — drag one into the
+  // middle and it keeps left-0, floating over the scrolling columns.
+  pinnedKeys={["merchantId", "gid"]}
+  pinnedReason="Frozen to the left of the table."
+/>
+
+<DataTable columns={columns} data={rows} rowKey={(r) => r.id} />
+
+// Wiring the state by hand instead of using the hook:
+<ColumnManager
+  columns={managed}
+  order={order}
+  onOrderChange={setOrder}
+  hiddenKeys={hidden}          // omit, with onHiddenKeysChange, for
+  onHiddenKeysChange={setHidden}  // a reorder-only popover
+  onReset={() => { setOrder(DEFAULT_ORDER); setHidden([]); }}
+/>
+
+// Reordering is @dnd-kit, so the rows animate out of each other's way
+// as one is dragged past them. Keyboard users reorder without a mouse:
+// Space picks a row up, the arrows move it, Space drops it, Escape
+// abandons it.
+//
+// @dnd-kit is a peer of the bundle, not inlined into it — an app that
+// uses ColumnManager needs @dnd-kit/core, /sortable and /utilities
+// installed, which both PayGlocal apps already do.`,
+    toc: baseToc,
+  },
+  {
+    slug: "filter-chips",
+    title: "Filter chips",
+    description:
+      "The filter toolbar: dashed pills that open staged editors, one open at a time, plus a searchable menu for reaching every filter a table has.",
+    importSnippet: `import {
+  FilterToolbar,
+  FilterChipGroup,
+  SelectFilterChip,
+  SingleSelectFilterChip,
+  DateRangeFilterChip,
+  CalendarDateFilterChip,
+  NumberRangeFilterChip,
+  TextFilterChip,
+  MonthRangeFilterChip,
+  AddFilterMenu,
+  FilterChip,
+} from "@payglocal_ui/flux-ui";`,
+    usageSnippet: `// FilterToolbar lays out search / chips / actions and wraps the chips in
+// a FilterChipGroup, so exactly one popover is open at a time — and
+// switching between two chips does not make the second one flash.
+//
+// That flash is why the group exists. Every chip sharing one openChip
+// value while Radix reports the switch as two separate events means a
+// naive setOpenChip(open ? key : null) lets whichever event lands second
+// win: when the dismissal lands second it wipes out the chip that just
+// opened, so it mounts, paints and unmounts. The group makes a close
+// count only if the chip closing is still the one on screen. No page
+// needs openChip state any more.
+<FilterToolbar
+  search={<SearchInput />}
+  chips={
+    <>
+      <DateRangeFilterChip value={date} onChange={setDate} />
+      <SelectFilterChip
+        label="Status"
+        options={STATUS}
+        selected={status}
+        onChange={setStatus}
+      />
+      <NumberRangeFilterChip value={amount} onChange={setAmount} prefix="₹" />
+      <SingleSelectFilterChip
+        label="Settlement cycle"
+        options={CYCLES}
+        value={cycle}
+        onChange={setCycle}
+        showValueInLabel
+      />
+    </>
+  }
+  actions={<Button>Export</Button>}
+/>
+
+// ── Reaching every filter ─────────────────────────────────────────────
+// AddFilterMenu replaces a "More filters" drawer of leftovers. Typing
+// searches filter NAMES and their VALUES at once, so someone who knows
+// they want "USD" finds it without first knowing it lives under
+// Currency — and choosing anything promotes that filter to a real chip,
+// so there is exactly one place a filter can be.
+<AddFilterMenu
+  filters={[
+    { key: "currency", label: "Currency", options: CURRENCY, activeCount: currency.length },
+    { key: "acquirer", label: "Acquirer", options: ACQUIRER, activeCount: acquirer.length },
+    { key: "amount", label: "Amount" },   // no options: findable by name
+  ]}
+  visibleKeys={visible}
+  onAddFilter={(key) => setVisible((v) => [...v, key])}
+  // Supply this and the filter rows become toggles: a ticked filter is in
+  // the toolbar, and the menu stays open so turning several on is one
+  // visit. Removing must also CLEAR that filter — a chip is shown whenever
+  // it holds values, so a filter removed with values still applied would
+  // either bounce straight back or keep narrowing the table invisibly.
+  onRemoveFilter={(key) => { setVisible((v) => v.filter((k) => k !== key)); clear(key); }}
+  onSelectValue={(filterKey, value) => apply(filterKey, value)}
+/>
+
+// A chip's own × only CLEARS its values; it stays in the toolbar. Removing
+// it is a deliberate trip back to the menu, so clearing a filter you are
+// still working with never makes the control vanish under the pointer.
+
+// ── Both footer buttons commit and close ──────────────────────────────
+// Apply commits the draft; Clear drops the filter. Clear is NOT "untick
+// everything and carry on" — that leaves the panel open over a filter
+// still in force, so the chip reads "Status 2" above a list showing
+// nothing ticked, and closing the panel silently keeps the old value.
+// Clear stays enabled whenever there is anything to drop, including an
+// applied value whose draft has just been emptied by hand.
+
+// ── Seven chips, one for each shape ───────────────────────────────────
+// SelectFilterChip      multi-select; search past 8 options, count on the pill
+// SingleSelectFilterChip one-of-many; applies on pick, nothing to stage
+// DateRangeFilterChip   two typed date fields, optional relative tab
+// CalendarDateFilterChip a real calendar, single or range, optional presets
+// NumberRangeFilterChip min / max, optional currency prefix
+// TextFilterChip        one free-text value, Enter applies
+// MonthRangeFilterChip  start / end month on a year grid
+
+// Pick between the two date chips by how people reach for the filter:
+// typed fields for a known span, a calendar for "that Tuesday" or "the
+// week of the 14th", where two text inputs make you count days.
+<CalendarDateFilterChip
+  label="Settlement date"
+  value={date}
+  onChange={setDate}
+  // resolve() runs when the preset is CHOSEN, so "last 7 days" counts
+  // back from the click rather than from whenever this array was built.
+  presets={[
+    { value: "today", label: "Today", resolve: () => lastDays(0) },
+    { value: "last7", label: "Last 7 days", resolve: () => lastDays(6) },
+  ]}
+/>
+
+// ── A relative date range ─────────────────────────────────────────────
+// "Last 2 days" is a duration, not a pair of dates: resolving it when the
+// user picks it quietly freezes it at that moment. The chip reports the
+// duration and you resolve it at request time, where now is still now.
+<DateRangeFilterChip
+  value={range}
+  onChange={setRange}
+  relativeValue={relative}
+  onRelativeChange={setRelative}   // adding this turns on the "Last…" tab
+/>
+const window = relativeRangeToMillis(relative);  // call in the handler
+
+// The two modes are exclusive: applying one clears the other, so a
+// request is never built from an absolute window AND a relative one.
+
+// ── Excluding instead of including ────────────────────────────────────
+// Supply onInvertChange and the panel grows an "Invert filter" tick. It
+// is staged with the options and applied with them, because inverting
+// without changing the set still changes what the table shows. An
+// inverted chip says so on the pill — "Status (excluded)" — since the
+// count alone would be identical either way.
+<SelectFilterChip
+  label="Status"
+  options={STATUS}
+  selected={status}
+  onChange={setStatus}
+  invert={invert}
+  onInvertChange={setInvert}
+/>
+
+// ── A one-off chip ────────────────────────────────────────────────────
+// Build on FilterChip rather than reassembling the shell, so a bespoke
+// filter still opens, closes and clears like the rest. onOpen reseeds the
+// draft from the applied value, so an abandoned edit never leaks back.
+<FilterChip
+  chipKey="risk"
+  label="Risk score"
+  active={score !== ""}
+  onClear={() => setScore("")}
+  onOpen={() => setDraft(score)}
+>
+  <RiskSlider value={draft} onChange={setDraft} />
+  <FilterChipActions onClear={() => setDraft("")} onApply={() => setScore(draft)} />
+</FilterChip>`,
+    toc: baseToc,
+  },
+  {
     slug: "date-picker",
     title: "Date picker",
     description: "Single-date calendar popover with keyboard-friendly grid.",
     importSnippet: `import { DatePicker } from "@payglocal_ui/flux-ui";`,
     usageSnippet: `const [value, setValue] = useState("");
 
-<DatePicker value={value} onChange={setValue} placeholder="Pick a date" />`,
+<DatePicker value={value} onChange={setValue} placeholder="Pick a date" />
+
+// Bound it. Days outside min/max are struck out and cannot be clicked, so
+// an out-of-range date is refused BEFORE the click rather than rejected
+// afterwards — a feature once hand-rolled a whole date chip to enforce an
+// upper bound on Apply, which is the version of this that reads as a bug.
+<DatePicker value={to} onChange={setTo} min={from} max={today} />`,
     toc: baseToc,
   },
   {
@@ -378,7 +842,23 @@ const [amount, setAmount] = useState("");
     <button type="button">Open</button>
   </PopoverTrigger>
   <PopoverContent>Content</PopoverContent>
-</Popover>`,
+</Popover>
+
+// ── A panel that must not run off the bottom ──────────────────────────
+// A trigger low on a long page has very little room beneath it, and a
+// tall list plus a footer will run past the fold — the last options, and
+// often Apply itself, end up unreachable. Radix measures that space; cap
+// the content to it and lay the panel out as a column, so the fixed
+// chrome stays put and only the list scrolls.
+<PopoverContent className="flex max-h-[var(--radix-popover-content-available-height)] flex-col overflow-hidden">
+  <div className="shrink-0 …">{header}</div>
+  <div className="min-h-0 flex-1 overflow-y-auto">{list}</div>
+  <div className="shrink-0 …">{footer}</div>
+</PopoverContent>
+
+// min-h-0 is what lets a flex child shrink below its content height at
+// all; without it the list refuses to scroll and pushes the footer out.
+// PopoverContent already keeps a 12px gutter from the viewport edge.`,
     toc: baseToc,
   },
   {
@@ -428,7 +908,14 @@ const [amount, setAmount] = useState("");
     description: "Shimmer placeholders for tables, charts, and stat cards.",
     importSnippet: `import { Shimmer, StatCardSkeleton, TableRowSkeleton } from "@payglocal_ui/flux-ui";`,
     usageSnippet: `<StatCardSkeleton />
-<TableRowSkeleton cols={4} />`,
+<TableRowSkeleton cols={4} />
+
+// DataTable does NOT use TableRowSkeleton — it builds its loading rows
+// from its own columns, so each placeholder cell carries that column's
+// width, alignment and sticky classes and lines up under its header.
+// A generic "n cells" row came up short against a table with a greedy
+// spacer column, which read as a column missing while loading.
+// TableRowSkeleton stays for a hand-rolled table outside DataTable.`,
     toc: baseToc,
   },
   {

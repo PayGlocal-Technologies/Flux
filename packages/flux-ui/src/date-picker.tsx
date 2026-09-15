@@ -38,12 +38,21 @@ interface DatePickerProps {
   onChange:     (v: string) => void;
   placeholder?: string;
   className?:   string;
+  /** Earliest selectable date, `YYYY-MM-DD`. Days before it are struck out. */
   min?:         string;
+  /**
+   * Latest selectable date, `YYYY-MM-DD`.
+   *
+   * Its absence is why a feature ended up hand-rolling a whole date chip to
+   * enforce an upper bound on Apply instead — an error after the fact, where
+   * the calendar could have said so before the click.
+   */
+  max?:         string;
   label?:       string;
 }
 
 /* ─── DatePicker ─────────────────────────────────────────────────────────── */
-export function DatePicker({ value, onChange, placeholder = "Select date", className, min, label }: DatePickerProps) {
+export function DatePicker({ value, onChange, placeholder = "Select date", className, min, max, label }: DatePickerProps) {
   const today   = new Date();
   const parsed  = parseYMD(value);
 
@@ -123,10 +132,13 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
   const firstDay  = firstDayOf(viewYear, viewMonth);
   const prevTotal = daysInMonth(viewYear, viewMonth === 0 ? 11 : viewMonth - 1);
   const minParsed = parseYMD(min ?? "");
+  const maxParsed = parseYMD(max ?? "");
 
   function isDisabled(y: number, m: number, d: number) {
-    if (!minParsed) return false;
-    return new Date(y, m, d) < new Date(minParsed.y, minParsed.m, minParsed.d);
+    const day = new Date(y, m, d);
+    if (minParsed && day < new Date(minParsed.y, minParsed.m, minParsed.d)) return true;
+    if (maxParsed && day > new Date(maxParsed.y, maxParsed.m, maxParsed.d)) return true;
+    return false;
   }
 
   type Cell = { d: number; m: number; y: number; current: boolean };

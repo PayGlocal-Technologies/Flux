@@ -2711,20 +2711,23 @@ import { jsx as jsx34 } from "react/jsx-runtime";
 var Popover = PopoverPrimitive2.Root;
 var PopoverTrigger = PopoverPrimitive2.Trigger;
 var PopoverAnchor = PopoverPrimitive2.Anchor;
-var PopoverContent = React25.forwardRef(({ className, align = "center", sideOffset = 6, ...props }, ref) => /* @__PURE__ */ jsx34(PopoverPrimitive2.Portal, { children: /* @__PURE__ */ jsx34(
-  PopoverPrimitive2.Content,
-  {
-    ref,
-    align,
-    sideOffset,
-    className: cn(
-      "z-[120] w-72 rounded-xl border border-border bg-popover p-4 text-popover-foreground shadow-lg outline-none",
-      "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150",
-      className
-    ),
-    ...props
-  }
-) }));
+var PopoverContent = React25.forwardRef(
+  ({ className, align = "center", sideOffset = 6, collisionPadding = 12, ...props }, ref) => /* @__PURE__ */ jsx34(PopoverPrimitive2.Portal, { children: /* @__PURE__ */ jsx34(
+    PopoverPrimitive2.Content,
+    {
+      ref,
+      align,
+      sideOffset,
+      collisionPadding,
+      className: cn(
+        "z-[120] w-72 rounded-xl border border-border bg-popover p-4 text-popover-foreground shadow-lg outline-none",
+        "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150",
+        className
+      ),
+      ...props
+    }
+  ) })
+);
 PopoverContent.displayName = PopoverPrimitive2.Content.displayName;
 
 // src/tooltip.tsx
@@ -3155,13 +3158,107 @@ var TabsContent = React30.forwardRef(({ className, ...props }, ref) => /* @__PUR
 ));
 TabsContent.displayName = TabsPrimitive.Content.displayName;
 
+// src/tab-presets.tsx
+import { useEffect as useEffect2, useRef as useRef3, useState as useState6 } from "react";
+import { Fragment as Fragment5, jsx as jsx41, jsxs as jsxs23 } from "react/jsx-runtime";
+function UnderlineTabs({
+  tabs,
+  value,
+  onValueChange,
+  actions,
+  className
+}) {
+  const tabRefs = useRef3({});
+  const [indicator, setIndicator] = useState6(null);
+  useEffect2(() => {
+    const measure = () => {
+      const el = tabRefs.current[value];
+      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+    };
+    const raf = requestAnimationFrame(measure);
+    window.addEventListener("resize", measure);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", measure);
+    };
+  }, [value]);
+  return /* @__PURE__ */ jsx41(Tabs, { value, onValueChange, className, children: /* @__PURE__ */ jsxs23("div", { className: "flex flex-wrap items-center justify-between gap-3", children: [
+    /* @__PURE__ */ jsxs23(TabsList, { className: "relative h-auto justify-start gap-5 rounded-none border-0 bg-transparent p-0", children: [
+      tabs.map((tab) => /* @__PURE__ */ jsx41(
+        TabsTrigger,
+        {
+          ref: (el) => {
+            tabRefs.current[tab.value] = el;
+          },
+          value: tab.value,
+          className: "h-auto rounded-none px-0 py-2.5 text-[13px] font-medium text-muted-foreground shadow-none data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none",
+          children: tab.label
+        },
+        tab.value
+      )),
+      /* @__PURE__ */ jsx41(
+        "span",
+        {
+          "aria-hidden": true,
+          className: "absolute bottom-0 h-0.5 bg-primary transition-all duration-200 ease-out",
+          style: {
+            left: indicator?.left ?? 0,
+            width: indicator?.width ?? 0,
+            opacity: indicator ? 1 : 0
+          }
+        }
+      )
+    ] }),
+    actions ? /* @__PURE__ */ jsx41("div", { className: "flex shrink-0 items-center gap-2", children: actions }) : null
+  ] }) });
+}
+function SegmentedTabs({
+  options,
+  value,
+  onValueChange,
+  label = "Options",
+  collapseToSelect = true,
+  className
+}) {
+  return /* @__PURE__ */ jsxs23(Fragment5, { children: [
+    /* @__PURE__ */ jsx41(
+      Tabs,
+      {
+        value,
+        onValueChange: (next) => onValueChange(next),
+        className: cn(collapseToSelect && "hidden md:block", className),
+        children: /* @__PURE__ */ jsx41(
+          TabsList,
+          {
+            "aria-label": label,
+            className: "h-auto gap-4 rounded-none border-0 bg-transparent p-0",
+            children: options.map((option) => /* @__PURE__ */ jsx41(
+              TabsTrigger,
+              {
+                value: option.value,
+                className: "h-auto rounded-none border-b-2 border-transparent px-0 py-1 text-[13px] font-medium text-muted-foreground shadow-none data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:text-primary data-[state=active]:shadow-none",
+                children: option.label
+              },
+              option.value
+            ))
+          }
+        )
+      }
+    ),
+    collapseToSelect ? /* @__PURE__ */ jsxs23(Select, { value, onValueChange: (next) => onValueChange(next), children: [
+      /* @__PURE__ */ jsx41(SelectTrigger, { className: "h-8 w-[9.5rem] md:hidden", "aria-label": label, children: /* @__PURE__ */ jsx41(SelectValue, {}) }),
+      /* @__PURE__ */ jsx41(SelectContent, { children: options.map((option) => /* @__PURE__ */ jsx41(SelectItem, { value: option.value, children: option.label }, option.value)) })
+    ] }) : null
+  ] });
+}
+
 // src/accordion.tsx
 import * as React31 from "react";
 import * as AccordionPrimitive from "@radix-ui/react-accordion";
 import { ChevronDown as ChevronDown5 } from "lucide-react";
-import { jsx as jsx41, jsxs as jsxs23 } from "react/jsx-runtime";
+import { jsx as jsx42, jsxs as jsxs24 } from "react/jsx-runtime";
 var Accordion = AccordionPrimitive.Root;
-var AccordionItem = React31.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx41(
+var AccordionItem = React31.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx42(
   AccordionPrimitive.Item,
   {
     ref,
@@ -3170,7 +3267,7 @@ var AccordionItem = React31.forwardRef(({ className, ...props }, ref) => /* @__P
   }
 ));
 AccordionItem.displayName = "AccordionItem";
-var AccordionTrigger = React31.forwardRef(({ className, children, ...props }, ref) => /* @__PURE__ */ jsx41(AccordionPrimitive.Header, { className: "flex", children: /* @__PURE__ */ jsxs23(
+var AccordionTrigger = React31.forwardRef(({ className, children, ...props }, ref) => /* @__PURE__ */ jsx42(AccordionPrimitive.Header, { className: "flex", children: /* @__PURE__ */ jsxs24(
   AccordionPrimitive.Trigger,
   {
     ref,
@@ -3184,12 +3281,12 @@ var AccordionTrigger = React31.forwardRef(({ className, children, ...props }, re
     ...props,
     children: [
       children,
-      /* @__PURE__ */ jsx41(ChevronDown5, { className: "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-pg-fast ease-pg-standard" })
+      /* @__PURE__ */ jsx42(ChevronDown5, { className: "h-4 w-4 shrink-0 text-muted-foreground transition-transform duration-pg-fast ease-pg-standard" })
     ]
   }
 ) }));
 AccordionTrigger.displayName = "AccordionTrigger";
-var AccordionContent = React31.forwardRef(({ className, children, ...props }, ref) => /* @__PURE__ */ jsx41(
+var AccordionContent = React31.forwardRef(({ className, children, ...props }, ref) => /* @__PURE__ */ jsx42(
   AccordionPrimitive.Content,
   {
     ref,
@@ -3202,7 +3299,7 @@ var AccordionContent = React31.forwardRef(({ className, children, ...props }, re
       "--accordion-content-height": "var(--radix-accordion-content-height)"
     },
     ...props,
-    children: /* @__PURE__ */ jsx41("div", { className: cn("pb-4 pt-0", className), children })
+    children: /* @__PURE__ */ jsx42("div", { className: cn("pb-4 pt-0", className), children })
   }
 ));
 AccordionContent.displayName = "AccordionContent";
@@ -3210,7 +3307,7 @@ AccordionContent.displayName = "AccordionContent";
 // src/alert.tsx
 import * as React32 from "react";
 import { X as X6, Info as Info2, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
-import { jsx as jsx42, jsxs as jsxs24 } from "react/jsx-runtime";
+import { jsx as jsx43, jsxs as jsxs25 } from "react/jsx-runtime";
 var variantStyles = {
   info: "bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-200",
   success: "bg-green-50 border-green-200 text-green-900 dark:bg-green-950/30 dark:border-green-800 dark:text-green-200",
@@ -3228,7 +3325,7 @@ var variantIcons = {
 var Alert = React32.forwardRef(
   ({ className, variant = "info", dismissible, onDismiss, children, ...props }, ref) => {
     const Icon2 = variantIcons[variant];
-    return /* @__PURE__ */ jsxs24(
+    return /* @__PURE__ */ jsxs25(
       "div",
       {
         ref,
@@ -3236,16 +3333,16 @@ var Alert = React32.forwardRef(
         className: cn("relative flex gap-3 rounded-xl border p-4 shadow-sm", variantStyles[variant], className),
         ...props,
         children: [
-          /* @__PURE__ */ jsx42(Icon2, { className: "mt-0.5 size-4 shrink-0", "aria-hidden": true }),
-          /* @__PURE__ */ jsx42("div", { className: "flex-1 min-w-0", children }),
-          dismissible && /* @__PURE__ */ jsx42(
+          /* @__PURE__ */ jsx43(Icon2, { className: "mt-0.5 size-4 shrink-0", "aria-hidden": true }),
+          /* @__PURE__ */ jsx43("div", { className: "flex-1 min-w-0", children }),
+          dismissible && /* @__PURE__ */ jsx43(
             "button",
             {
               type: "button",
               onClick: onDismiss,
               className: "shrink-0 rounded-md p-0.5 opacity-60 hover:opacity-100 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
               "aria-label": "Dismiss",
-              children: /* @__PURE__ */ jsx42(X6, { className: "size-4" })
+              children: /* @__PURE__ */ jsx43(X6, { className: "size-4" })
             }
           )
         ]
@@ -3255,17 +3352,17 @@ var Alert = React32.forwardRef(
 );
 Alert.displayName = "Alert";
 var AlertTitle = React32.forwardRef(
-  ({ className, ...props }, ref) => /* @__PURE__ */ jsx42("h5", { ref, className: cn("mb-1 text-sm font-semibold leading-none", className), ...props })
+  ({ className, ...props }, ref) => /* @__PURE__ */ jsx43("h5", { ref, className: cn("mb-1 text-sm font-semibold leading-none", className), ...props })
 );
 AlertTitle.displayName = "AlertTitle";
 var AlertDescription = React32.forwardRef(
-  ({ className, ...props }, ref) => /* @__PURE__ */ jsx42("p", { ref, className: cn("text-sm opacity-90 leading-relaxed", className), ...props })
+  ({ className, ...props }, ref) => /* @__PURE__ */ jsx43("p", { ref, className: cn("text-sm opacity-90 leading-relaxed", className), ...props })
 );
 AlertDescription.displayName = "AlertDescription";
 var Banner = React32.forwardRef(
   ({ className, variant = "info", dismissible, onDismiss, children, ...props }, ref) => {
     const Icon2 = variantIcons[variant];
-    return /* @__PURE__ */ jsxs24(
+    return /* @__PURE__ */ jsxs25(
       "div",
       {
         ref,
@@ -3273,16 +3370,16 @@ var Banner = React32.forwardRef(
         className: cn("flex items-center gap-3 border-b px-4 py-3", variantStyles[variant], className),
         ...props,
         children: [
-          /* @__PURE__ */ jsx42(Icon2, { className: "size-4 shrink-0", "aria-hidden": true }),
-          /* @__PURE__ */ jsx42("div", { className: "flex-1 min-w-0 text-sm", children }),
-          dismissible && /* @__PURE__ */ jsx42(
+          /* @__PURE__ */ jsx43(Icon2, { className: "size-4 shrink-0", "aria-hidden": true }),
+          /* @__PURE__ */ jsx43("div", { className: "flex-1 min-w-0 text-sm", children }),
+          dismissible && /* @__PURE__ */ jsx43(
             "button",
             {
               type: "button",
               onClick: onDismiss,
               className: "shrink-0 rounded-md p-0.5 opacity-60 hover:opacity-100 transition-opacity focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
               "aria-label": "Dismiss",
-              children: /* @__PURE__ */ jsx42(X6, { className: "size-4" })
+              children: /* @__PURE__ */ jsx43(X6, { className: "size-4" })
             }
           )
         ]
@@ -3295,7 +3392,7 @@ Banner.displayName = "Banner";
 // src/callout.tsx
 import * as React33 from "react";
 import { Info as Info3, CheckCircle2 as CheckCircle22, AlertTriangle as AlertTriangle2, XCircle as XCircle2, Sparkles } from "lucide-react";
-import { jsx as jsx43 } from "react/jsx-runtime";
+import { jsx as jsx44 } from "react/jsx-runtime";
 var variantStyles2 = {
   info: "bg-blue-50 border-blue-200 text-blue-900 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-200",
   success: "bg-green-50 border-green-200 text-green-900 dark:bg-green-950/30 dark:border-green-800 dark:text-green-200",
@@ -3313,29 +3410,29 @@ var variantIcons2 = {
   discovery: Sparkles
 };
 var Callout = React33.forwardRef(
-  ({ className, variant = "info", children, ...props }, ref) => /* @__PURE__ */ jsx43("div", { ref, className: cn("flex gap-3 rounded-xl border p-4", variantStyles2[variant], className), ...props, children })
+  ({ className, variant = "info", children, ...props }, ref) => /* @__PURE__ */ jsx44("div", { ref, className: cn("flex gap-3 rounded-xl border p-4", variantStyles2[variant], className), ...props, children })
 );
 Callout.displayName = "Callout";
 var CalloutIcon = React33.forwardRef(
   ({ className, variant = "info", ...props }, ref) => {
     const Icon2 = variantIcons2[variant];
-    return /* @__PURE__ */ jsx43("div", { ref, className: cn("mt-0.5 shrink-0", className), ...props, children: /* @__PURE__ */ jsx43(Icon2, { className: "size-4", "aria-hidden": true }) });
+    return /* @__PURE__ */ jsx44("div", { ref, className: cn("mt-0.5 shrink-0", className), ...props, children: /* @__PURE__ */ jsx44(Icon2, { className: "size-4", "aria-hidden": true }) });
   }
 );
 CalloutIcon.displayName = "CalloutIcon";
 var CalloutTitle = React33.forwardRef(
-  ({ className, ...props }, ref) => /* @__PURE__ */ jsx43("p", { ref, className: cn("text-sm font-semibold", className), ...props })
+  ({ className, ...props }, ref) => /* @__PURE__ */ jsx44("p", { ref, className: cn("text-sm font-semibold", className), ...props })
 );
 CalloutTitle.displayName = "CalloutTitle";
 var CalloutText = React33.forwardRef(
-  ({ className, ...props }, ref) => /* @__PURE__ */ jsx43("p", { ref, className: cn("mt-1 text-sm opacity-90 leading-relaxed", className), ...props })
+  ({ className, ...props }, ref) => /* @__PURE__ */ jsx44("p", { ref, className: cn("mt-1 text-sm opacity-90 leading-relaxed", className), ...props })
 );
 CalloutText.displayName = "CalloutText";
 
 // src/section-message.tsx
 import * as React34 from "react";
 import { Info as Info4, CheckCircle2 as CheckCircle23, AlertTriangle as AlertTriangle3, XCircle as XCircle3, Sparkles as Sparkles2 } from "lucide-react";
-import { jsx as jsx44, jsxs as jsxs25 } from "react/jsx-runtime";
+import { jsx as jsx45, jsxs as jsxs26 } from "react/jsx-runtime";
 var variantConfig = {
   info: {
     border: "border-l-blue-500",
@@ -3373,7 +3470,7 @@ var SectionMessage = React34.forwardRef(
   ({ className, variant = "info", children, ...props }, ref) => {
     const config = variantConfig[variant];
     const Icon2 = config.icon;
-    return /* @__PURE__ */ jsx44(SectionMessageVariantContext.Provider, { value: variant, children: /* @__PURE__ */ jsxs25(
+    return /* @__PURE__ */ jsx45(SectionMessageVariantContext.Provider, { value: variant, children: /* @__PURE__ */ jsxs26(
       "div",
       {
         ref,
@@ -3386,21 +3483,21 @@ var SectionMessage = React34.forwardRef(
         ),
         ...props,
         children: [
-          /* @__PURE__ */ jsx44(
+          /* @__PURE__ */ jsx45(
             Icon2,
             {
               className: cn("mt-0.5 size-5 shrink-0", config.iconColor),
               "aria-hidden": true
             }
           ),
-          /* @__PURE__ */ jsx44("div", { className: "flex-1 min-w-0", children })
+          /* @__PURE__ */ jsx45("div", { className: "flex-1 min-w-0", children })
         ]
       }
     ) });
   }
 );
 SectionMessage.displayName = "SectionMessage";
-var SectionMessageTitle = React34.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx44(
+var SectionMessageTitle = React34.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx45(
   "h4",
   {
     ref,
@@ -3409,7 +3506,7 @@ var SectionMessageTitle = React34.forwardRef(({ className, ...props }, ref) => /
   }
 ));
 SectionMessageTitle.displayName = "SectionMessageTitle";
-var SectionMessageContent = React34.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx44(
+var SectionMessageContent = React34.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx45(
   "div",
   {
     ref,
@@ -3418,7 +3515,7 @@ var SectionMessageContent = React34.forwardRef(({ className, ...props }, ref) =>
   }
 ));
 SectionMessageContent.displayName = "SectionMessageContent";
-var SectionMessageActions = React34.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx44(
+var SectionMessageActions = React34.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx45(
   "div",
   {
     ref,
@@ -3431,7 +3528,7 @@ SectionMessageActions.displayName = "SectionMessageActions";
 // src/spinner.tsx
 import * as React35 from "react";
 import { Loader2 as Loader22 } from "lucide-react";
-import { jsx as jsx45, jsxs as jsxs26 } from "react/jsx-runtime";
+import { jsx as jsx46, jsxs as jsxs27 } from "react/jsx-runtime";
 var sizeMap = {
   xs: 12,
   sm: 16,
@@ -3448,7 +3545,7 @@ var colorMap = {
 var Spinner = React35.forwardRef(
   ({ className, size = "md", color = "primary", ...props }, ref) => {
     const px = sizeMap[size];
-    return /* @__PURE__ */ jsxs26(
+    return /* @__PURE__ */ jsxs27(
       "span",
       {
         ref,
@@ -3458,7 +3555,7 @@ var Spinner = React35.forwardRef(
         className: cn("inline-flex items-center justify-center", colorMap[color], className),
         ...props,
         children: [
-          /* @__PURE__ */ jsx45(
+          /* @__PURE__ */ jsx46(
             Loader22,
             {
               width: px,
@@ -3467,7 +3564,7 @@ var Spinner = React35.forwardRef(
               "aria-hidden": "true"
             }
           ),
-          /* @__PURE__ */ jsx45("span", { className: "sr-only", children: "Loading..." })
+          /* @__PURE__ */ jsx46("span", { className: "sr-only", children: "Loading..." })
         ]
       }
     );
@@ -3479,7 +3576,7 @@ Spinner.displayName = "Spinner";
 import * as React36 from "react";
 import * as ProgressPrimitive from "@radix-ui/react-progress";
 import { Check as Check7 } from "lucide-react";
-import { jsx as jsx46, jsxs as jsxs27 } from "react/jsx-runtime";
+import { jsx as jsx47, jsxs as jsxs28 } from "react/jsx-runtime";
 var variantTrack = {
   default: "bg-primary",
   success: "bg-green-500",
@@ -3492,15 +3589,15 @@ var sizeClasses3 = {
   md: "h-2",
   lg: "h-3"
 };
-var Progress = React36.forwardRef(({ className, value, variant = "default", size = "md", label, ...props }, ref) => /* @__PURE__ */ jsxs27("div", { className: "w-full", children: [
-  /* @__PURE__ */ jsx46(
+var Progress = React36.forwardRef(({ className, value, variant = "default", size = "md", label, ...props }, ref) => /* @__PURE__ */ jsxs28("div", { className: "w-full", children: [
+  /* @__PURE__ */ jsx47(
     ProgressPrimitive.Root,
     {
       ref,
       className: cn("relative w-full overflow-hidden rounded-full bg-muted", sizeClasses3[size], className),
       ...props,
       value,
-      children: /* @__PURE__ */ jsx46(
+      children: /* @__PURE__ */ jsx47(
         ProgressPrimitive.Indicator,
         {
           className: cn("h-full w-full flex-1 transition-all duration-pg-slow ease-pg-standard", variantTrack[variant]),
@@ -3509,45 +3606,45 @@ var Progress = React36.forwardRef(({ className, value, variant = "default", size
       )
     }
   ),
-  label && /* @__PURE__ */ jsxs27("p", { className: "mt-1 text-xs text-muted-foreground text-right", children: [
+  label && /* @__PURE__ */ jsxs28("p", { className: "mt-1 text-xs text-muted-foreground text-right", children: [
     value ?? 0,
     "%"
   ] })
 ] }));
 Progress.displayName = "Progress";
 var ProgressTracker = React36.forwardRef(
-  ({ className, steps, ...props }, ref) => /* @__PURE__ */ jsx46("div", { ref, className: cn("flex items-start", className), ...props, children: steps.map((step, i) => /* @__PURE__ */ jsxs27(React36.Fragment, { children: [
-    /* @__PURE__ */ jsxs27("div", { className: "flex flex-col items-center gap-1.5 min-w-0", children: [
-      /* @__PURE__ */ jsx46("div", { className: cn(
+  ({ className, steps, ...props }, ref) => /* @__PURE__ */ jsx47("div", { ref, className: cn("flex items-start", className), ...props, children: steps.map((step, i) => /* @__PURE__ */ jsxs28(React36.Fragment, { children: [
+    /* @__PURE__ */ jsxs28("div", { className: "flex flex-col items-center gap-1.5 min-w-0", children: [
+      /* @__PURE__ */ jsx47("div", { className: cn(
         "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors",
         step.status === "complete" && "bg-primary border-primary text-primary-foreground",
         step.status === "current" && "bg-primary/10 border-primary text-primary",
         step.status === "upcoming" && "bg-card border-border text-muted-foreground"
-      ), children: step.status === "complete" ? /* @__PURE__ */ jsx46(Check7, { className: "size-4", strokeWidth: 2.5 }) : i + 1 }),
-      /* @__PURE__ */ jsxs27("div", { className: "text-center px-1", children: [
-        /* @__PURE__ */ jsx46("p", { className: cn("text-xs font-medium", step.status === "upcoming" ? "text-muted-foreground" : "text-foreground"), children: step.label }),
-        step.description && /* @__PURE__ */ jsx46("p", { className: "text-[11px] text-muted-foreground mt-0.5", children: step.description })
+      ), children: step.status === "complete" ? /* @__PURE__ */ jsx47(Check7, { className: "size-4", strokeWidth: 2.5 }) : i + 1 }),
+      /* @__PURE__ */ jsxs28("div", { className: "text-center px-1", children: [
+        /* @__PURE__ */ jsx47("p", { className: cn("text-xs font-medium", step.status === "upcoming" ? "text-muted-foreground" : "text-foreground"), children: step.label }),
+        step.description && /* @__PURE__ */ jsx47("p", { className: "text-[11px] text-muted-foreground mt-0.5", children: step.description })
       ] })
     ] }),
-    i < steps.length - 1 && /* @__PURE__ */ jsx46("div", { className: "flex-1 mt-4 mx-1", children: /* @__PURE__ */ jsx46("div", { className: cn("h-0.5 w-full rounded-full transition-colors", step.status === "complete" ? "bg-primary" : "bg-border") }) })
+    i < steps.length - 1 && /* @__PURE__ */ jsx47("div", { className: "flex-1 mt-4 mx-1", children: /* @__PURE__ */ jsx47("div", { className: cn("h-0.5 w-full rounded-full transition-colors", step.status === "complete" ? "bg-primary" : "bg-border") }) })
   ] }, i)) })
 );
 ProgressTracker.displayName = "ProgressTracker";
 
 // src/skeleton.tsx
-import { jsx as jsx47, jsxs as jsxs28 } from "react/jsx-runtime";
+import { jsx as jsx48, jsxs as jsxs29 } from "react/jsx-runtime";
 function Shimmer({ className, rounded = "md" }) {
   const r = { sm: "rounded", md: "rounded-lg", lg: "rounded-xl", full: "rounded-full" }[rounded];
-  return /* @__PURE__ */ jsx47("div", { className: cn("shimmer", r, className) });
+  return /* @__PURE__ */ jsx48("div", { className: cn("shimmer", r, className) });
 }
 function StatCardSkeleton() {
-  return /* @__PURE__ */ jsxs28("div", { className: "bg-card text-card-foreground rounded-xl p-5 flex flex-col gap-3 border border-border shadow-sm", children: [
-    /* @__PURE__ */ jsxs28("div", { className: "flex items-center justify-between", children: [
-      /* @__PURE__ */ jsx47(Shimmer, { className: "h-3 w-28" }),
-      /* @__PURE__ */ jsx47(Shimmer, { className: "h-10 w-10", rounded: "full" })
+  return /* @__PURE__ */ jsxs29("div", { className: "bg-card text-card-foreground rounded-xl p-5 flex flex-col gap-3 border border-border shadow-sm", children: [
+    /* @__PURE__ */ jsxs29("div", { className: "flex items-center justify-between", children: [
+      /* @__PURE__ */ jsx48(Shimmer, { className: "h-3 w-28" }),
+      /* @__PURE__ */ jsx48(Shimmer, { className: "h-10 w-10", rounded: "full" })
     ] }),
-    /* @__PURE__ */ jsx47(Shimmer, { className: "h-9 w-44 mt-1" }),
-    /* @__PURE__ */ jsx47(Shimmer, { className: "h-3 w-32" })
+    /* @__PURE__ */ jsx48(Shimmer, { className: "h-9 w-44 mt-1" }),
+    /* @__PURE__ */ jsx48(Shimmer, { className: "h-3 w-32" })
   ] });
 }
 function TableRowSkeleton({
@@ -3558,7 +3655,7 @@ function TableRowSkeleton({
 }) {
   const density = densityProp ?? (comfortable ? "comfortable" : "default");
   const cellPad = density === "comfortable" ? "px-5 py-4" : density === "compact" ? snug ? "pl-1.5 pr-2.5 py-2.5" : "px-3 py-2.5" : "px-4 py-3.5";
-  return /* @__PURE__ */ jsx47(
+  return /* @__PURE__ */ jsx48(
     "tr",
     {
       className: cn(
@@ -3566,17 +3663,17 @@ function TableRowSkeleton({
         density === "comfortable" && "min-h-[56px]",
         density === "compact" && "min-h-[44px]"
       ),
-      children: Array.from({ length: cols }).map((_, i) => /* @__PURE__ */ jsx47("td", { className: cellPad, children: /* @__PURE__ */ jsx47(Shimmer, { className: cn("h-3.5", i === 0 ? "w-20" : i === cols - 1 ? "w-14" : "w-28") }) }, i))
+      children: Array.from({ length: cols }).map((_, i) => /* @__PURE__ */ jsx48("td", { className: cellPad, children: /* @__PURE__ */ jsx48(Shimmer, { className: cn("h-3.5", i === 0 ? "w-20" : i === cols - 1 ? "w-14" : "w-28") }) }, i))
     }
   );
 }
 function ChartSkeleton({ height = "h-48" }) {
-  return /* @__PURE__ */ jsx47("div", { className: cn("flex items-end gap-2 px-2", height), children: [55, 72, 40, 88, 65, 82, 48, 95, 60, 70].map((h, i) => /* @__PURE__ */ jsx47("div", { className: "flex-1 shimmer rounded-t-md", style: { height: `${h}%` } }, i)) });
+  return /* @__PURE__ */ jsx48("div", { className: cn("flex items-end gap-2 px-2", height), children: [55, 72, 40, 88, 65, 82, 48, 95, 60, 70].map((h, i) => /* @__PURE__ */ jsx48("div", { className: "flex-1 shimmer rounded-t-md", style: { height: `${h}%` } }, i)) });
 }
 
 // src/empty-state.tsx
 import { Inbox } from "lucide-react";
-import { jsx as jsx48, jsxs as jsxs29 } from "react/jsx-runtime";
+import { jsx as jsx49, jsxs as jsxs30 } from "react/jsx-runtime";
 function EmptyState({
   icon: Icon2 = Inbox,
   title,
@@ -3584,18 +3681,25 @@ function EmptyState({
   action,
   className
 }) {
-  return /* @__PURE__ */ jsxs29("div", { className: cn("flex flex-col items-center justify-center py-16 px-4 text-center", className), children: [
-    /* @__PURE__ */ jsx48("div", { className: "w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4", children: /* @__PURE__ */ jsx48(Icon2, { className: "w-6 h-6 text-slate-400" }) }),
-    /* @__PURE__ */ jsx48("h3", { className: "text-sm font-semibold text-slate-700 mb-1", children: title }),
-    description && /* @__PURE__ */ jsx48("p", { className: "text-xs text-slate-500 max-w-xs leading-relaxed", children: description }),
-    action && /* @__PURE__ */ jsx48("div", { className: "mt-4", children: action })
+  return /* @__PURE__ */ jsxs30("div", { className: cn("flex flex-col items-center justify-center py-16 px-4 text-center", className), children: [
+    /* @__PURE__ */ jsx49("div", { className: "w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mb-4", children: /* @__PURE__ */ jsx49(Icon2, { className: "w-6 h-6 text-slate-400" }) }),
+    /* @__PURE__ */ jsx49("h3", { className: "text-sm font-semibold text-slate-700 mb-1", children: title }),
+    description && /* @__PURE__ */ jsx49("p", { className: "text-xs text-slate-500 max-w-xs leading-relaxed", children: description }),
+    action && /* @__PURE__ */ jsx49("div", { className: "mt-4", children: action })
   ] });
 }
 
 // src/data-table.tsx
-import { ChevronDown as ChevronDown6, ChevronLeft as ChevronLeft3, ChevronRight as ChevronRight5 } from "lucide-react";
-import { useState as useState6 } from "react";
-import { jsx as jsx49, jsxs as jsxs30 } from "react/jsx-runtime";
+import {
+  ArrowDown,
+  ArrowUp,
+  ChevronDown as ChevronDown6,
+  ChevronLeft as ChevronLeft3,
+  ChevronRight as ChevronRight5,
+  ChevronsUpDown
+} from "lucide-react";
+import { useCallback as useCallback2, useEffect as useEffect3, useMemo as useMemo4, useRef as useRef4, useState as useState7 } from "react";
+import { Fragment as Fragment7, jsx as jsx50, jsxs as jsxs31 } from "react/jsx-runtime";
 function getPageRange(current, total) {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
   const pages = [1];
@@ -3607,6 +3711,81 @@ function getPageRange(current, total) {
   pages.push(total);
   return pages;
 }
+var DEFAULT_COUNT_LABELS = { singular: "item", plural: "items" };
+function normalizePagination(pagination, rowsHeld, internalPage) {
+  if (pagination.mode === "none") {
+    return {
+      showFooter: false,
+      sliceLocally: false,
+      page: 1,
+      // A footerless table shows every row it was given; guard against a
+      // zero divisor for the range arithmetic that never renders.
+      pageSize: rowsHeld || 1,
+      summary: "none",
+      countLabels: DEFAULT_COUNT_LABELS
+    };
+  }
+  const shared = {
+    showFooter: true,
+    summary: pagination.summary ?? "range",
+    countLabels: pagination.countLabels ?? DEFAULT_COUNT_LABELS,
+    leading: pagination.leading,
+    pageSizeOptions: pagination.pageSizeOptions,
+    onPageSizeChange: pagination.onPageSizeChange
+  };
+  if (pagination.mode === "client") {
+    const pageSize = pagination.pageSize ?? 10;
+    return {
+      ...shared,
+      sliceLocally: true,
+      page: internalPage,
+      pageSize,
+      total: rowsHeld,
+      totalPages: Math.max(1, Math.ceil(rowsHeld / pageSize))
+    };
+  }
+  if (pagination.mode === "page") {
+    return {
+      ...shared,
+      sliceLocally: false,
+      page: pagination.page,
+      pageSize: pagination.pageSize,
+      total: pagination.total,
+      totalPages: Math.max(1, Math.ceil(pagination.total / pagination.pageSize))
+    };
+  }
+  return {
+    ...shared,
+    sliceLocally: false,
+    page: pagination.page,
+    pageSize: pagination.pageSize,
+    hasNext: pagination.hasNext,
+    hasPrev: pagination.hasPrev ?? pagination.page > 1,
+    onNext: pagination.onNext,
+    onPrev: pagination.onPrev
+  };
+}
+function nextSortOrder(current, columnKey, directions) {
+  if (!current || current.columnKey !== columnKey) {
+    return { columnKey, order: directions[0] };
+  }
+  const at = directions.indexOf(current.order);
+  const next = directions[at + 1];
+  return next ? { columnKey, order: next } : null;
+}
+function SortIndicator({ order }) {
+  const Glyph = order === "ascend" ? ArrowUp : order === "descend" ? ArrowDown : ChevronsUpDown;
+  return /* @__PURE__ */ jsx50(
+    Glyph,
+    {
+      "aria-hidden": true,
+      className: cn(
+        "ml-1.5 h-3 w-3 shrink-0",
+        order ? "text-primary" : "text-muted-foreground/40"
+      )
+    }
+  );
+}
 function DataTable({
   columns,
   data,
@@ -3614,10 +3793,8 @@ function DataTable({
   skeletonRows = 6,
   emptyTitle = "No data yet",
   emptyDescription,
-  pageSize = 10,
-  page: controlledPage,
-  onPageChange,
-  totalRows,
+  pagination = { mode: "client" },
+  sorting,
   className,
   rowKey,
   rowCta,
@@ -3627,19 +3804,39 @@ function DataTable({
   tableLayout = "fixed",
   theadClassName,
   headerStyle = "surface",
-  footerSummary = "range",
-  footerCountLabels = { singular: "item", plural: "items" },
   snug = false,
-  expandable,
-  footerLeading
+  expandable
 }) {
-  const isControlled = controlledPage !== void 0;
-  const [internalPage, setInternalPage] = useState6(1);
-  const page = isControlled ? controlledPage : internalPage;
-  const setPage = isControlled ? (p) => onPageChange?.(p) : (p) => setInternalPage(p);
+  const [internalSort, setInternalSort] = useState7(null);
+  const isSortControlled = sorting?.value !== void 0;
+  const sortState = isSortControlled ? sorting.value : internalSort;
+  const columnByKey = useMemo4(() => new Map(columns.map((c) => [c.key, c])), [columns]);
+  const sortedData = useMemo4(() => {
+    if (!sortState) return data;
+    const sorter = columnByKey.get(sortState.columnKey)?.sorter;
+    if (typeof sorter !== "function") return data;
+    const out = data.slice().sort(sorter);
+    return sortState.order === "descend" ? out.reverse() : out;
+  }, [data, sortState, columnByKey]);
+  const [internalPage, setInternalPage] = useState7(1);
+  const pager = normalizePagination(pagination, sortedData.length, internalPage);
+  const paginated = pager.sliceLocally ? sortedData.slice((pager.page - 1) * pager.pageSize, pager.page * pager.pageSize) : sortedData;
+  const from = (pager.page - 1) * pager.pageSize;
+  const setSort = (next) => {
+    if (isSortControlled) sorting.onChange?.(next);
+    else {
+      setInternalSort(next);
+      sorting?.onChange?.(next);
+    }
+    if (pagination.mode === "client") setInternalPage(1);
+  };
+  const goToPage = (p) => {
+    if (pagination.mode === "page") pagination.onPageChange(p);
+    else if (pagination.mode === "client") setInternalPage(p);
+  };
   const hasAction = rowAction != null || rowCta != null;
   const hasSpacer = tableLayout === "content";
-  const [internalExpanded, setInternalExpanded] = useState6([]);
+  const [internalExpanded, setInternalExpanded] = useState7([]);
   const isExpandControlled = expandable?.expandedKeys !== void 0;
   const expandedKeys = isExpandControlled ? expandable.expandedKeys : internalExpanded;
   const hasExpand = expandable != null;
@@ -3652,9 +3849,6 @@ function DataTable({
     else setInternalExpanded(next);
     if (!isOpen) expandable.onExpand?.(row, index);
   };
-  const total = totalRows ?? data.length;
-  const totalPages = Math.ceil(total / pageSize);
-  const paginated = isControlled ? data : data.slice((page - 1) * pageSize, page * pageSize);
   const seenKeys = /* @__PURE__ */ new Map();
   const rowKeys = paginated.map((row) => {
     const base = rowKey(row);
@@ -3675,12 +3869,34 @@ function DataTable({
   const expandGuideLeft = cellPadLeft + 10;
   const actionGutter = comfortable ? 20 : compact ? 12 : 16;
   const ROW_CLICK_IGNORE = 'button, a, input, select, textarea, label, [role="button"], [role="link"], [role="checkbox"], [role="menuitem"], [role="menu"], [role="dialog"], [data-row-click-ignore]';
+  const scrollRef = useRef4(null);
+  const [edge, setEdge] = useState7({ start: false, end: false });
+  const syncEdges = useCallback2(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const max = el.scrollWidth - el.clientWidth;
+    setEdge({
+      start: el.scrollLeft > 1,
+      // 1px of slack: sub-pixel widths mean scrollLeft rarely reaches `max`
+      // exactly, which would leave the end shadow stuck on at full scroll.
+      end: max > 1 && el.scrollLeft < max - 1
+    });
+  }, []);
+  useEffect3(() => {
+    const raf = requestAnimationFrame(syncEdges);
+    window.addEventListener("resize", syncEdges);
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", syncEdges);
+    };
+  }, [syncEdges, columns.length, paginated.length]);
   const isRowClickTarget = (target, rowEl) => {
     if (!(target instanceof Element)) return false;
+    if (!rowEl.contains(target)) return false;
     const interactive = target.closest(ROW_CLICK_IGNORE);
     return !(interactive && rowEl.contains(interactive));
   };
-  return /* @__PURE__ */ jsxs30(
+  return /* @__PURE__ */ jsxs31(
     "div",
     {
       className: cn(
@@ -3688,17 +3904,21 @@ function DataTable({
         className
       ),
       children: [
-        /* @__PURE__ */ jsx49(
+        /* @__PURE__ */ jsx50(
           "div",
           {
+            ref: scrollRef,
+            onScroll: syncEdges,
+            "data-scrolled-start": edge.start ? "true" : "false",
+            "data-scrolled-end": edge.end ? "true" : "false",
             className: cn(
-              "overflow-x-auto",
+              "group/table-scroll overflow-x-auto",
               "[&::-webkit-scrollbar]:h-[4px] [&::-webkit-scrollbar-track]:bg-transparent",
               "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent",
               "hover:[&::-webkit-scrollbar-thumb]:bg-border dark:hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/35"
             ),
             style: { scrollbarWidth: "thin", scrollbarColor: "var(--border) transparent" },
-            children: /* @__PURE__ */ jsxs30(
+            children: /* @__PURE__ */ jsxs31(
               "table",
               {
                 className: cn(tableLayout === "auto" && "min-w-[920px]"),
@@ -3710,9 +3930,9 @@ function DataTable({
                   width: "100%"
                 },
                 children: [
-                  tableLayout === "fixed" && !isEmpty && /* @__PURE__ */ jsxs30("colgroup", { children: [
-                    hasExpand ? /* @__PURE__ */ jsx49("col", { style: { width: 40 } }) : null,
-                    columns.map((col) => /* @__PURE__ */ jsx49(
+                  tableLayout === "fixed" && !isEmpty && /* @__PURE__ */ jsxs31("colgroup", { children: [
+                    hasExpand ? /* @__PURE__ */ jsx50("col", { style: { width: 40 } }) : null,
+                    columns.map((col) => /* @__PURE__ */ jsx50(
                       "col",
                       {
                         style: {
@@ -3723,9 +3943,9 @@ function DataTable({
                       },
                       col.key
                     )),
-                    hasAction ? /* @__PURE__ */ jsx49("col", { style: { width: 0 } }) : null
+                    hasAction ? /* @__PURE__ */ jsx50("col", { style: { width: 0 } }) : null
                   ] }),
-                  /* @__PURE__ */ jsx49(
+                  /* @__PURE__ */ jsx50(
                     "thead",
                     {
                       className: cn(
@@ -3733,7 +3953,7 @@ function DataTable({
                         headerStyle === "minimal" && "bg-transparent",
                         theadClassName
                       ),
-                      children: /* @__PURE__ */ jsxs30(
+                      children: /* @__PURE__ */ jsxs31(
                         "tr",
                         {
                           className: cn(
@@ -3741,39 +3961,125 @@ function DataTable({
                             headerStyle === "surface" ? "border-border" : "border-border/70"
                           ),
                           children: [
-                            hasExpand ? /* @__PURE__ */ jsx49("th", { className: cn(headPad, "w-10 p-0"), "aria-hidden": true }) : null,
-                            columns.map((col) => /* @__PURE__ */ jsx49(
-                              "th",
-                              {
-                                className: cn(
-                                  headPad,
-                                  headText,
-                                  "whitespace-nowrap align-middle",
-                                  col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left",
-                                  // Width hints live in `cellClassName`; see `isEmpty`.
-                                  !isEmpty && col.cellClassName
-                                ),
-                                children: col.header
-                              },
-                              col.key
-                            )),
-                            hasSpacer ? /* @__PURE__ */ jsx49("th", { className: "w-full p-0", "aria-hidden": true }) : null,
-                            hasAction ? /* @__PURE__ */ jsx49("th", { className: "sticky right-0 z-[1] w-0 p-0", "aria-hidden": true }) : null
+                            hasExpand ? /* @__PURE__ */ jsx50("th", { className: cn(headPad, "w-10 p-0"), "aria-hidden": true }) : null,
+                            columns.map((col) => {
+                              const sortable = col.sorter != null && col.sorter !== false;
+                              const activeOrder = sortState?.columnKey === col.key ? sortState.order : null;
+                              const align = col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left";
+                              return /* @__PURE__ */ jsx50(
+                                "th",
+                                {
+                                  style: col.cellStyle,
+                                  "aria-sort": !sortable ? void 0 : activeOrder === "ascend" ? "ascending" : activeOrder === "descend" ? "descending" : "none",
+                                  className: cn(
+                                    headPad,
+                                    headText,
+                                    "whitespace-nowrap align-middle",
+                                    align,
+                                    // Width hints live in `cellClassName`; see `isEmpty`.
+                                    !isEmpty && col.cellClassName
+                                  ),
+                                  children: sortable ? /* @__PURE__ */ jsxs31(
+                                    "button",
+                                    {
+                                      type: "button",
+                                      onClick: () => setSort(
+                                        nextSortOrder(
+                                          sortState,
+                                          col.key,
+                                          col.sortDirections ?? ["ascend", "descend"]
+                                        )
+                                      ),
+                                      className: cn(
+                                        // Inherits the header's own type styling rather than
+                                        // restating it, so a sortable header is visually
+                                        // identical to a plain one apart from the glyph.
+                                        //
+                                        // Deliberately NOT truncating: a plain header does
+                                        // not, so a sortable one that did would ellipsise
+                                        // names the column beside it shows in full.
+                                        // A bare <button>, so Preflight's `font: inherit`
+                                        // already hands it the header's own type. The
+                                        // `text-[inherit]` that used to be here did nothing
+                                        // for size — Tailwind reads `text-[<non-length>]` as
+                                        // a colour — and only looked like it worked because
+                                        // nothing here sets a competing font-size.
+                                        "-mx-1 inline-flex items-center whitespace-nowrap rounded px-1 py-0.5 transition-colors",
+                                        "hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
+                                        activeOrder && "text-foreground",
+                                        // The glyph follows the text, so on a right-aligned
+                                        // column it has to lead instead — otherwise it sits
+                                        // between the label and the numbers it describes.
+                                        col.align === "right" && "flex-row-reverse [&>svg]:ml-0 [&>svg]:mr-1.5"
+                                      ),
+                                      children: [
+                                        col.header,
+                                        /* @__PURE__ */ jsx50(SortIndicator, { order: activeOrder })
+                                      ]
+                                    }
+                                  ) : col.header
+                                },
+                                col.key
+                              );
+                            }),
+                            hasSpacer ? /* @__PURE__ */ jsx50("th", { className: "w-full p-0", "aria-hidden": true }) : null,
+                            hasAction ? /* @__PURE__ */ jsx50("th", { className: "sticky right-0 z-[1] w-0 p-0", "aria-hidden": true }) : null
                           ]
                         }
                       )
                     }
                   ),
-                  /* @__PURE__ */ jsx49("tbody", { children: isLoading ? Array.from({ length: skeletonRows }).map((_, i) => /* @__PURE__ */ jsx49(
-                    TableRowSkeleton,
-                    {
-                      cols: columns.length + (hasExpand ? 1 : 0),
-                      density,
-                      snug
-                    },
-                    i
-                  )) : paginated.length === 0 ? /* @__PURE__ */ jsx49("tr", { children: /* @__PURE__ */ jsx49("td", { colSpan: totalColSpan, children: /* @__PURE__ */ jsx49(EmptyState, { title: emptyTitle, description: emptyDescription }) }) }) : paginated.flatMap((row, i) => [
-                    /* @__PURE__ */ jsxs30(
+                  /* @__PURE__ */ jsx50("tbody", { children: isLoading ? (
+                    // The placeholder row mirrors the real row's cells exactly: one
+                    // per column, carrying that column's own width, alignment and
+                    // sticky classes, plus the same expand / spacer / action cells.
+                    //
+                    // It used to be a generic `TableRowSkeleton` with a cell count
+                    // and nothing else. With `tableLayout="content"` the real row
+                    // also carries a greedy spacer cell, so the skeleton was one cell
+                    // short: the last shimmer stretched across the spacer's slot and
+                    // the placeholder columns stopped lining up with the headers
+                    // above them — which reads as a column missing while loading.
+                    Array.from({ length: skeletonRows }).map((_, r) => /* @__PURE__ */ jsxs31(
+                      "tr",
+                      {
+                        className: cn(
+                          "border-b border-border/60",
+                          comfortable && "min-h-[56px]",
+                          compact && "min-h-[44px]"
+                        ),
+                        children: [
+                          hasExpand ? /* @__PURE__ */ jsx50("td", { className: cn(cellPad, "w-10") }) : null,
+                          columns.map((col, c) => /* @__PURE__ */ jsx50(
+                            "td",
+                            {
+                              style: col.cellStyle,
+                              className: cn(
+                                cellPad,
+                                "align-middle overflow-hidden",
+                                col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left",
+                                col.cellClassName
+                              ),
+                              children: /* @__PURE__ */ jsx50(
+                                Shimmer,
+                                {
+                                  className: cn(
+                                    "inline-block h-3.5 max-w-full",
+                                    c === 0 ? "w-20" : c === columns.length - 1 ? "w-14" : "w-28"
+                                  )
+                                }
+                              )
+                            },
+                            col.key
+                          )),
+                          hasSpacer ? /* @__PURE__ */ jsx50("td", { className: "p-0", "aria-hidden": true }) : null,
+                          hasAction ? /* @__PURE__ */ jsx50("td", { className: "sticky right-0 z-[1] w-0 p-0", "aria-hidden": true }) : null
+                        ]
+                      },
+                      r
+                    ))
+                  ) : paginated.length === 0 ? /* @__PURE__ */ jsx50("tr", { children: /* @__PURE__ */ jsx50("td", { colSpan: totalColSpan, children: /* @__PURE__ */ jsx50(EmptyState, { title: emptyTitle, description: emptyDescription }) }) }) : paginated.flatMap((row, i) => [
+                    /* @__PURE__ */ jsxs31(
                       "tr",
                       {
                         className: cn(
@@ -3805,7 +4111,7 @@ function DataTable({
                           onRowClick(row, i);
                         } : void 0,
                         children: [
-                          hasExpand ? /* @__PURE__ */ jsx49("td", { className: cn(cellPad, "w-10 align-middle"), children: expandable.isExpandable?.(row, i) ?? true ? /* @__PURE__ */ jsx49(
+                          hasExpand ? /* @__PURE__ */ jsx50("td", { className: cn(cellPad, "w-10 align-middle"), children: expandable.isExpandable?.(row, i) ?? true ? /* @__PURE__ */ jsx50(
                             "button",
                             {
                               type: "button",
@@ -3813,7 +4119,7 @@ function DataTable({
                               "aria-label": expandable.toggleLabel ?? "Toggle row details",
                               onClick: () => toggleExpanded(rowKeys[i], row, i),
                               className: "inline-flex h-5 w-5 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                              children: /* @__PURE__ */ jsx49(
+                              children: /* @__PURE__ */ jsx50(
                                 ChevronDown6,
                                 {
                                   className: cn(
@@ -3824,9 +4130,10 @@ function DataTable({
                               )
                             }
                           ) : null }) : null,
-                          columns.map((col) => /* @__PURE__ */ jsx49(
+                          columns.map((col) => /* @__PURE__ */ jsx50(
                             "td",
                             {
+                              style: col.cellStyle,
                               className: cn(
                                 cellPad,
                                 "align-middle",
@@ -3845,19 +4152,19 @@ function DataTable({
                             },
                             col.key
                           )),
-                          hasSpacer ? /* @__PURE__ */ jsx49("td", { className: "p-0", "aria-hidden": true }) : null,
+                          hasSpacer ? /* @__PURE__ */ jsx50("td", { className: "p-0", "aria-hidden": true }) : null,
                           hasAction ? (
                             // Zero-width sticky cell pinned to the right edge of the
                             // viewport. Its children are positioned absolutely so they
                             // float over the row (out of the 0-width cell) — the action
                             // stays in view while scrolling and nothing trails the last
                             // data column. Everything is revealed on hover only.
-                            /* @__PURE__ */ jsx49("td", { className: "sticky right-0 z-[1] w-0 p-0 align-middle", children: /* @__PURE__ */ jsx49(
+                            /* @__PURE__ */ jsx50("td", { className: "sticky right-0 z-[1] w-0 p-0 align-middle", children: /* @__PURE__ */ jsx50(
                               "span",
                               {
                                 className: "absolute top-1/2 -translate-y-1/2 z-[1] inline-flex items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
                                 style: { right: actionGutter },
-                                children: rowAction != null ? typeof rowAction === "function" ? rowAction(row, i) : rowAction : /* @__PURE__ */ jsx49(
+                                children: rowAction != null ? typeof rowAction === "function" ? rowAction(row, i) : rowAction : /* @__PURE__ */ jsx50(
                                   "button",
                                   {
                                     type: "button",
@@ -3879,17 +4186,17 @@ function DataTable({
                     // The panel spans every column, including the toggle, spacer and
                     // action cells, so it reads as one band under its row rather
                     // than as a cell inside the grid.
-                    rowExpanded(row, i) ? /* @__PURE__ */ jsx49(
+                    rowExpanded(row, i) ? /* @__PURE__ */ jsx50(
                       "tr",
                       {
                         className: "border-b border-border/60 bg-muted/40 last:border-b-0 dark:bg-muted/25",
-                        children: /* @__PURE__ */ jsx49("td", { colSpan: totalColSpan, className: "p-0 align-top", children: /* @__PURE__ */ jsxs30(
+                        children: /* @__PURE__ */ jsx50("td", { colSpan: totalColSpan, className: "p-0 align-top", children: /* @__PURE__ */ jsxs31(
                           "div",
                           {
                             className: "relative",
                             style: { paddingLeft: expandIndent, paddingRight: cellPadLeft },
                             children: [
-                              /* @__PURE__ */ jsx49(
+                              /* @__PURE__ */ jsx50(
                                 "span",
                                 {
                                   "aria-hidden": true,
@@ -3910,92 +4217,927 @@ function DataTable({
             )
           }
         ),
-        !isLoading && paginated.length > 0 && /* @__PURE__ */ jsxs30(
-          "div",
+        pager.showFooter && !isLoading && paginated.length > 0 && /* @__PURE__ */ jsx50(
+          DataTableFooter,
           {
-            className: cn(
-              "flex items-center gap-4 flex-wrap border-t border-border",
-              footerPad,
-              footerSummary === "count" && totalPages <= 1 && !footerLeading ? "justify-start" : "justify-between"
-            ),
-            children: [
-              /* @__PURE__ */ jsxs30("div", { className: "flex items-center gap-3", children: [
-                footerLeading,
-                footerSummary === "count" ? /* @__PURE__ */ jsxs30("span", { className: "text-[12px] text-muted-foreground tabular-nums", children: [
-                  /* @__PURE__ */ jsx49("span", { className: "font-medium text-foreground", children: total }),
-                  " ",
-                  total === 1 ? footerCountLabels.singular : footerCountLabels.plural
-                ] }) : /* @__PURE__ */ jsxs30("span", { className: "text-[12px] text-muted-foreground tabular-nums", children: [
-                  "Showing",
-                  " ",
-                  /* @__PURE__ */ jsxs30("span", { className: "text-foreground font-medium", children: [
-                    Math.min((page - 1) * pageSize + 1, total),
-                    "\u2013",
-                    Math.min(page * pageSize, total)
-                  ] }),
-                  " ",
-                  "of",
-                  " ",
-                  /* @__PURE__ */ jsx49("span", { className: "text-foreground font-medium", children: total.toLocaleString() }),
-                  " ",
-                  total !== 1 ? "results" : "result"
-                ] })
-              ] }),
-              (footerSummary === "range" || footerSummary === "count") && totalPages > 1 && /* @__PURE__ */ jsxs30("div", { className: "flex items-center gap-1", children: [
-                /* @__PURE__ */ jsx49(
-                  "button",
-                  {
-                    onClick: () => setPage(Math.max(1, page - 1)),
-                    disabled: page === 1,
-                    className: "w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors",
-                    children: /* @__PURE__ */ jsx49(ChevronLeft3, { className: "w-3.5 h-3.5" })
-                  }
-                ),
-                getPageRange(page, totalPages).map(
-                  (p, idx) => p === "\u2026" ? /* @__PURE__ */ jsx49(
-                    "span",
-                    {
-                      className: "w-7 h-7 flex items-center justify-center text-[12px] text-muted-foreground select-none",
-                      children: "\u2026"
-                    },
-                    `ellipsis-${idx}`
-                  ) : /* @__PURE__ */ jsx49(
-                    "button",
-                    {
-                      onClick: () => setPage(p),
-                      className: cn(
-                        "w-7 h-7 rounded-md text-[12px] font-medium transition-colors tabular-nums flex items-center justify-center",
-                        page === p ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                      ),
-                      children: p
-                    },
-                    p
-                  )
-                ),
-                /* @__PURE__ */ jsx49(
-                  "button",
-                  {
-                    onClick: () => setPage(Math.min(totalPages, page + 1)),
-                    disabled: page === totalPages,
-                    className: "w-7 h-7 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed transition-colors",
-                    children: /* @__PURE__ */ jsx49(ChevronRight5, { className: "w-3.5 h-3.5" })
-                  }
-                )
-              ] })
-            ]
+            pad: footerPad,
+            summary: pager.summary,
+            countLabels: pager.countLabels,
+            leading: pager.leading,
+            pageSizeOptions: pager.pageSizeOptions,
+            pageSize: pager.pageSize,
+            onPageSizeChange: pager.onPageSizeChange,
+            from,
+            rowCount: paginated.length,
+            total: pager.total,
+            page: pager.page,
+            totalPages: pager.totalPages,
+            hasNext: pager.hasNext,
+            hasPrev: pager.hasPrev,
+            onNext: pager.onNext,
+            onPrev: pager.onPrev,
+            onPageChange: goToPage
           }
         )
       ]
     }
   );
 }
+var PAGE_BUTTON = "w-7 h-7 rounded-md flex items-center justify-center text-[12px] font-medium tabular-nums transition-colors";
+var PAGE_BUTTON_IDLE = "text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed";
+var PAGE_BUTTON_ACTIVE = "bg-primary text-primary-foreground shadow-sm";
+function DataTableFooter({
+  pad: pad2,
+  summary,
+  countLabels,
+  leading,
+  pageSizeOptions,
+  pageSize,
+  onPageSizeChange,
+  from,
+  rowCount,
+  total,
+  page,
+  totalPages,
+  hasNext,
+  hasPrev,
+  onNext,
+  onPrev,
+  onPageChange
+}) {
+  const isCursor = totalPages === void 0;
+  const pageCount = totalPages ?? 0;
+  const showPager = isCursor ? !!hasPrev || !!hasNext : pageCount > 1;
+  const showRowsPerPage = !!pageSizeOptions?.length && !!onPageSizeChange;
+  const start = from + 1;
+  const end = total !== void 0 ? Math.min(from + pageSize, total) : from + rowCount;
+  const pages = isCursor ? [...hasPrev ? [page - 1] : [], page, ...hasNext ? [page + 1] : []] : getPageRange(page, pageCount);
+  const goPrev = () => isCursor ? onPrev?.() : onPageChange(Math.max(1, page - 1));
+  const goNext = () => isCursor ? onNext?.() : onPageChange(Math.min(pageCount, page + 1));
+  const showPrev = isCursor ? !!hasPrev : true;
+  const showNext = isCursor ? !!hasNext : true;
+  const prevDisabled = isCursor ? false : page === 1;
+  const nextDisabled = isCursor ? false : page === pageCount;
+  const goToNumber = (p) => {
+    if (!isCursor) return onPageChange(p);
+    if (p === page - 1) onPrev?.();
+    else if (p === page + 1) onNext?.();
+  };
+  return /* @__PURE__ */ jsxs31(
+    "div",
+    {
+      className: cn(
+        "flex items-center gap-4 flex-wrap border-t border-border",
+        pad2,
+        summary === "none" && !showRowsPerPage && !leading ? "justify-end" : "justify-between"
+      ),
+      children: [
+        /* @__PURE__ */ jsxs31("div", { className: "flex items-center gap-3", children: [
+          leading,
+          showRowsPerPage ? /* @__PURE__ */ jsxs31("div", { className: "flex items-center gap-2 text-[12px] text-muted-foreground", children: [
+            /* @__PURE__ */ jsx50("span", { children: "Rows per page" }),
+            /* @__PURE__ */ jsxs31(
+              Select,
+              {
+                value: String(pageSize),
+                onValueChange: (v) => onPageSizeChange(Number(v)),
+                children: [
+                  /* @__PURE__ */ jsx50(SelectTrigger, { size: "sm", "aria-label": "Rows per page", children: /* @__PURE__ */ jsx50(SelectValue, {}) }),
+                  /* @__PURE__ */ jsx50(SelectContent, { children: pageSizeOptions.map((n) => /* @__PURE__ */ jsx50(SelectItem, { value: String(n), children: n }, n)) })
+                ]
+              }
+            )
+          ] }) : null,
+          summary === "count" && total !== void 0 ? /* @__PURE__ */ jsxs31("span", { className: "text-[12px] text-muted-foreground tabular-nums", children: [
+            /* @__PURE__ */ jsx50("span", { className: "font-medium text-foreground", children: total.toLocaleString() }),
+            " ",
+            total === 1 ? countLabels.singular : countLabels.plural
+          ] }) : summary === "range" ? /* @__PURE__ */ jsxs31("span", { className: "text-[12px] text-muted-foreground tabular-nums", children: [
+            "Showing",
+            " ",
+            /* @__PURE__ */ jsxs31("span", { className: "text-foreground font-medium", children: [
+              Math.min(start, total ?? start),
+              "\u2013",
+              end
+            ] }),
+            total !== void 0 ? /* @__PURE__ */ jsxs31(Fragment7, { children: [
+              " ",
+              "of",
+              " ",
+              /* @__PURE__ */ jsx50("span", { className: "text-foreground font-medium", children: total.toLocaleString() }),
+              " ",
+              total !== 1 ? "results" : "result"
+            ] }) : null
+          ] }) : null
+        ] }),
+        showPager && /* @__PURE__ */ jsxs31("div", { className: "flex items-center gap-1", children: [
+          showPrev ? /* @__PURE__ */ jsx50(
+            "button",
+            {
+              type: "button",
+              "aria-label": "Previous page",
+              onClick: goPrev,
+              disabled: prevDisabled,
+              className: cn(PAGE_BUTTON, PAGE_BUTTON_IDLE),
+              children: /* @__PURE__ */ jsx50(ChevronLeft3, { className: "w-3.5 h-3.5" })
+            }
+          ) : null,
+          pages.map(
+            (p, idx) => p === "\u2026" ? /* @__PURE__ */ jsx50(
+              "span",
+              {
+                className: "w-7 h-7 flex items-center justify-center text-[12px] text-muted-foreground select-none",
+                children: "\u2026"
+              },
+              `ellipsis-${idx}`
+            ) : /* @__PURE__ */ jsx50(
+              "button",
+              {
+                type: "button",
+                "aria-current": p === page ? "page" : void 0,
+                onClick: () => goToNumber(p),
+                className: cn(PAGE_BUTTON, p === page ? PAGE_BUTTON_ACTIVE : PAGE_BUTTON_IDLE),
+                children: p
+              },
+              p
+            )
+          ),
+          showNext ? /* @__PURE__ */ jsx50(
+            "button",
+            {
+              type: "button",
+              "aria-label": "Next page",
+              onClick: goNext,
+              disabled: nextDisabled,
+              className: cn(PAGE_BUTTON, PAGE_BUTTON_IDLE),
+              children: /* @__PURE__ */ jsx50(ChevronRight5, { className: "w-3.5 h-3.5" })
+            }
+          ) : null
+        ] })
+      ]
+    }
+  );
+}
+function frozenColumn({
+  left,
+  right,
+  isLast = false
+}) {
+  const toRight = right !== void 0;
+  const boundary = toRight ? [
+    "after:pointer-events-none after:absolute after:inset-y-0 after:left-0 after:w-px after:bg-border",
+    "before:pointer-events-none before:absolute before:inset-y-0 before:left-0 before:w-1",
+    "before:opacity-0 before:transition-opacity before:duration-200",
+    "before:bg-[linear-gradient(to_right,rgb(0_0_0/0.07),transparent)]",
+    "dark:before:bg-[linear-gradient(to_right,rgb(0_0_0/0.35),transparent)]",
+    "group-data-[scrolled-end=true]/table-scroll:before:opacity-100"
+  ] : [
+    "after:pointer-events-none after:absolute after:inset-y-0 after:right-0 after:w-px after:bg-border",
+    "before:pointer-events-none before:absolute before:inset-y-0 before:right-0 before:w-1",
+    "before:opacity-0 before:transition-opacity before:duration-200",
+    "before:bg-[linear-gradient(to_left,rgb(0_0_0/0.07),transparent)]",
+    "dark:before:bg-[linear-gradient(to_left,rgb(0_0_0/0.35),transparent)]",
+    "group-data-[scrolled-start=true]/table-scroll:before:opacity-100"
+  ];
+  return {
+    cellStyle: toRight ? { right } : { left: left ?? 0 },
+    cellClassName: cn(
+      "sticky z-10 bg-card",
+      // Follow the row's own hover rather than sitting at a fixed tint: the
+      // frozen cells are part of the row, and a row that highlights in two
+      // shades reads as two rows. Mixed to an opaque colour, never an alpha —
+      // a translucent pinned cell lets the rows scrolling beneath show through.
+      "group-hover:bg-[color-mix(in_oklab,var(--muted)_40%,var(--card))]",
+      "dark:group-hover:bg-[color-mix(in_oklab,var(--muted)_25%,var(--card))]",
+      isLast && boundary
+    )
+  };
+}
+
+// src/data-table-card.tsx
+import { jsx as jsx51, jsxs as jsxs32 } from "react/jsx-runtime";
+function DataTableCard({
+  columns,
+  data,
+  rowKey,
+  isLoading,
+  title,
+  description,
+  actions,
+  tabs,
+  toolbar,
+  footer,
+  emptyTitle,
+  emptyDescription,
+  emptyState,
+  errorState,
+  pagination,
+  sorting,
+  rowAction,
+  onRowClick,
+  tableLayout = "content",
+  expandable,
+  density = "compact",
+  skeletonRows = 8,
+  maxBodyHeight = "calc(100vh - 260px)",
+  className
+}) {
+  const capped = maxBodyHeight !== "none";
+  const showEmptyState = !!emptyState && !isLoading && data.length === 0;
+  return /* @__PURE__ */ jsxs32(
+    "div",
+    {
+      className: cn("overflow-hidden rounded-xl border border-border bg-card", className),
+      style: capped ? { ["--dtc-max-body"]: maxBodyHeight } : void 0,
+      children: [
+        title && /* @__PURE__ */ jsxs32("div", { className: "flex flex-wrap items-start justify-between gap-3 border-b border-border px-4 py-3.5", children: [
+          /* @__PURE__ */ jsxs32("div", { className: "min-w-0", children: [
+            /* @__PURE__ */ jsx51("h2", { className: "text-sm font-semibold text-foreground", children: title }),
+            description && /* @__PURE__ */ jsx51("p", { className: "mt-0.5 text-xs text-muted-foreground", children: description })
+          ] }),
+          actions && /* @__PURE__ */ jsx51("div", { className: "flex shrink-0 items-center gap-2", children: actions })
+        ] }),
+        tabs && /* @__PURE__ */ jsx51("div", { className: "border-b border-border px-4 pt-3", children: tabs }),
+        toolbar && /* @__PURE__ */ jsx51("div", { className: "border-b border-border px-4 py-3", children: toolbar }),
+        errorState,
+        !errorState && showEmptyState && emptyState,
+        /* @__PURE__ */ jsx51(
+          DataTable,
+          {
+            className: cn(
+              (showEmptyState || errorState) && "hidden",
+              // The card already draws the border and radius; a second set inside
+              // it would read as a table nested in a card.
+              "rounded-none border-0",
+              footer && "[&>.border-t]:hidden",
+              // Cap the scroll container so the body scrolls internally while the
+              // toolbar and footer stay fixed. The cap comes from an inline custom
+              // property rather than a class, so a caller's `className` override
+              // cannot depend on class-merge order.
+              capped && "[&>div:first-child]:max-h-[var(--dtc-max-body)] [&>div:first-child]:overflow-y-auto"
+            ),
+            theadClassName: capped ? "sticky top-0 z-20 [&_th]:bg-card" : void 0,
+            tableLayout,
+            columns,
+            data,
+            isLoading,
+            rowKey,
+            skeletonRows,
+            density,
+            pagination,
+            sorting,
+            rowAction,
+            onRowClick,
+            emptyTitle,
+            emptyDescription,
+            expandable
+          }
+        ),
+        footer && /* @__PURE__ */ jsx51("div", { className: "flex flex-wrap items-center justify-between gap-3 border-t border-border px-4 py-3", children: footer })
+      ]
+    }
+  );
+}
+function TableToolbarActions({ children }) {
+  return /* @__PURE__ */ jsx51("div", { className: "ml-auto flex items-center gap-2", children });
+}
+
+// src/data-card-list.tsx
+import { ChevronLeft as ChevronLeft4, ChevronRight as ChevronRight6 } from "lucide-react";
+import { jsx as jsx52, jsxs as jsxs33 } from "react/jsx-runtime";
+function DefaultCardSkeleton() {
+  return /* @__PURE__ */ jsxs33("div", { className: "rounded-xl border border-border bg-card p-3.5", children: [
+    /* @__PURE__ */ jsxs33("div", { className: "flex items-center gap-2", children: [
+      /* @__PURE__ */ jsx52(Shimmer, { className: "h-4 w-40" }),
+      /* @__PURE__ */ jsx52(Shimmer, { className: "ml-auto h-3.5 w-5", rounded: "sm" })
+    ] }),
+    /* @__PURE__ */ jsx52(Shimmer, { className: "mt-2 h-3 w-28" }),
+    /* @__PURE__ */ jsx52(Shimmer, { className: "mt-1.5 h-3 w-44" }),
+    /* @__PURE__ */ jsx52(Shimmer, { className: "mt-2.5 h-3.5 w-32" })
+  ] });
+}
+function DataCardList({
+  rows,
+  rowKey,
+  renderCard,
+  isLoading = false,
+  renderSkeleton,
+  skeletonCount = 6,
+  emptyTitle = "Nothing to show",
+  emptyDescription,
+  emptyState,
+  errorState,
+  pagination = { mode: "client" },
+  bordered = true,
+  className
+}) {
+  const pager = normalizePagination(pagination, rows.length, 1);
+  const page = pager.sliceLocally ? rows.slice((pager.page - 1) * pager.pageSize, pager.page * pager.pageSize) : rows;
+  const isCursor = pager.totalPages === void 0;
+  const hasPrev = isCursor ? !!pager.hasPrev : pager.page > 1;
+  const hasNext = isCursor ? !!pager.hasNext : pager.page < (pager.totalPages ?? 1);
+  const goPrev = () => isCursor ? pager.onPrev?.() : pagination.mode === "page" && pagination.onPageChange(pager.page - 1);
+  const goNext = () => isCursor ? pager.onNext?.() : pagination.mode === "page" && pagination.onPageChange(pager.page + 1);
+  const showPager = !errorState && pager.showFooter && !isLoading && page.length > 0 && (hasPrev || hasNext);
+  return /* @__PURE__ */ jsxs33(
+    "div",
+    {
+      className: cn(
+        "flex flex-col gap-3 p-4",
+        bordered && "rounded-xl border border-border bg-card",
+        className
+      ),
+      children: [
+        errorState ? errorState : isLoading ? Array.from({ length: skeletonCount }).map(
+          (_, i) => renderSkeleton ? /* @__PURE__ */ jsx52("div", { children: renderSkeleton(i) }, i) : /* @__PURE__ */ jsx52(DefaultCardSkeleton, {}, i)
+        ) : page.length === 0 ? emptyState ?? /* @__PURE__ */ jsx52(EmptyState, { title: emptyTitle, description: emptyDescription }) : page.map((row, i) => /* @__PURE__ */ jsx52("div", { children: renderCard(row, i) }, rowKey(row))),
+        showPager && /* @__PURE__ */ jsxs33("div", { className: "flex items-center justify-between gap-2 pt-1", children: [
+          /* @__PURE__ */ jsx52(
+            Button,
+            {
+              type: "button",
+              variant: "ghost",
+              size: "sm",
+              disabled: !hasPrev,
+              onClick: goPrev,
+              leftIcon: /* @__PURE__ */ jsx52(ChevronLeft4, { className: "h-3.5 w-3.5" }),
+              children: "Prev"
+            }
+          ),
+          /* @__PURE__ */ jsxs33("span", { className: "text-[12px] tabular-nums text-muted-foreground", children: [
+            "Page ",
+            pager.page,
+            pager.totalPages !== void 0 ? ` of ${pager.totalPages}` : ""
+          ] }),
+          /* @__PURE__ */ jsx52(
+            Button,
+            {
+              type: "button",
+              variant: "ghost",
+              size: "sm",
+              disabled: !hasNext,
+              onClick: goNext,
+              rightIcon: /* @__PURE__ */ jsx52(ChevronRight6, { className: "h-3.5 w-3.5" }),
+              children: "Next"
+            }
+          )
+        ] })
+      ]
+    }
+  );
+}
+
+// src/copyable-cell.tsx
+import { useEffect as useEffect4, useRef as useRef5, useState as useState8 } from "react";
+import { Check as Check8, Copy } from "lucide-react";
+import { toast } from "sonner";
+import { jsx as jsx53, jsxs as jsxs34 } from "react/jsx-runtime";
+function CopyableCell({
+  value,
+  display,
+  label = "Value",
+  onClick,
+  accent = false,
+  monospace = false,
+  fallback = "\u2014",
+  variant = "inline",
+  revealOnHover = true,
+  showToast = true,
+  valueClassName,
+  className
+}) {
+  const [copied, setCopied] = useState8(false);
+  const timer = useRef5(null);
+  useEffect4(
+    () => () => {
+      if (timer.current) clearTimeout(timer.current);
+    },
+    []
+  );
+  if (!value) return /* @__PURE__ */ jsx53("span", { className: "text-muted-foreground", children: fallback });
+  const copyValue = async () => {
+    try {
+      await navigator.clipboard.writeText(value);
+      setCopied(true);
+      if (showToast) toast.success(`${label} copied`);
+      if (timer.current) clearTimeout(timer.current);
+      timer.current = setTimeout(() => setCopied(false), 1500);
+    } catch {
+    }
+  };
+  const copy = (e) => {
+    e.stopPropagation();
+    void copyValue();
+  };
+  const text = cn(
+    "min-w-0 truncate font-medium",
+    accent ? "text-primary" : "text-foreground",
+    monospace && "font-mono",
+    valueClassName
+  );
+  const elided = display !== void 0 && display !== value;
+  const copyHint = copied ? "Copied" : elided ? `Copy ${value}` : `Copy ${label}`;
+  if (variant === "cell") {
+    return /* @__PURE__ */ jsx53(TooltipProvider, { delayDuration: 200, children: /* @__PURE__ */ jsxs34(Tooltip, { children: [
+      /* @__PURE__ */ jsx53(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsxs34(
+        "div",
+        {
+          role: "button",
+          tabIndex: 0,
+          onClick: copy,
+          onKeyDown: (e) => {
+            if (e.key !== "Enter" && e.key !== " ") return;
+            e.preventDefault();
+            e.stopPropagation();
+            void copyValue();
+          },
+          "aria-label": copied ? "Copied to clipboard" : `Copy ${value}`,
+          className: cn(
+            "group/copy flex min-w-0 cursor-pointer items-center gap-1 rounded-md",
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
+            className
+          ),
+          children: [
+            /* @__PURE__ */ jsx53("span", { className: cn(text, "flex-1 group-hover/copy:underline"), children: display ?? value }),
+            copied ? /* @__PURE__ */ jsx53(Check8, { className: "h-3 w-3 shrink-0 text-muted-foreground" }) : /* @__PURE__ */ jsx53(
+              Copy,
+              {
+                className: cn(
+                  "h-3 w-3 shrink-0 text-muted-foreground",
+                  revealOnHover && "opacity-0 transition-opacity group-hover/copy:opacity-100 group-focus-visible/copy:opacity-100 [@media(hover:none)]:opacity-100"
+                )
+              }
+            )
+          ]
+        }
+      ) }),
+      /* @__PURE__ */ jsx53(TooltipContent, { side: "top", className: "text-xs", children: copied ? "Copied" : "Copy" })
+    ] }) });
+  }
+  return /* @__PURE__ */ jsxs34("div", { className: cn("group/copy flex min-w-0 items-center gap-1", className), children: [
+    onClick ? (
+      // A bare <button>, deliberately, where the rest of flux would reach for
+      // `Button variant="link"`. That variant hard-codes `text-[15px]`, and
+      // the obvious override — `text-[inherit]` — does not beat it: Tailwind
+      // and tailwind-merge read `text-[<non-length>]` as a COLOUR, so the
+      // size class survives and the cell renders 2px larger than every other
+      // cell in the row. Preflight already gives a bare button `font: inherit`,
+      // so this simply inherits the cell's size at whatever density the table
+      // is using, which is what a cell should do.
+      /* @__PURE__ */ jsx53(
+        "button",
+        {
+          type: "button",
+          onClick,
+          title: value,
+          className: cn(
+            "cursor-pointer bg-transparent p-0 text-left underline-offset-4",
+            "hover:underline focus-visible:underline focus-visible:outline-none",
+            text
+          ),
+          children: display ?? value
+        }
+      )
+    ) : /* @__PURE__ */ jsx53("span", { className: text, title: value, children: display ?? value }),
+    /* @__PURE__ */ jsx53(TooltipProvider, { delayDuration: 200, children: /* @__PURE__ */ jsxs34(Tooltip, { children: [
+      /* @__PURE__ */ jsx53(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsx53(
+        Button,
+        {
+          type: "button",
+          variant: "ghost",
+          onClick: copy,
+          "aria-label": `Copy ${label}`,
+          className: cn(
+            "h-5 w-5 min-h-0 min-w-0 shrink-0 rounded-md p-0 text-muted-foreground",
+            revealOnHover && [
+              "opacity-0 transition-opacity",
+              // `group-hover` is the DataTable row; `group-hover/copy`
+              // covers a cell used outside one, where hovering the value
+              // itself should still reveal the button.
+              "focus-visible:opacity-100 group-hover:opacity-100 group-hover/copy:opacity-100",
+              // No hover to wait for on a touch device, so it simply shows.
+              "[@media(hover:none)]:opacity-100"
+            ]
+          ),
+          children: copied ? /* @__PURE__ */ jsx53(Check8, { className: "h-3 w-3" }) : /* @__PURE__ */ jsx53(Copy, { className: "h-3 w-3" })
+        }
+      ) }),
+      /* @__PURE__ */ jsx53(TooltipContent, { side: "top", className: "text-xs", children: copyHint })
+    ] }) })
+  ] });
+}
+
+// src/rotating-search-input.tsx
+import { useEffect as useEffect5, useMemo as useMemo5, useRef as useRef6, useState as useState9 } from "react";
+import { Search as Search3 } from "lucide-react";
+import { jsx as jsx54, jsxs as jsxs35 } from "react/jsx-runtime";
+var WORD_HEIGHT = 20;
+function RotatingSearchInput({
+  value,
+  onSearch,
+  words,
+  debounceDelay = 300,
+  className,
+  ariaLabel = "Search"
+}) {
+  const [internalValue, setInternalValue] = useState9(value ?? "");
+  const [index, setIndex] = useState9(0);
+  const [withTransition, setWithTransition] = useState9(true);
+  const latestOnSearch = useRef6(onSearch);
+  useEffect5(() => {
+    latestOnSearch.current = onSearch;
+  }, [onSearch]);
+  const debouncedRef = useRef6(null);
+  useEffect5(() => {
+    let timeout = null;
+    const debounced = (val) => {
+      if (timeout) clearTimeout(timeout);
+      timeout = setTimeout(() => latestOnSearch.current(val), debounceDelay);
+    };
+    debounced.cancel = () => {
+      if (timeout) clearTimeout(timeout);
+    };
+    debouncedRef.current = debounced;
+    return () => debounced.cancel();
+  }, [debounceDelay]);
+  useEffect5(() => {
+    if (value === void 0) return;
+    const timer = setTimeout(() => setInternalValue(value), 0);
+    return () => clearTimeout(timer);
+  }, [value]);
+  const extendedWords = useMemo5(
+    () => words.length === 0 ? [] : [...words, words[0]],
+    [words]
+  );
+  useEffect5(() => {
+    const timer = setTimeout(() => {
+      setWithTransition(false);
+      setIndex(0);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [words.length]);
+  useEffect5(() => {
+    if (words.length === 0) return;
+    const id = setInterval(() => {
+      setWithTransition(true);
+      setIndex((prev) => prev + 1);
+    }, 2500);
+    return () => clearInterval(id);
+  }, [words.length]);
+  useEffect5(() => {
+    if (index !== words.length) return;
+    const timer = setTimeout(() => {
+      setWithTransition(false);
+      setIndex(0);
+    }, 2e3);
+    return () => clearTimeout(timer);
+  }, [index, words.length]);
+  const handleChange = (e) => {
+    setInternalValue(e.target.value);
+    debouncedRef.current?.(e.target.value);
+  };
+  return /* @__PURE__ */ jsxs35("div", { className: cn("relative", className), children: [
+    !internalValue && words.length > 0 && /* @__PURE__ */ jsxs35("div", { className: "pointer-events-none absolute left-8 top-1/2 z-10 flex h-5 -translate-y-1/2 items-start gap-1 overflow-hidden text-xs text-muted-foreground", children: [
+      /* @__PURE__ */ jsx54("span", { className: "h-5 shrink-0 leading-5", children: "Search by" }),
+      /* @__PURE__ */ jsx54(
+        "div",
+        {
+          style: {
+            transform: `translateY(-${index * WORD_HEIGHT}px)`,
+            transition: withTransition ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)" : "none"
+          },
+          children: extendedWords.map((word, i) => /* @__PURE__ */ jsx54("div", { className: "h-5 leading-5", children: word }, `${word}-${i}`))
+        }
+      )
+    ] }),
+    /* @__PURE__ */ jsx54(Search3, { className: "pointer-events-none absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" }),
+    /* @__PURE__ */ jsx54(
+      Input,
+      {
+        type: "text",
+        "aria-label": ariaLabel,
+        value: internalValue,
+        placeholder: "",
+        onChange: handleChange,
+        className: "!h-8 min-h-0 bg-muted/50 pl-8 text-xs"
+      }
+    )
+  ] });
+}
+
+// src/column-manager.tsx
+import { useCallback as useCallback3, useEffect as useEffect6, useMemo as useMemo6, useState as useState10 } from "react";
+import {
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { GripVertical, RotateCcw } from "lucide-react";
+import { jsx as jsx55, jsxs as jsxs36 } from "react/jsx-runtime";
+function SortableColumnRow({
+  id,
+  label,
+  visibility,
+  pinned,
+  pinnedReason
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id,
+    // Both halves matter. `draggable` is the request — a fixed column cannot be
+    // picked up. `droppable` is what makes it actually stay put: without it the
+    // row is still a valid drop target, so dragging any other row onto it
+    // pushes it down and the "fixed" column has moved after all.
+    disabled: pinned ? { draggable: true, droppable: true } : void 0
+  });
+  const style = {
+    // A pinned row takes no transform at all, so it holds its place while the
+    // movable rows animate around it.
+    transform: pinned ? void 0 : CSS.Transform.toString(transform),
+    transition: pinned ? void 0 : transition,
+    // Above its neighbours while moving, so it slides over them rather than
+    // disappearing behind the next row's background.
+    zIndex: isDragging ? 10 : void 0
+  };
+  return /* @__PURE__ */ jsxs36(
+    "div",
+    {
+      ref: setNodeRef,
+      style,
+      className: cn(
+        "flex items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px] text-foreground",
+        isDragging && "bg-muted opacity-90",
+        // No hover affordance on a pinned row: there is nothing to pick up.
+        !isDragging && !pinned && "hover:bg-muted/50"
+      ),
+      children: [
+        pinned ? /* @__PURE__ */ jsxs36(
+          "span",
+          {
+            title: pinnedReason,
+            "aria-label": `${label} column is fixed in place`,
+            className: "flex min-w-0 flex-1 cursor-not-allowed items-center gap-2",
+            children: [
+              /* @__PURE__ */ jsx55(GripVertical, { className: "h-3.5 w-3.5 shrink-0 text-muted-foreground/30" }),
+              /* @__PURE__ */ jsx55("span", { className: "truncate", children: label })
+            ]
+          }
+        ) : /* @__PURE__ */ jsxs36(
+          "span",
+          {
+            className: "flex min-w-0 flex-1 cursor-grab items-center gap-2 active:cursor-grabbing",
+            ...attributes,
+            ...listeners,
+            children: [
+              /* @__PURE__ */ jsx55(GripVertical, { className: "h-3.5 w-3.5 shrink-0 text-muted-foreground" }),
+              /* @__PURE__ */ jsx55("span", { className: "truncate", children: label })
+            ]
+          }
+        ),
+        visibility && (visibility.lockedReason ? (
+          /**
+           * A locked column renders grey, not the primary blue a live tick
+           * uses: blue says "you chose this", and nobody chose this. The
+           * tooltip hangs off a wrapping span rather than the Checkbox, because
+           * a disabled control receives no pointer events and a trigger on the
+           * box itself would never fire. The span also carries the not-allowed
+           * cursor and is focusable, so the reason is reachable by keyboard as
+           * well as hover.
+           */
+          /* @__PURE__ */ jsx55(TooltipProvider, { delayDuration: 150, children: /* @__PURE__ */ jsxs36(Tooltip, { children: [
+            /* @__PURE__ */ jsx55(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ jsx55("span", { tabIndex: 0, className: "shrink-0 cursor-not-allowed rounded-sm", children: /* @__PURE__ */ jsx55(
+              Checkbox,
+              {
+                checked: true,
+                disabled: true,
+                "aria-label": `${label} column is always shown`,
+                className: "pointer-events-none border-border opacity-100 data-[state=checked]:border-border data-[state=checked]:bg-muted-foreground/40 data-[state=checked]:text-foreground/70"
+              }
+            ) }) }),
+            /* @__PURE__ */ jsx55(TooltipContent, { className: "max-w-[15rem]", children: visibility.lockedReason })
+          ] }) })
+        ) : /* @__PURE__ */ jsx55(
+          Checkbox,
+          {
+            checked: visibility.checked,
+            onCheckedChange: visibility.onToggle,
+            "aria-label": `Show ${label} column`,
+            className: "shrink-0"
+          }
+        ))
+      ]
+    }
+  );
+}
+function ColumnManager({
+  columns,
+  order,
+  onOrderChange,
+  hiddenKeys,
+  onHiddenKeysChange,
+  fixedKeys = [],
+  pinnedKeys = [],
+  fixedReason = "Always shown. The table needs this column to make sense.",
+  pinnedReason = "Fixed in place. This column stays frozen at the left of the table.",
+  onReset,
+  label = "Columns",
+  iconOnly = false,
+  className,
+  align = "end"
+}) {
+  const canToggleVisibility = !!hiddenKeys && !!onHiddenKeysChange;
+  const hidden = useMemo6(() => hiddenKeys ?? [], [hiddenKeys]);
+  const immovable = pinnedKeys;
+  const byKey = useMemo6(() => new Map(columns.map((c) => [c.key, c])), [columns]);
+  const ordered = useMemo6(
+    () => order.map((k) => byKey.get(k)).filter((c) => !!c),
+    [order, byKey]
+  );
+  const isCustomised = order.join("|") !== columns.map((c) => c.key).join("|") || hidden.length > 0;
+  const toggleVisibility = (key) => {
+    if (!onHiddenKeysChange || fixedKeys.includes(key)) return;
+    onHiddenKeysChange(
+      hidden.includes(key) ? hidden.filter((k) => k !== key) : [...hidden, key]
+    );
+  };
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 4 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
+  const movableKeys = useMemo6(
+    () => order.filter((k) => !immovable.includes(k)),
+    [order, immovable]
+  );
+  const onDragEnd = (e) => {
+    const { active, over } = e;
+    if (!over || active.id === over.id) return;
+    const from = movableKeys.indexOf(active.id);
+    const to = movableKeys.indexOf(over.id);
+    if (from === -1 || to === -1) return;
+    const moved = arrayMove(movableKeys, from, to);
+    let next = 0;
+    onOrderChange(order.map((key) => immovable.includes(key) ? key : moved[next++]));
+  };
+  return /* @__PURE__ */ jsxs36(Popover, { children: [
+    /* @__PURE__ */ jsx55(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ jsx55(
+      Button,
+      {
+        variant: "outline",
+        size: "sm",
+        "aria-label": iconOnly ? label : void 0,
+        leftIcon: /* @__PURE__ */ jsx55(GripVertical, { className: "h-3.5 w-3.5" }),
+        className: cn(
+          // Compact by default so it sits level with filter chips rather than
+          // towering over them at Button's own `sm` height.
+          "h-auto min-h-0 shrink-0 py-1 text-muted-foreground hover:text-foreground",
+          className
+        ),
+        children: iconOnly ? null : label
+      }
+    ) }),
+    /* @__PURE__ */ jsxs36(
+      PopoverContent,
+      {
+        align,
+        className: "flex max-h-[var(--radix-popover-content-available-height)] w-56 flex-col overflow-hidden p-2",
+        children: [
+          /* @__PURE__ */ jsx55("p", { className: "shrink-0 px-2 pb-1.5 text-[11px] font-medium text-muted-foreground", children: canToggleVisibility ? "Drag to reorder \xB7 tick to show" : "Drag to reorder" }),
+          /* @__PURE__ */ jsx55(DndContext, { sensors, collisionDetection: closestCenter, onDragEnd, children: /* @__PURE__ */ jsx55(SortableContext, { items: movableKeys, strategy: verticalListSortingStrategy, children: /* @__PURE__ */ jsx55("div", { className: "flex min-h-0 flex-1 flex-col gap-0.5 overflow-y-auto", children: ordered.map((col) => /* @__PURE__ */ jsx55(
+            SortableColumnRow,
+            {
+              id: col.key,
+              label: col.label,
+              pinned: immovable.includes(col.key),
+              pinnedReason,
+              visibility: canToggleVisibility ? {
+                checked: !hidden.includes(col.key),
+                // A fixed column keeps a box rather than having none,
+                // so the list reads as one set of columns with some
+                // locked, not two lists.
+                lockedReason: fixedKeys.includes(col.key) ? fixedReason : void 0,
+                onToggle: () => toggleVisibility(col.key)
+              } : void 0
+            },
+            col.key
+          )) }) }) }),
+          /* @__PURE__ */ jsx55(Separator, { className: "my-2 shrink-0" }),
+          isCustomised ? /* @__PURE__ */ jsx55(
+            Button,
+            {
+              type: "button",
+              variant: "ghost",
+              size: "sm",
+              leftIcon: /* @__PURE__ */ jsx55(RotateCcw, { className: "h-3 w-3" }),
+              onClick: onReset,
+              className: "w-full justify-start text-muted-foreground hover:text-foreground",
+              children: "Reset to defaults"
+            }
+          ) : (
+            /* Nothing to undo. A disabled button here would offer an action and
+               then refuse it; saying the columns already are the default answers
+               the question the button was raising. */
+            /* @__PURE__ */ jsx55("p", { className: "px-2 py-1.5 text-[12px] text-muted-foreground", children: "Columns are in their default order." })
+          )
+        ]
+      }
+    )
+  ] });
+}
+function useColumnPreferences(defaultOrder, { storageKey } = {}) {
+  const defaultKey = defaultOrder.join("|");
+  const [prefs, setPrefs] = useState10({ order: defaultOrder, hidden: [] });
+  useEffect6(() => {
+    if (!storageKey || typeof window === "undefined") return;
+    try {
+      const raw = window.localStorage.getItem(storageKey);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      const savedOrder = Array.isArray(saved.order) ? saved.order : [];
+      const savedHidden = Array.isArray(saved.hidden) ? saved.hidden : [];
+      const known = new Set(defaultOrder);
+      setPrefs({
+        // Keep the saved arrangement for columns that still exist, then append
+        // anything new in its declared position at the end.
+        order: [
+          ...savedOrder.filter((k) => known.has(k)),
+          ...defaultOrder.filter((k) => !savedOrder.includes(k))
+        ],
+        hidden: savedHidden.filter((k) => known.has(k))
+      });
+    } catch {
+    }
+  }, [storageKey, defaultKey]);
+  const persist = useCallback3(
+    (next) => {
+      setPrefs(next);
+      if (!storageKey || typeof window === "undefined") return;
+      try {
+        window.localStorage.setItem(storageKey, JSON.stringify(next));
+      } catch {
+      }
+    },
+    [storageKey]
+  );
+  const setOrder = useCallback3(
+    (order) => persist({ order, hidden: prefs.hidden }),
+    [persist, prefs.hidden]
+  );
+  const setHidden = useCallback3(
+    (hidden) => persist({ order: prefs.order, hidden }),
+    [persist, prefs.order]
+  );
+  const reset = useCallback3(() => {
+    setPrefs({ order: defaultOrder, hidden: [] });
+    if (!storageKey || typeof window === "undefined") return;
+    try {
+      window.localStorage.removeItem(storageKey);
+    } catch {
+    }
+  }, [storageKey, defaultKey]);
+  return {
+    order: prefs.order,
+    hidden: prefs.hidden,
+    setOrder,
+    setHidden,
+    reset,
+    managerProps: {
+      order: prefs.order,
+      onOrderChange: setOrder,
+      hiddenKeys: prefs.hidden,
+      onHiddenKeysChange: setHidden,
+      onReset: reset
+    }
+  };
+}
+function applyColumnPreferences(columns, { order, hidden } = {}, pinnedKeys = ["action"]) {
+  const pinned = columns.filter((c) => pinnedKeys.includes(c.key));
+  const movable = columns.filter((c) => !pinnedKeys.includes(c.key));
+  const arranged = order?.length ? (() => {
+    const byKey = new Map(movable.map((c) => [c.key, c]));
+    const seen = order.map((k) => byKey.get(k)).filter((c) => !!c);
+    const missing = movable.filter((c) => !order.includes(c.key));
+    return [...seen, ...missing];
+  })() : movable;
+  const visible = hidden?.length ? arranged.filter((c) => !hidden.includes(c.key)) : arranged;
+  return [...visible, ...pinned];
+}
 
 // src/page-header.tsx
-import { jsx as jsx50, jsxs as jsxs31 } from "react/jsx-runtime";
+import { jsx as jsx56, jsxs as jsxs37 } from "react/jsx-runtime";
 function PageHeader({ title, titleAriaLabel, subtitle, actions, className }) {
-  return /* @__PURE__ */ jsxs31("div", { className: cn("flex items-start justify-between mb-6", className), children: [
-    /* @__PURE__ */ jsxs31("div", { children: [
-      /* @__PURE__ */ jsx50(
+  return /* @__PURE__ */ jsxs37("div", { className: cn("flex items-start justify-between mb-6", className), children: [
+    /* @__PURE__ */ jsxs37("div", { children: [
+      /* @__PURE__ */ jsx56(
         "h1",
         {
           className: "text-xl font-semibold text-foreground tracking-tight flex items-center gap-2.5 flex-wrap",
@@ -4003,19 +5145,19 @@ function PageHeader({ title, titleAriaLabel, subtitle, actions, className }) {
           children: title
         }
       ),
-      subtitle && /* @__PURE__ */ jsx50("p", { className: "text-sm text-muted-foreground mt-0.5", children: subtitle })
+      subtitle && /* @__PURE__ */ jsx56("p", { className: "text-sm text-muted-foreground mt-0.5", children: subtitle })
     ] }),
-    actions && /* @__PURE__ */ jsx50("div", { className: "flex items-center gap-2", children: actions })
+    actions && /* @__PURE__ */ jsx56("div", { className: "flex items-center gap-2", children: actions })
   ] });
 }
 
 // src/code.tsx
-import { forwardRef as forwardRef41, useState as useState7, useCallback as useCallback2 } from "react";
-import { Check as Check8, Copy } from "lucide-react";
-import { jsx as jsx51, jsxs as jsxs32 } from "react/jsx-runtime";
+import { forwardRef as forwardRef41, useState as useState11, useCallback as useCallback4 } from "react";
+import { Check as Check9, Copy as Copy2 } from "lucide-react";
+import { jsx as jsx57, jsxs as jsxs38 } from "react/jsx-runtime";
 var Code = forwardRef41(
   ({ className, children, ...props }, ref) => {
-    return /* @__PURE__ */ jsx51(
+    return /* @__PURE__ */ jsx57(
       "code",
       {
         ref,
@@ -4039,8 +5181,8 @@ var CodeBlock = forwardRef41(
     className,
     ...props
   }, ref) => {
-    const [copied, setCopied] = useState7(false);
-    const handleCopy = useCallback2(async () => {
+    const [copied, setCopied] = useState11(false);
+    const handleCopy = useCallback4(async () => {
       try {
         await navigator.clipboard.writeText(code);
         setCopied(true);
@@ -4050,7 +5192,7 @@ var CodeBlock = forwardRef41(
       }
     }, [code]);
     const hasHeader = Boolean(filename || language);
-    return /* @__PURE__ */ jsxs32(
+    return /* @__PURE__ */ jsxs38(
       "div",
       {
         ref,
@@ -4061,16 +5203,16 @@ var CodeBlock = forwardRef41(
         ),
         ...props,
         children: [
-          hasHeader && /* @__PURE__ */ jsxs32("div", { className: "flex items-center justify-between bg-[#1a1f2e] px-4 py-2 border-b border-[#2a3441]", children: [
-            /* @__PURE__ */ jsxs32("div", { className: "flex items-center gap-2.5", children: [
-              filename && /* @__PURE__ */ jsx51("span", { className: "text-[#9ca3af] text-xs font-mono", children: filename }),
-              language && /* @__PURE__ */ jsx51("span", { className: "rounded-md bg-[#2a3441] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#6b7280]", children: language })
+          hasHeader && /* @__PURE__ */ jsxs38("div", { className: "flex items-center justify-between bg-[#1a1f2e] px-4 py-2 border-b border-[#2a3441]", children: [
+            /* @__PURE__ */ jsxs38("div", { className: "flex items-center gap-2.5", children: [
+              filename && /* @__PURE__ */ jsx57("span", { className: "text-[#9ca3af] text-xs font-mono", children: filename }),
+              language && /* @__PURE__ */ jsx57("span", { className: "rounded-md bg-[#2a3441] px-1.5 py-0.5 text-[10px] font-medium uppercase tracking-wide text-[#6b7280]", children: language })
             ] }),
-            !hideCopy && /* @__PURE__ */ jsx51(CopyButton, { copied, onClick: handleCopy, inHeader: true })
+            !hideCopy && /* @__PURE__ */ jsx57(CopyButton, { copied, onClick: handleCopy, inHeader: true })
           ] }),
-          /* @__PURE__ */ jsxs32("div", { className: "relative", children: [
-            /* @__PURE__ */ jsx51("pre", { className: "overflow-x-auto p-4 font-mono text-[13px] leading-relaxed", children: /* @__PURE__ */ jsx51("code", { children: code }) }),
-            !hasHeader && !hideCopy && /* @__PURE__ */ jsx51("div", { className: "absolute top-3 right-3", children: /* @__PURE__ */ jsx51(CopyButton, { copied, onClick: handleCopy }) })
+          /* @__PURE__ */ jsxs38("div", { className: "relative", children: [
+            /* @__PURE__ */ jsx57("pre", { className: "overflow-x-auto p-4 font-mono text-[13px] leading-relaxed", children: /* @__PURE__ */ jsx57("code", { children: code }) }),
+            !hasHeader && !hideCopy && /* @__PURE__ */ jsx57("div", { className: "absolute top-3 right-3", children: /* @__PURE__ */ jsx57(CopyButton, { copied, onClick: handleCopy }) })
           ] })
         ]
       }
@@ -4079,7 +5221,7 @@ var CodeBlock = forwardRef41(
 );
 CodeBlock.displayName = "CodeBlock";
 function CopyButton({ copied, onClick, inHeader = false }) {
-  return /* @__PURE__ */ jsx51(
+  return /* @__PURE__ */ jsx57(
     "button",
     {
       type: "button",
@@ -4090,7 +5232,7 @@ function CopyButton({ copied, onClick, inHeader = false }) {
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
         inHeader ? "size-6 text-[#6b7280] hover:bg-[#2a3441] hover:text-[#9ca3af]" : "size-7 bg-[#1a1f2e]/80 text-[#6b7280] hover:bg-[#1a1f2e] hover:text-[#9ca3af]"
       ),
-      children: copied ? /* @__PURE__ */ jsx51(Check8, { className: "size-3.5 text-green-400" }) : /* @__PURE__ */ jsx51(Copy, { className: "size-3.5" })
+      children: copied ? /* @__PURE__ */ jsx57(Check9, { className: "size-3.5 text-green-400" }) : /* @__PURE__ */ jsx57(Copy2, { className: "size-3.5" })
     }
   );
 }
@@ -4098,8 +5240,8 @@ function CopyButton({ copied, onClick, inHeader = false }) {
 // src/avatar.tsx
 import * as React37 from "react";
 import * as AvatarPrimitive from "@radix-ui/react-avatar";
-import { jsx as jsx52 } from "react/jsx-runtime";
-var Avatar = React37.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx52(
+import { jsx as jsx58 } from "react/jsx-runtime";
+var Avatar = React37.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx58(
   AvatarPrimitive.Root,
   {
     ref,
@@ -4108,9 +5250,9 @@ var Avatar = React37.forwardRef(({ className, ...props }, ref) => /* @__PURE__ *
   }
 ));
 Avatar.displayName = AvatarPrimitive.Root.displayName;
-var AvatarImage = React37.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx52(AvatarPrimitive.Image, { ref, className: cn("aspect-square h-full w-full object-cover", className), ...props }));
+var AvatarImage = React37.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx58(AvatarPrimitive.Image, { ref, className: cn("aspect-square h-full w-full object-cover", className), ...props }));
 AvatarImage.displayName = AvatarPrimitive.Image.displayName;
-var AvatarFallback = React37.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx52(
+var AvatarFallback = React37.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx58(
   AvatarPrimitive.Fallback,
   {
     ref,
@@ -4122,7 +5264,7 @@ AvatarFallback.displayName = AvatarPrimitive.Fallback.displayName;
 
 // src/avatar-group.tsx
 import * as React38 from "react";
-import { jsx as jsx53, jsxs as jsxs33 } from "react/jsx-runtime";
+import { jsx as jsx59, jsxs as jsxs39 } from "react/jsx-runtime";
 var sizeClasses4 = {
   sm: "h-6 w-6",
   md: "h-8 w-8",
@@ -4143,7 +5285,7 @@ var AvatarGroup = React38.forwardRef(
     const visible = avatars.slice(0, max);
     const overflowCount = avatars.length - max;
     const totalSlots = visible.length + (overflowCount > 0 ? 1 : 0);
-    return /* @__PURE__ */ jsxs33(
+    return /* @__PURE__ */ jsxs39(
       "div",
       {
         ref,
@@ -4152,7 +5294,7 @@ var AvatarGroup = React38.forwardRef(
         children: [
           visible.map((avatar, index) => {
             const zIndex = totalSlots - index;
-            return /* @__PURE__ */ jsxs33(
+            return /* @__PURE__ */ jsxs39(
               Avatar,
               {
                 className: cn(
@@ -4162,8 +5304,8 @@ var AvatarGroup = React38.forwardRef(
                 ),
                 style: { zIndex },
                 children: [
-                  avatar.src && /* @__PURE__ */ jsx53(AvatarImage, { src: avatar.src, alt: avatar.alt ?? avatar.fallback }),
-                  /* @__PURE__ */ jsx53(
+                  avatar.src && /* @__PURE__ */ jsx59(AvatarImage, { src: avatar.src, alt: avatar.alt ?? avatar.fallback }),
+                  /* @__PURE__ */ jsx59(
                     AvatarFallback,
                     {
                       className: cn(
@@ -4178,7 +5320,7 @@ var AvatarGroup = React38.forwardRef(
               index
             );
           }),
-          overflowCount > 0 && /* @__PURE__ */ jsxs33(
+          overflowCount > 0 && /* @__PURE__ */ jsxs39(
             "div",
             {
               className: cn(
@@ -4205,7 +5347,7 @@ AvatarGroup.displayName = "AvatarGroup";
 import * as React39 from "react";
 import * as AvatarPrimitive2 from "@radix-ui/react-avatar";
 import { X as X7 } from "lucide-react";
-import { jsx as jsx54, jsxs as jsxs34 } from "react/jsx-runtime";
+import { jsx as jsx60, jsxs as jsxs40 } from "react/jsx-runtime";
 function getInitials(label) {
   const words = label.trim().split(/\s+/);
   if (words.length === 1) {
@@ -4246,7 +5388,7 @@ var AvatarTag = React39.forwardRef(
   }, ref) => {
     const cfg = sizeConfig[size];
     const initials = getInitials(label);
-    return /* @__PURE__ */ jsxs34(
+    return /* @__PURE__ */ jsxs40(
       "span",
       {
         ref,
@@ -4259,7 +5401,7 @@ var AvatarTag = React39.forwardRef(
         ),
         ...props,
         children: [
-          /* @__PURE__ */ jsxs34(
+          /* @__PURE__ */ jsxs40(
             AvatarPrimitive2.Root,
             {
               className: cn(
@@ -4267,7 +5409,7 @@ var AvatarTag = React39.forwardRef(
                 cfg.avatar
               ),
               children: [
-                /* @__PURE__ */ jsx54(
+                /* @__PURE__ */ jsx60(
                   AvatarPrimitive2.Image,
                   {
                     src,
@@ -4275,7 +5417,7 @@ var AvatarTag = React39.forwardRef(
                     className: "aspect-square h-full w-full object-cover"
                   }
                 ),
-                /* @__PURE__ */ jsx54(
+                /* @__PURE__ */ jsx60(
                   AvatarPrimitive2.Fallback,
                   {
                     className: cn(
@@ -4288,8 +5430,8 @@ var AvatarTag = React39.forwardRef(
               ]
             }
           ),
-          /* @__PURE__ */ jsx54("span", { className: "leading-none select-none", children: label }),
-          onRemove && /* @__PURE__ */ jsx54(
+          /* @__PURE__ */ jsx60("span", { className: "leading-none select-none", children: label }),
+          onRemove && /* @__PURE__ */ jsx60(
             "button",
             {
               type: "button",
@@ -4303,7 +5445,7 @@ var AvatarTag = React39.forwardRef(
                 disabled && "pointer-events-none"
               ),
               "aria-label": `Remove ${label}`,
-              children: /* @__PURE__ */ jsx54(X7, { className: cfg.icon })
+              children: /* @__PURE__ */ jsx60(X7, { className: cfg.icon })
             }
           )
         ]
@@ -4315,12 +5457,12 @@ AvatarTag.displayName = "AvatarTag";
 
 // src/calendar.tsx
 import * as React40 from "react";
-import { ChevronDown as ChevronDown7, ChevronLeft as ChevronLeft4, ChevronRight as ChevronRight6 } from "lucide-react";
+import { ChevronDown as ChevronDown7, ChevronLeft as ChevronLeft5, ChevronRight as ChevronRight7 } from "lucide-react";
 import {
   DayPicker,
   getDefaultClassNames
 } from "react-day-picker";
-import { jsx as jsx55 } from "react/jsx-runtime";
+import { jsx as jsx61 } from "react/jsx-runtime";
 var cellSize = "[--cell-size:2rem]";
 function navButtonClasses(variant) {
   const base = "inline-flex items-center justify-center rounded-lg border font-medium transition-colors duration-pg-fast ease-pg-standard focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50";
@@ -4351,7 +5493,7 @@ function Calendar({
   ...props
 }) {
   const defaultClassNames = getDefaultClassNames();
-  return /* @__PURE__ */ jsx55(
+  return /* @__PURE__ */ jsx61(
     DayPicker,
     {
       showOutsideDays,
@@ -4449,7 +5591,7 @@ function Calendar({
         ...classNames
       },
       components: {
-        Root: ({ className: rootClass, rootRef, ...rootProps }) => /* @__PURE__ */ jsx55(
+        Root: ({ className: rootClass, rootRef, ...rootProps }) => /* @__PURE__ */ jsx61(
           "div",
           {
             "data-slot": "calendar",
@@ -4460,15 +5602,15 @@ function Calendar({
         ),
         Chevron: ({ className: chClass, orientation, ...chProps }) => {
           if (orientation === "left") {
-            return /* @__PURE__ */ jsx55(ChevronLeft4, { className: cn("size-4", chClass), ...chProps });
+            return /* @__PURE__ */ jsx61(ChevronLeft5, { className: cn("size-4", chClass), ...chProps });
           }
           if (orientation === "right") {
-            return /* @__PURE__ */ jsx55(ChevronRight6, { className: cn("size-4", chClass), ...chProps });
+            return /* @__PURE__ */ jsx61(ChevronRight7, { className: cn("size-4", chClass), ...chProps });
           }
-          return /* @__PURE__ */ jsx55(ChevronDown7, { className: cn("size-4", chClass), ...chProps });
+          return /* @__PURE__ */ jsx61(ChevronDown7, { className: cn("size-4", chClass), ...chProps });
         },
         DayButton: CalendarDayButton,
-        WeekNumber: ({ children, ...weekProps }) => /* @__PURE__ */ jsx55("th", { ...weekProps, children: /* @__PURE__ */ jsx55("div", { className: "flex h-[var(--cell-size)] w-[var(--cell-size)] min-h-[var(--cell-size)] min-w-[var(--cell-size)] items-center justify-center text-center text-xs tabular-nums", children }) }),
+        WeekNumber: ({ children, ...weekProps }) => /* @__PURE__ */ jsx61("th", { ...weekProps, children: /* @__PURE__ */ jsx61("div", { className: "flex h-[var(--cell-size)] w-[var(--cell-size)] min-h-[var(--cell-size)] min-w-[var(--cell-size)] items-center justify-center text-center text-xs tabular-nums", children }) }),
         ...components
       },
       ...props
@@ -4486,7 +5628,7 @@ function CalendarDayButton({
   React40.useEffect(() => {
     if (modifiers.focused) ref.current?.focus();
   }, [modifiers.focused]);
-  return /* @__PURE__ */ jsx55(
+  return /* @__PURE__ */ jsx61(
     Button,
     {
       ref,
@@ -4510,11 +5652,11 @@ function CalendarDayButton({
 }
 
 // src/date-picker.tsx
-import { useState as useState8, useRef as useRef4, useEffect as useEffect3 } from "react";
+import { useState as useState12, useRef as useRef8, useEffect as useEffect8 } from "react";
 import { createPortal } from "react-dom";
-import { ChevronLeft as ChevronLeft5, ChevronRight as ChevronRight7, ChevronDown as ChevronDown8, CalendarDays } from "lucide-react";
+import { ChevronLeft as ChevronLeft6, ChevronRight as ChevronRight8, ChevronDown as ChevronDown8, CalendarDays } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import { jsx as jsx56, jsxs as jsxs35 } from "react/jsx-runtime";
+import { jsx as jsx62, jsxs as jsxs41 } from "react/jsx-runtime";
 var MONTHS = [
   "January",
   "February",
@@ -4552,22 +5694,22 @@ function displayDate(ymd) {
   if (!p) return "";
   return `${String(p.d).padStart(2, "0")} ${MONTHS[p.m].slice(0, 3)} ${p.y}`;
 }
-function DatePicker({ value, onChange, placeholder = "Select date", className, min, label }) {
+function DatePicker({ value, onChange, placeholder = "Select date", className, min, max, label }) {
   const today = /* @__PURE__ */ new Date();
   const parsed = parseYMD(value);
-  const [open, setOpen] = useState8(false);
-  const [panelPos, setPanelPos] = useState8({ top: 0, left: 0 });
-  const [viewYear, setViewYear] = useState8(parsed?.y ?? today.getFullYear());
-  const [viewMonth, setViewMonth] = useState8(parsed?.m ?? today.getMonth());
-  const [yearMenu, setYearMenu] = useState8(false);
-  const [monthMenu, setMonthMenu] = useState8(false);
-  const [mounted, setMounted] = useState8(false);
-  const triggerRef = useRef4(null);
-  const panelRef = useRef4(null);
-  useEffect3(() => {
+  const [open, setOpen] = useState12(false);
+  const [panelPos, setPanelPos] = useState12({ top: 0, left: 0 });
+  const [viewYear, setViewYear] = useState12(parsed?.y ?? today.getFullYear());
+  const [viewMonth, setViewMonth] = useState12(parsed?.m ?? today.getMonth());
+  const [yearMenu, setYearMenu] = useState12(false);
+  const [monthMenu, setMonthMenu] = useState12(false);
+  const [mounted, setMounted] = useState12(false);
+  const triggerRef = useRef8(null);
+  const panelRef = useRef8(null);
+  useEffect8(() => {
     setMounted(true);
   }, []);
-  useEffect3(() => {
+  useEffect8(() => {
     if (parsed) {
       setViewYear(parsed.y);
       setViewMonth(parsed.m);
@@ -4591,7 +5733,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
       setOpen(true);
     });
   }
-  useEffect3(() => {
+  useEffect8(() => {
     if (!open) return;
     function handler(e) {
       const inTrigger = triggerRef.current?.contains(e.target);
@@ -4621,9 +5763,12 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
   const firstDay = firstDayOf(viewYear, viewMonth);
   const prevTotal = daysInMonth(viewYear, viewMonth === 0 ? 11 : viewMonth - 1);
   const minParsed = parseYMD(min ?? "");
+  const maxParsed = parseYMD(max ?? "");
   function isDisabled(y, m, d) {
-    if (!minParsed) return false;
-    return new Date(y, m, d) < new Date(minParsed.y, minParsed.m, minParsed.d);
+    const day = new Date(y, m, d);
+    if (minParsed && day < new Date(minParsed.y, minParsed.m, minParsed.d)) return true;
+    if (maxParsed && day > new Date(maxParsed.y, maxParsed.m, maxParsed.d)) return true;
+    return false;
   }
   const cells = [];
   for (let i = 0; i < firstDay; i++) {
@@ -4651,7 +5796,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
   }
   const isToday = (c) => c.d === today.getDate() && c.m === today.getMonth() && c.y === today.getFullYear();
   const isSelected = (c) => !!parsed && c.d === parsed.d && c.m === parsed.m && c.y === parsed.y;
-  const panel = /* @__PURE__ */ jsx56(AnimatePresence, { children: open && /* @__PURE__ */ jsxs35(
+  const panel = /* @__PURE__ */ jsx62(AnimatePresence, { children: open && /* @__PURE__ */ jsxs41(
     motion.div,
     {
       ref: panelRef,
@@ -4670,18 +5815,18 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
         boxShadow: "0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.07)"
       },
       children: [
-        /* @__PURE__ */ jsxs35("div", { className: "flex items-center justify-between px-4 pt-4 pb-3", children: [
-          /* @__PURE__ */ jsx56(
+        /* @__PURE__ */ jsxs41("div", { className: "flex items-center justify-between px-4 pt-4 pb-3", children: [
+          /* @__PURE__ */ jsx62(
             "button",
             {
               onClick: prevMonth,
               className: "w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors",
-              children: /* @__PURE__ */ jsx56(ChevronLeft5, { className: "w-4 h-4" })
+              children: /* @__PURE__ */ jsx62(ChevronLeft6, { className: "w-4 h-4" })
             }
           ),
-          /* @__PURE__ */ jsxs35("div", { className: "flex items-center gap-1", children: [
-            /* @__PURE__ */ jsxs35("div", { className: "relative", children: [
-              /* @__PURE__ */ jsxs35(
+          /* @__PURE__ */ jsxs41("div", { className: "flex items-center gap-1", children: [
+            /* @__PURE__ */ jsxs41("div", { className: "relative", children: [
+              /* @__PURE__ */ jsxs41(
                 "button",
                 {
                   onClick: () => {
@@ -4691,11 +5836,11 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
                   className: "flex items-center gap-1 px-2 py-1 rounded-lg text-[14px] font-semibold text-gray-900 hover:bg-gray-100 transition-colors",
                   children: [
                     MONTHS[viewMonth].slice(0, 3),
-                    /* @__PURE__ */ jsx56(ChevronDown8, { className: "w-3 h-3 text-gray-400" })
+                    /* @__PURE__ */ jsx62(ChevronDown8, { className: "w-3 h-3 text-gray-400" })
                   ]
                 }
               ),
-              /* @__PURE__ */ jsx56(AnimatePresence, { children: monthMenu && /* @__PURE__ */ jsx56(
+              /* @__PURE__ */ jsx62(AnimatePresence, { children: monthMenu && /* @__PURE__ */ jsx62(
                 motion.div,
                 {
                   initial: { opacity: 0, y: -4 },
@@ -4703,7 +5848,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
                   exit: { opacity: 0, y: -4 },
                   transition: { duration: 0.12 },
                   className: "absolute top-full left-0 z-[10000] mt-1 max-h-[220px] min-w-[130px] overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-lg",
-                  children: MONTHS.map((mn, mi) => /* @__PURE__ */ jsx56(
+                  children: MONTHS.map((mn, mi) => /* @__PURE__ */ jsx62(
                     "button",
                     {
                       onClick: () => {
@@ -4719,8 +5864,8 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
                 }
               ) })
             ] }),
-            /* @__PURE__ */ jsxs35("div", { className: "relative", children: [
-              /* @__PURE__ */ jsxs35(
+            /* @__PURE__ */ jsxs41("div", { className: "relative", children: [
+              /* @__PURE__ */ jsxs41(
                 "button",
                 {
                   onClick: () => {
@@ -4730,11 +5875,11 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
                   className: "flex items-center gap-1 px-2 py-1 rounded-lg text-[14px] font-semibold text-gray-900 hover:bg-gray-100 transition-colors",
                   children: [
                     viewYear,
-                    /* @__PURE__ */ jsx56(ChevronDown8, { className: "w-3 h-3 text-gray-400" })
+                    /* @__PURE__ */ jsx62(ChevronDown8, { className: "w-3 h-3 text-gray-400" })
                   ]
                 }
               ),
-              /* @__PURE__ */ jsx56(AnimatePresence, { children: yearMenu && /* @__PURE__ */ jsx56(
+              /* @__PURE__ */ jsx62(AnimatePresence, { children: yearMenu && /* @__PURE__ */ jsx62(
                 motion.div,
                 {
                   initial: { opacity: 0, y: -4 },
@@ -4742,7 +5887,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
                   exit: { opacity: 0, y: -4 },
                   transition: { duration: 0.12 },
                   className: "absolute top-full left-0 z-[10000] mt-1 max-h-[200px] min-w-[90px] overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-lg",
-                  children: years.map((yr) => /* @__PURE__ */ jsx56(
+                  children: years.map((yr) => /* @__PURE__ */ jsx62(
                     "button",
                     {
                       onClick: () => {
@@ -4759,24 +5904,24 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
               ) })
             ] })
           ] }),
-          /* @__PURE__ */ jsx56(
+          /* @__PURE__ */ jsx62(
             "button",
             {
               onClick: nextMonth,
               className: "w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors",
-              children: /* @__PURE__ */ jsx56(ChevronRight7, { className: "w-4 h-4" })
+              children: /* @__PURE__ */ jsx62(ChevronRight8, { className: "w-4 h-4" })
             }
           )
         ] }),
-        /* @__PURE__ */ jsx56(
+        /* @__PURE__ */ jsx62(
           "div",
           {
             className: "px-3 pb-1",
             style: { display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" },
-            children: DAYS.map((d) => /* @__PURE__ */ jsx56("div", { className: "py-1 text-center text-[11.5px] font-semibold text-muted-foreground", children: d }, d))
+            children: DAYS.map((d) => /* @__PURE__ */ jsx62("div", { className: "py-1 text-center text-[11.5px] font-semibold text-muted-foreground", children: d }, d))
           }
         ),
-        /* @__PURE__ */ jsx56(
+        /* @__PURE__ */ jsx62(
           "div",
           {
             className: "gap-y-0.5 px-3 pb-4",
@@ -4785,7 +5930,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
               const selected = isSelected(cell);
               const tod = isToday(cell);
               const disabled = cell.current && isDisabled(cell.y, cell.m, cell.d);
-              return /* @__PURE__ */ jsx56(
+              return /* @__PURE__ */ jsx62(
                 "button",
                 {
                   onClick: () => selectDay(cell),
@@ -4809,9 +5954,9 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
       ]
     }
   ) });
-  return /* @__PURE__ */ jsxs35("div", { className: cn("relative", className), children: [
-    label && /* @__PURE__ */ jsx56("p", { className: "mb-2 text-sm font-medium text-foreground", children: label }),
-    /* @__PURE__ */ jsxs35(
+  return /* @__PURE__ */ jsxs41("div", { className: cn("relative", className), children: [
+    label && /* @__PURE__ */ jsx62("p", { className: "mb-2 text-sm font-medium text-foreground", children: label }),
+    /* @__PURE__ */ jsxs41(
       "button",
       {
         ref: triggerRef,
@@ -4822,9 +5967,9 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
           open ? "border-ring ring-2 ring-ring/20" : "hover:border-muted-foreground/45"
         ),
         children: [
-          /* @__PURE__ */ jsx56(CalendarDays, { className: "size-[1.125rem] shrink-0 text-muted-foreground" }),
-          /* @__PURE__ */ jsx56("span", { className: cn("flex-1", value ? "text-foreground" : "text-muted-foreground"), children: value ? displayDate(value) : placeholder }),
-          /* @__PURE__ */ jsx56(ChevronDown8, { className: cn("size-[1.125rem] shrink-0 text-muted-foreground transition-transform", open && "rotate-180") })
+          /* @__PURE__ */ jsx62(CalendarDays, { className: "size-[1.125rem] shrink-0 text-muted-foreground" }),
+          /* @__PURE__ */ jsx62("span", { className: cn("flex-1", value ? "text-foreground" : "text-muted-foreground"), children: value ? displayDate(value) : placeholder }),
+          /* @__PURE__ */ jsx62(ChevronDown8, { className: cn("size-[1.125rem] shrink-0 text-muted-foreground transition-transform", open && "rotate-180") })
         ]
       }
     ),
@@ -4835,7 +5980,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
 // src/chart.tsx
 import * as React41 from "react";
 import * as RechartsPrimitive from "recharts";
-import { Fragment as Fragment6, jsx as jsx57, jsxs as jsxs36 } from "react/jsx-runtime";
+import { Fragment as Fragment8, jsx as jsx63, jsxs as jsxs42 } from "react/jsx-runtime";
 var THEMES = { light: "", dark: ".dark" };
 var INITIAL_DIMENSION = { width: 320, height: 200 };
 var ChartContext = React41.createContext(null);
@@ -4856,7 +6001,7 @@ function ChartContainer({
 }) {
   const uniqueId = React41.useId();
   const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`;
-  return /* @__PURE__ */ jsx57(ChartContext.Provider, { value: { config }, children: /* @__PURE__ */ jsxs36(
+  return /* @__PURE__ */ jsx63(ChartContext.Provider, { value: { config }, children: /* @__PURE__ */ jsxs42(
     "div",
     {
       "data-slot": "chart",
@@ -4867,8 +6012,8 @@ function ChartContainer({
       ),
       ...props,
       children: [
-        /* @__PURE__ */ jsx57(ChartStyle, { id: chartId, config }),
-        /* @__PURE__ */ jsx57(
+        /* @__PURE__ */ jsx63(ChartStyle, { id: chartId, config }),
+        /* @__PURE__ */ jsx63(
           RechartsPrimitive.ResponsiveContainer,
           {
             initialDimension,
@@ -4886,7 +6031,7 @@ var ChartStyle = ({ id, config }) => {
   if (!colorConfig.length) {
     return null;
   }
-  return /* @__PURE__ */ jsx57(
+  return /* @__PURE__ */ jsx63(
     "style",
     {
       dangerouslySetInnerHTML: {
@@ -4930,12 +6075,12 @@ function ChartTooltipContent({
     const itemConfig = getPayloadConfigFromPayload(config, item, key);
     const value = !labelKey && typeof label === "string" ? config[label]?.label ?? label : itemConfig?.label;
     if (labelFormatter) {
-      return /* @__PURE__ */ jsx57("div", { className: cn("font-medium", labelClassName), children: labelFormatter(value, payload) });
+      return /* @__PURE__ */ jsx63("div", { className: cn("font-medium", labelClassName), children: labelFormatter(value, payload) });
     }
     if (!value) {
       return null;
     }
-    return /* @__PURE__ */ jsx57("div", { className: cn("font-medium", labelClassName), children: value });
+    return /* @__PURE__ */ jsx63("div", { className: cn("font-medium", labelClassName), children: value });
   }, [
     label,
     labelFormatter,
@@ -4949,7 +6094,7 @@ function ChartTooltipContent({
     return null;
   }
   const nestLabel = payload.length === 1 && indicator !== "dot";
-  return /* @__PURE__ */ jsxs36(
+  return /* @__PURE__ */ jsxs42(
     "div",
     {
       className: cn(
@@ -4958,19 +6103,19 @@ function ChartTooltipContent({
       ),
       children: [
         !nestLabel ? tooltipLabel : null,
-        /* @__PURE__ */ jsx57("div", { className: "grid gap-1.5", children: payload.filter((item) => item.type !== "none").map((item, index) => {
+        /* @__PURE__ */ jsx63("div", { className: "grid gap-1.5", children: payload.filter((item) => item.type !== "none").map((item, index) => {
           const key = `${nameKey ?? item.name ?? item.dataKey ?? "value"}`;
           const itemConfig = getPayloadConfigFromPayload(config, item, key);
           const indicatorColor = color ?? item.payload?.fill ?? item.color;
-          return /* @__PURE__ */ jsx57(
+          return /* @__PURE__ */ jsx63(
             "div",
             {
               className: cn(
                 "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
                 indicator === "dot" && "items-center"
               ),
-              children: formatter && item?.value !== void 0 && item.name ? formatter(item.value, item.name, item, index, item.payload) : /* @__PURE__ */ jsxs36(Fragment6, { children: [
-                itemConfig?.icon ? /* @__PURE__ */ jsx57(itemConfig.icon, {}) : !hideIndicator && /* @__PURE__ */ jsx57(
+              children: formatter && item?.value !== void 0 && item.name ? formatter(item.value, item.name, item, index, item.payload) : /* @__PURE__ */ jsxs42(Fragment8, { children: [
+                itemConfig?.icon ? /* @__PURE__ */ jsx63(itemConfig.icon, {}) : !hideIndicator && /* @__PURE__ */ jsx63(
                   "div",
                   {
                     className: cn(
@@ -4988,7 +6133,7 @@ function ChartTooltipContent({
                     }
                   }
                 ),
-                /* @__PURE__ */ jsxs36(
+                /* @__PURE__ */ jsxs42(
                   "div",
                   {
                     className: cn(
@@ -4996,11 +6141,11 @@ function ChartTooltipContent({
                       nestLabel ? "items-end" : "items-center"
                     ),
                     children: [
-                      /* @__PURE__ */ jsxs36("div", { className: "grid gap-1.5", children: [
+                      /* @__PURE__ */ jsxs42("div", { className: "grid gap-1.5", children: [
                         nestLabel ? tooltipLabel : null,
-                        /* @__PURE__ */ jsx57("span", { className: "text-muted-foreground", children: itemConfig?.label ?? item.name })
+                        /* @__PURE__ */ jsx63("span", { className: "text-muted-foreground", children: itemConfig?.label ?? item.name })
                       ] }),
-                      item.value != null && /* @__PURE__ */ jsx57("span", { className: "font-mono font-medium text-foreground tabular-nums", children: typeof item.value === "number" ? item.value.toLocaleString() : String(item.value) })
+                      item.value != null && /* @__PURE__ */ jsx63("span", { className: "font-mono font-medium text-foreground tabular-nums", children: typeof item.value === "number" ? item.value.toLocaleString() : String(item.value) })
                     ]
                   }
                 )
@@ -5025,7 +6170,7 @@ function ChartLegendContent({
   if (!payload?.length) {
     return null;
   }
-  return /* @__PURE__ */ jsx57(
+  return /* @__PURE__ */ jsx63(
     "div",
     {
       className: cn(
@@ -5036,14 +6181,14 @@ function ChartLegendContent({
       children: payload.filter((item) => item.type !== "none").map((item, index) => {
         const key = `${nameKey ?? item.dataKey ?? "value"}`;
         const itemConfig = getPayloadConfigFromPayload(config, item, key);
-        return /* @__PURE__ */ jsxs36(
+        return /* @__PURE__ */ jsxs42(
           "div",
           {
             className: cn(
               "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
             ),
             children: [
-              itemConfig?.icon && !hideIcon ? /* @__PURE__ */ jsx57(itemConfig.icon, {}) : /* @__PURE__ */ jsx57(
+              itemConfig?.icon && !hideIcon ? /* @__PURE__ */ jsx63(itemConfig.icon, {}) : /* @__PURE__ */ jsx63(
                 "div",
                 {
                   className: "h-2 w-2 shrink-0 rounded-[2px]",
@@ -5096,7 +6241,7 @@ import {
   Info as Info5,
   Minus as Minus2
 } from "lucide-react";
-import { Fragment as Fragment7, jsx as jsx58, jsxs as jsxs37 } from "react/jsx-runtime";
+import { Fragment as Fragment9, jsx as jsx64, jsxs as jsxs43 } from "react/jsx-runtime";
 var gridStroke = "color-mix(in srgb, var(--border) 65%, transparent)";
 var tickFill = "var(--muted-foreground)";
 function MetricSparklineCard({
@@ -5113,7 +6258,7 @@ function MetricSparklineCard({
   const chartData = data.map((d) => ({ ...d, y: d.y }));
   const trendCls = trend?.direction === "up" ? "text-emerald-600 dark:text-emerald-400" : trend?.direction === "down" ? "text-red-600 dark:text-red-400" : "text-muted-foreground";
   const TrendIcon = trend?.direction === "up" ? ArrowUpRight : trend?.direction === "down" ? ArrowDownRight : Minus2;
-  return /* @__PURE__ */ jsxs37(
+  return /* @__PURE__ */ jsxs43(
     "div",
     {
       className: cn(
@@ -5121,29 +6266,29 @@ function MetricSparklineCard({
         className
       ),
       children: [
-        /* @__PURE__ */ jsxs37("div", { className: "flex items-start justify-between gap-2", children: [
-          /* @__PURE__ */ jsxs37("div", { className: "flex min-w-0 items-center gap-2", children: [
-            icon ? /* @__PURE__ */ jsx58("span", { className: "flex shrink-0 text-muted-foreground [&_svg]:size-4", children: icon }) : null,
-            /* @__PURE__ */ jsx58("span", { className: "truncate text-sm font-semibold text-foreground", children: title })
+        /* @__PURE__ */ jsxs43("div", { className: "flex items-start justify-between gap-2", children: [
+          /* @__PURE__ */ jsxs43("div", { className: "flex min-w-0 items-center gap-2", children: [
+            icon ? /* @__PURE__ */ jsx64("span", { className: "flex shrink-0 text-muted-foreground [&_svg]:size-4", children: icon }) : null,
+            /* @__PURE__ */ jsx64("span", { className: "truncate text-sm font-semibold text-foreground", children: title })
           ] }),
-          onInfoClick ? /* @__PURE__ */ jsx58(
+          onInfoClick ? /* @__PURE__ */ jsx64(
             "button",
             {
               type: "button",
               onClick: onInfoClick,
               className: "shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
               "aria-label": "More info",
-              children: /* @__PURE__ */ jsx58(Info5, { className: "size-3.5" })
+              children: /* @__PURE__ */ jsx64(Info5, { className: "size-3.5" })
             }
           ) : null
         ] }),
-        /* @__PURE__ */ jsx58("div", { className: "mt-3 text-2xl font-semibold tabular-nums tracking-tight text-foreground", children: value }),
-        /* @__PURE__ */ jsx58("div", { className: "pointer-events-none absolute bottom-3 right-3 h-14 w-[46%] max-w-[9rem] opacity-95", children: /* @__PURE__ */ jsx58(ResponsiveContainer2, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs37(AreaChart, { data: chartData, margin: { top: 4, right: 0, left: 0, bottom: 0 }, children: [
-          /* @__PURE__ */ jsx58("defs", { children: /* @__PURE__ */ jsxs37("linearGradient", { id: gid, x1: "0", y1: "0", x2: "0", y2: "1", children: [
-            /* @__PURE__ */ jsx58("stop", { offset: "0%", stopColor: accentColor, stopOpacity: 0.35 }),
-            /* @__PURE__ */ jsx58("stop", { offset: "100%", stopColor: accentColor, stopOpacity: 0 })
+        /* @__PURE__ */ jsx64("div", { className: "mt-3 text-2xl font-semibold tabular-nums tracking-tight text-foreground", children: value }),
+        /* @__PURE__ */ jsx64("div", { className: "pointer-events-none absolute bottom-3 right-3 h-14 w-[46%] max-w-[9rem] opacity-95", children: /* @__PURE__ */ jsx64(ResponsiveContainer2, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs43(AreaChart, { data: chartData, margin: { top: 4, right: 0, left: 0, bottom: 0 }, children: [
+          /* @__PURE__ */ jsx64("defs", { children: /* @__PURE__ */ jsxs43("linearGradient", { id: gid, x1: "0", y1: "0", x2: "0", y2: "1", children: [
+            /* @__PURE__ */ jsx64("stop", { offset: "0%", stopColor: accentColor, stopOpacity: 0.35 }),
+            /* @__PURE__ */ jsx64("stop", { offset: "100%", stopColor: accentColor, stopOpacity: 0 })
           ] }) }),
-          /* @__PURE__ */ jsx58(
+          /* @__PURE__ */ jsx64(
             Area,
             {
               type: "monotone",
@@ -5155,10 +6300,10 @@ function MetricSparklineCard({
             }
           )
         ] }) }) }),
-        trend ? /* @__PURE__ */ jsxs37("div", { className: cn("mt-10 flex items-center gap-1 text-xs font-medium", trendCls), children: [
-          /* @__PURE__ */ jsx58(TrendIcon, { className: "size-3.5 shrink-0", "aria-hidden": true }),
-          /* @__PURE__ */ jsx58("span", { children: trend.label })
-        ] }) : /* @__PURE__ */ jsx58("div", { className: "mt-10" })
+        trend ? /* @__PURE__ */ jsxs43("div", { className: cn("mt-10 flex items-center gap-1 text-xs font-medium", trendCls), children: [
+          /* @__PURE__ */ jsx64(TrendIcon, { className: "size-3.5 shrink-0", "aria-hidden": true }),
+          /* @__PURE__ */ jsx64("span", { children: trend.label })
+        ] }) : /* @__PURE__ */ jsx64("div", { className: "mt-10" })
       ]
     }
   );
@@ -5180,10 +6325,10 @@ function DashboardAreaChartTemplate({
   className
 }) {
   const areaGid = React42.useId().replace(/:/g, "");
-  return /* @__PURE__ */ jsxs37("div", { className: cn("rounded-xl border border-border bg-card text-card-foreground shadow-sm", className), children: [
-    /* @__PURE__ */ jsxs37("div", { className: "flex flex-col gap-4 border-b border-border px-5 pt-4 pb-3 sm:flex-row sm:items-start sm:justify-between", children: [
-      /* @__PURE__ */ jsx58("h3", { className: "text-sm font-semibold text-foreground", children: title }),
-      /* @__PURE__ */ jsx58("div", { className: "flex flex-wrap gap-1 rounded-lg border border-border bg-muted/30 p-0.5", children: tabs.map((t) => /* @__PURE__ */ jsx58(
+  return /* @__PURE__ */ jsxs43("div", { className: cn("rounded-xl border border-border bg-card text-card-foreground shadow-sm", className), children: [
+    /* @__PURE__ */ jsxs43("div", { className: "flex flex-col gap-4 border-b border-border px-5 pt-4 pb-3 sm:flex-row sm:items-start sm:justify-between", children: [
+      /* @__PURE__ */ jsx64("h3", { className: "text-sm font-semibold text-foreground", children: title }),
+      /* @__PURE__ */ jsx64("div", { className: "flex flex-wrap gap-1 rounded-lg border border-border bg-muted/30 p-0.5", children: tabs.map((t) => /* @__PURE__ */ jsx64(
         "button",
         {
           type: "button",
@@ -5197,17 +6342,17 @@ function DashboardAreaChartTemplate({
         t.id
       )) })
     ] }),
-    /* @__PURE__ */ jsxs37("div", { className: "px-5 pt-4", children: [
-      /* @__PURE__ */ jsx58("div", { className: "text-2xl font-semibold tabular-nums tracking-tight text-foreground", children: headline }),
-      delta ? /* @__PURE__ */ jsx58("div", { className: "mt-1 text-sm", children: delta }) : null
+    /* @__PURE__ */ jsxs43("div", { className: "px-5 pt-4", children: [
+      /* @__PURE__ */ jsx64("div", { className: "text-2xl font-semibold tabular-nums tracking-tight text-foreground", children: headline }),
+      delta ? /* @__PURE__ */ jsx64("div", { className: "mt-1 text-sm", children: delta }) : null
     ] }),
-    /* @__PURE__ */ jsx58("div", { className: "px-3 pb-2 pt-2", style: { height }, children: /* @__PURE__ */ jsx58(ResponsiveContainer2, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs37(AreaChart, { data, margin: { top: 8, right: 12, left: 0, bottom: 0 }, children: [
-      /* @__PURE__ */ jsx58("defs", { children: /* @__PURE__ */ jsxs37("linearGradient", { id: areaGid, x1: "0", y1: "0", x2: "0", y2: "1", children: [
-        /* @__PURE__ */ jsx58("stop", { offset: "0%", stopColor: "var(--chart-1)", stopOpacity: 0.35 }),
-        /* @__PURE__ */ jsx58("stop", { offset: "100%", stopColor: "var(--chart-1)", stopOpacity: 0.02 })
+    /* @__PURE__ */ jsx64("div", { className: "px-3 pb-2 pt-2", style: { height }, children: /* @__PURE__ */ jsx64(ResponsiveContainer2, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs43(AreaChart, { data, margin: { top: 8, right: 12, left: 0, bottom: 0 }, children: [
+      /* @__PURE__ */ jsx64("defs", { children: /* @__PURE__ */ jsxs43("linearGradient", { id: areaGid, x1: "0", y1: "0", x2: "0", y2: "1", children: [
+        /* @__PURE__ */ jsx64("stop", { offset: "0%", stopColor: "var(--chart-1)", stopOpacity: 0.35 }),
+        /* @__PURE__ */ jsx64("stop", { offset: "100%", stopColor: "var(--chart-1)", stopOpacity: 0.02 })
       ] }) }),
-      /* @__PURE__ */ jsx58(CartesianGrid, { strokeDasharray: "3 3", stroke: gridStroke, vertical: false }),
-      /* @__PURE__ */ jsx58(
+      /* @__PURE__ */ jsx64(CartesianGrid, { strokeDasharray: "3 3", stroke: gridStroke, vertical: false }),
+      /* @__PURE__ */ jsx64(
         XAxis,
         {
           dataKey: xKey,
@@ -5217,7 +6362,7 @@ function DashboardAreaChartTemplate({
           interval: "preserveStartEnd"
         }
       ),
-      /* @__PURE__ */ jsx58(
+      /* @__PURE__ */ jsx64(
         YAxis,
         {
           axisLine: false,
@@ -5227,7 +6372,7 @@ function DashboardAreaChartTemplate({
           width: 44
         }
       ),
-      /* @__PURE__ */ jsx58(
+      /* @__PURE__ */ jsx64(
         Tooltip3,
         {
           contentStyle: {
@@ -5239,7 +6384,7 @@ function DashboardAreaChartTemplate({
           }
         }
       ),
-      /* @__PURE__ */ jsx58(
+      /* @__PURE__ */ jsx64(
         Area,
         {
           type: "monotone",
@@ -5249,7 +6394,7 @@ function DashboardAreaChartTemplate({
           fill: `url(#${areaGid})`
         }
       ),
-      compareLineKey ? /* @__PURE__ */ jsx58(
+      compareLineKey ? /* @__PURE__ */ jsx64(
         Line,
         {
           type: "monotone",
@@ -5261,9 +6406,9 @@ function DashboardAreaChartTemplate({
         }
       ) : null
     ] }) }) }),
-    footer ? /* @__PURE__ */ jsxs37(Fragment7, { children: [
-      /* @__PURE__ */ jsx58(Separator, {}),
-      /* @__PURE__ */ jsx58("div", { className: "px-5 py-3", children: footer })
+    footer ? /* @__PURE__ */ jsxs43(Fragment9, { children: [
+      /* @__PURE__ */ jsx64(Separator, {}),
+      /* @__PURE__ */ jsx64("div", { className: "px-5 py-3", children: footer })
     ] }) : null
   ] });
 }
@@ -5277,21 +6422,21 @@ function GroupedBarChartTemplate({
   formatYAxis = (v) => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(0)}K` : `${v}`,
   className
 }) {
-  return /* @__PURE__ */ jsxs37("div", { className: cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground shadow-sm", className), children: [
-    /* @__PURE__ */ jsxs37("div", { className: "mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between", children: [
-      /* @__PURE__ */ jsxs37("div", { children: [
-        /* @__PURE__ */ jsx58("h3", { className: "text-sm font-semibold text-foreground", children: title }),
-        subtitle ? /* @__PURE__ */ jsx58("p", { className: "mt-0.5 text-xs text-muted-foreground", children: subtitle }) : null
+  return /* @__PURE__ */ jsxs43("div", { className: cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground shadow-sm", className), children: [
+    /* @__PURE__ */ jsxs43("div", { className: "mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between", children: [
+      /* @__PURE__ */ jsxs43("div", { children: [
+        /* @__PURE__ */ jsx64("h3", { className: "text-sm font-semibold text-foreground", children: title }),
+        subtitle ? /* @__PURE__ */ jsx64("p", { className: "mt-0.5 text-xs text-muted-foreground", children: subtitle }) : null
       ] }),
-      /* @__PURE__ */ jsx58("div", { className: "flex flex-wrap items-center gap-4", children: series.map((s) => /* @__PURE__ */ jsxs37("div", { className: "flex items-center gap-1.5", children: [
-        /* @__PURE__ */ jsx58("div", { className: "size-2.5 rounded-sm", style: { background: s.color } }),
-        /* @__PURE__ */ jsx58("span", { className: "text-[11px] font-medium text-muted-foreground", children: s.label })
+      /* @__PURE__ */ jsx64("div", { className: "flex flex-wrap items-center gap-4", children: series.map((s) => /* @__PURE__ */ jsxs43("div", { className: "flex items-center gap-1.5", children: [
+        /* @__PURE__ */ jsx64("div", { className: "size-2.5 rounded-sm", style: { background: s.color } }),
+        /* @__PURE__ */ jsx64("span", { className: "text-[11px] font-medium text-muted-foreground", children: s.label })
       ] }, s.key)) })
     ] }),
-    /* @__PURE__ */ jsx58("div", { style: { height }, children: /* @__PURE__ */ jsx58(ResponsiveContainer2, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs37(BarChart, { data, barCategoryGap: "22%", barGap: 4, children: [
-      /* @__PURE__ */ jsx58(CartesianGrid, { strokeDasharray: "3 3", stroke: gridStroke, vertical: false }),
-      /* @__PURE__ */ jsx58(XAxis, { dataKey: xKey, axisLine: false, tickLine: false, tick: { fontSize: 11, fill: tickFill } }),
-      /* @__PURE__ */ jsx58(
+    /* @__PURE__ */ jsx64("div", { style: { height }, children: /* @__PURE__ */ jsx64(ResponsiveContainer2, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs43(BarChart, { data, barCategoryGap: "22%", barGap: 4, children: [
+      /* @__PURE__ */ jsx64(CartesianGrid, { strokeDasharray: "3 3", stroke: gridStroke, vertical: false }),
+      /* @__PURE__ */ jsx64(XAxis, { dataKey: xKey, axisLine: false, tickLine: false, tick: { fontSize: 11, fill: tickFill } }),
+      /* @__PURE__ */ jsx64(
         YAxis,
         {
           axisLine: false,
@@ -5301,7 +6446,7 @@ function GroupedBarChartTemplate({
           width: 40
         }
       ),
-      /* @__PURE__ */ jsx58(
+      /* @__PURE__ */ jsx64(
         Tooltip3,
         {
           contentStyle: {
@@ -5312,7 +6457,7 @@ function GroupedBarChartTemplate({
           }
         }
       ),
-      series.map((s) => /* @__PURE__ */ jsx58(Bar, { dataKey: s.key, name: s.label, fill: s.color, radius: [5, 5, 0, 0], maxBarSize: 36 }, s.key))
+      series.map((s) => /* @__PURE__ */ jsx64(Bar, { dataKey: s.key, name: s.label, fill: s.color, radius: [5, 5, 0, 0], maxBarSize: 36 }, s.key))
     ] }) }) })
   ] });
 }
@@ -5325,20 +6470,20 @@ function RankedBarListTemplate({
   barTo = "var(--chart-3)",
   className
 }) {
-  return /* @__PURE__ */ jsxs37("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm", className), children: [
-    /* @__PURE__ */ jsxs37("div", { className: "mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between", children: [
-      /* @__PURE__ */ jsxs37("div", { children: [
-        /* @__PURE__ */ jsx58("h3", { className: "text-sm font-semibold text-foreground", children: title }),
-        subtitle ? /* @__PURE__ */ jsx58("p", { className: "mt-0.5 text-xs text-muted-foreground", children: subtitle }) : null
+  return /* @__PURE__ */ jsxs43("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm", className), children: [
+    /* @__PURE__ */ jsxs43("div", { className: "mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between", children: [
+      /* @__PURE__ */ jsxs43("div", { children: [
+        /* @__PURE__ */ jsx64("h3", { className: "text-sm font-semibold text-foreground", children: title }),
+        subtitle ? /* @__PURE__ */ jsx64("p", { className: "mt-0.5 text-xs text-muted-foreground", children: subtitle }) : null
       ] }),
-      headerRight ? /* @__PURE__ */ jsx58("div", { className: "shrink-0", children: headerRight }) : null
+      headerRight ? /* @__PURE__ */ jsx64("div", { className: "shrink-0", children: headerRight }) : null
     ] }),
-    /* @__PURE__ */ jsx58("ul", { className: "space-y-3", children: items.map((row) => /* @__PURE__ */ jsxs37("li", { className: "flex items-center gap-3 text-sm", children: [
-      /* @__PURE__ */ jsxs37("div", { className: "flex min-w-0 flex-1 items-center gap-2", children: [
-        row.leading ? /* @__PURE__ */ jsx58("span", { className: "shrink-0 text-muted-foreground", children: row.leading }) : null,
-        /* @__PURE__ */ jsx58("span", { className: "truncate font-medium text-foreground", children: row.label })
+    /* @__PURE__ */ jsx64("ul", { className: "space-y-3", children: items.map((row) => /* @__PURE__ */ jsxs43("li", { className: "flex items-center gap-3 text-sm", children: [
+      /* @__PURE__ */ jsxs43("div", { className: "flex min-w-0 flex-1 items-center gap-2", children: [
+        row.leading ? /* @__PURE__ */ jsx64("span", { className: "shrink-0 text-muted-foreground", children: row.leading }) : null,
+        /* @__PURE__ */ jsx64("span", { className: "truncate font-medium text-foreground", children: row.label })
       ] }),
-      /* @__PURE__ */ jsx58("div", { className: "relative hidden h-2 w-[min(40%,9rem)] overflow-hidden rounded-full bg-muted sm:block", children: /* @__PURE__ */ jsx58(
+      /* @__PURE__ */ jsx64("div", { className: "relative hidden h-2 w-[min(40%,9rem)] overflow-hidden rounded-full bg-muted sm:block", children: /* @__PURE__ */ jsx64(
         "div",
         {
           className: "absolute inset-y-0 left-0 rounded-full",
@@ -5348,7 +6493,7 @@ function RankedBarListTemplate({
           }
         }
       ) }),
-      /* @__PURE__ */ jsx58("span", { className: "w-14 shrink-0 text-right text-xs font-semibold tabular-nums text-foreground", children: row.value })
+      /* @__PURE__ */ jsx64("span", { className: "w-14 shrink-0 text-right text-xs font-semibold tabular-nums text-foreground", children: row.value })
     ] }, row.id)) })
   ] });
 }
@@ -5362,15 +6507,15 @@ function CategoryBarChartTemplate({
   className
 }) {
   const chartData = data.map((d) => ({ name: d.category, v: d.value }));
-  return /* @__PURE__ */ jsxs37("div", { className: cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground shadow-sm", className), children: [
-    /* @__PURE__ */ jsxs37("div", { className: "mb-3", children: [
-      /* @__PURE__ */ jsx58("h3", { className: "text-sm font-semibold text-foreground", children: title }),
-      subtitle ? /* @__PURE__ */ jsx58("p", { className: "mt-0.5 text-xs text-muted-foreground", children: subtitle }) : null
+  return /* @__PURE__ */ jsxs43("div", { className: cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground shadow-sm", className), children: [
+    /* @__PURE__ */ jsxs43("div", { className: "mb-3", children: [
+      /* @__PURE__ */ jsx64("h3", { className: "text-sm font-semibold text-foreground", children: title }),
+      subtitle ? /* @__PURE__ */ jsx64("p", { className: "mt-0.5 text-xs text-muted-foreground", children: subtitle }) : null
     ] }),
-    /* @__PURE__ */ jsx58("div", { style: { height }, children: /* @__PURE__ */ jsx58(ResponsiveContainer2, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs37(BarChart, { data: chartData, barCategoryGap: "28%", children: [
-      /* @__PURE__ */ jsx58(CartesianGrid, { strokeDasharray: "3 3", stroke: gridStroke, vertical: false }),
-      /* @__PURE__ */ jsx58(XAxis, { dataKey: "name", axisLine: false, tickLine: false, tick: { fontSize: 11, fill: tickFill } }),
-      /* @__PURE__ */ jsx58(
+    /* @__PURE__ */ jsx64("div", { style: { height }, children: /* @__PURE__ */ jsx64(ResponsiveContainer2, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs43(BarChart, { data: chartData, barCategoryGap: "28%", children: [
+      /* @__PURE__ */ jsx64(CartesianGrid, { strokeDasharray: "3 3", stroke: gridStroke, vertical: false }),
+      /* @__PURE__ */ jsx64(XAxis, { dataKey: "name", axisLine: false, tickLine: false, tick: { fontSize: 11, fill: tickFill } }),
+      /* @__PURE__ */ jsx64(
         YAxis,
         {
           axisLine: false,
@@ -5381,7 +6526,7 @@ function CategoryBarChartTemplate({
           width: 36
         }
       ),
-      /* @__PURE__ */ jsx58(
+      /* @__PURE__ */ jsx64(
         Tooltip3,
         {
           formatter: (value) => [`${value ?? 0}%`, valueLabel],
@@ -5393,7 +6538,7 @@ function CategoryBarChartTemplate({
           }
         }
       ),
-      /* @__PURE__ */ jsx58(Bar, { dataKey: "v", fill: barColor, radius: [6, 6, 0, 0], maxBarSize: 48 })
+      /* @__PURE__ */ jsx64(Bar, { dataKey: "v", fill: barColor, radius: [6, 6, 0, 0], maxBarSize: 48 })
     ] }) }) })
   ] });
 }
@@ -5408,18 +6553,18 @@ function MiniSparklineChartCard({
 }) {
   const gid = React42.useId().replace(/:/g, "");
   const hasCompare = data.some((d) => d.compare != null);
-  return /* @__PURE__ */ jsxs37("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm", className), children: [
-    /* @__PURE__ */ jsx58("h3", { className: "text-sm font-semibold text-foreground", children: title }),
-    /* @__PURE__ */ jsx58("div", { className: "mt-2 text-2xl font-semibold tabular-nums", children: value }),
-    /* @__PURE__ */ jsx58("div", { className: "mt-2", style: { height }, children: /* @__PURE__ */ jsx58(ResponsiveContainer2, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs37(AreaChart, { data, margin: { top: 4, right: 8, left: 0, bottom: 0 }, children: [
-      /* @__PURE__ */ jsx58("defs", { children: /* @__PURE__ */ jsxs37("linearGradient", { id: gid, x1: "0", y1: "0", x2: "0", y2: "1", children: [
-        /* @__PURE__ */ jsx58("stop", { offset: "0%", stopColor: accentColor, stopOpacity: 0.3 }),
-        /* @__PURE__ */ jsx58("stop", { offset: "100%", stopColor: accentColor, stopOpacity: 0 })
+  return /* @__PURE__ */ jsxs43("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm", className), children: [
+    /* @__PURE__ */ jsx64("h3", { className: "text-sm font-semibold text-foreground", children: title }),
+    /* @__PURE__ */ jsx64("div", { className: "mt-2 text-2xl font-semibold tabular-nums", children: value }),
+    /* @__PURE__ */ jsx64("div", { className: "mt-2", style: { height }, children: /* @__PURE__ */ jsx64(ResponsiveContainer2, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs43(AreaChart, { data, margin: { top: 4, right: 8, left: 0, bottom: 0 }, children: [
+      /* @__PURE__ */ jsx64("defs", { children: /* @__PURE__ */ jsxs43("linearGradient", { id: gid, x1: "0", y1: "0", x2: "0", y2: "1", children: [
+        /* @__PURE__ */ jsx64("stop", { offset: "0%", stopColor: accentColor, stopOpacity: 0.3 }),
+        /* @__PURE__ */ jsx64("stop", { offset: "100%", stopColor: accentColor, stopOpacity: 0 })
       ] }) }),
-      /* @__PURE__ */ jsx58(XAxis, { dataKey: "x", hide: true }),
-      /* @__PURE__ */ jsx58(YAxis, { hide: true, domain: ["dataMin - 1", "dataMax + 1"] }),
-      /* @__PURE__ */ jsx58(Area, { type: "monotone", dataKey: "y", stroke: accentColor, strokeWidth: 2, fill: `url(#${gid})` }),
-      hasCompare ? /* @__PURE__ */ jsx58(
+      /* @__PURE__ */ jsx64(XAxis, { dataKey: "x", hide: true }),
+      /* @__PURE__ */ jsx64(YAxis, { hide: true, domain: ["dataMin - 1", "dataMax + 1"] }),
+      /* @__PURE__ */ jsx64(Area, { type: "monotone", dataKey: "y", stroke: accentColor, strokeWidth: 2, fill: `url(#${gid})` }),
+      hasCompare ? /* @__PURE__ */ jsx64(
         Line,
         {
           type: "monotone",
@@ -5432,10 +6577,10 @@ function MiniSparklineChartCard({
         }
       ) : null
     ] }) }) }),
-    /* @__PURE__ */ jsx58("div", { className: "mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t border-border pt-3 text-[11px]", children: stats.map((s) => /* @__PURE__ */ jsxs37("div", { className: "flex items-center gap-1.5", children: [
-      s.dotClassName ? /* @__PURE__ */ jsx58("span", { className: cn("size-1.5 rounded-full", s.dotClassName) }) : null,
-      /* @__PURE__ */ jsx58("span", { className: "text-muted-foreground", children: s.label }),
-      /* @__PURE__ */ jsx58("span", { className: "font-semibold tabular-nums text-foreground", children: s.value })
+    /* @__PURE__ */ jsx64("div", { className: "mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t border-border pt-3 text-[11px]", children: stats.map((s) => /* @__PURE__ */ jsxs43("div", { className: "flex items-center gap-1.5", children: [
+      s.dotClassName ? /* @__PURE__ */ jsx64("span", { className: cn("size-1.5 rounded-full", s.dotClassName) }) : null,
+      /* @__PURE__ */ jsx64("span", { className: "text-muted-foreground", children: s.label }),
+      /* @__PURE__ */ jsx64("span", { className: "font-semibold tabular-nums text-foreground", children: s.value })
     ] }, s.label)) })
   ] });
 }
@@ -5445,19 +6590,19 @@ var toneCls = {
   danger: "text-red-600 dark:text-red-400"
 };
 function AttentionListTemplate({ title, items, className }) {
-  return /* @__PURE__ */ jsxs37("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm", className), children: [
-    /* @__PURE__ */ jsx58("h3", { className: "text-sm font-semibold text-foreground", children: title }),
-    /* @__PURE__ */ jsx58("ul", { className: "mt-4 space-y-4", children: items.map((item) => /* @__PURE__ */ jsxs37(
+  return /* @__PURE__ */ jsxs43("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm", className), children: [
+    /* @__PURE__ */ jsx64("h3", { className: "text-sm font-semibold text-foreground", children: title }),
+    /* @__PURE__ */ jsx64("ul", { className: "mt-4 space-y-4", children: items.map((item) => /* @__PURE__ */ jsxs43(
       "li",
       {
         className: "flex flex-col gap-3 border-b border-border/60 pb-4 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between",
         children: [
-          /* @__PURE__ */ jsxs37("div", { className: "min-w-0 space-y-0.5", children: [
-            /* @__PURE__ */ jsx58("p", { className: "text-sm font-semibold text-foreground", children: item.title }),
-            /* @__PURE__ */ jsx58("p", { className: cn("text-lg font-semibold tabular-nums", toneCls[item.valueTone ?? "default"]), children: item.value }),
-            item.meta ? /* @__PURE__ */ jsx58("p", { className: "text-xs text-muted-foreground", children: item.meta }) : null
+          /* @__PURE__ */ jsxs43("div", { className: "min-w-0 space-y-0.5", children: [
+            /* @__PURE__ */ jsx64("p", { className: "text-sm font-semibold text-foreground", children: item.title }),
+            /* @__PURE__ */ jsx64("p", { className: cn("text-lg font-semibold tabular-nums", toneCls[item.valueTone ?? "default"]), children: item.value }),
+            item.meta ? /* @__PURE__ */ jsx64("p", { className: "text-xs text-muted-foreground", children: item.meta }) : null
           ] }),
-          /* @__PURE__ */ jsxs37(
+          /* @__PURE__ */ jsxs43(
             Button,
             {
               type: "button",
@@ -5467,7 +6612,7 @@ function AttentionListTemplate({ title, items, className }) {
               onClick: item.onAction,
               children: [
                 item.actionLabel,
-                /* @__PURE__ */ jsx58(ExternalLink, { className: "size-3.5 opacity-70", "aria-hidden": true })
+                /* @__PURE__ */ jsx64(ExternalLink, { className: "size-3.5 opacity-70", "aria-hidden": true })
               ]
             }
           )
@@ -5481,15 +6626,15 @@ function AttentionListTemplate({ title, items, className }) {
 // src/sonner.tsx
 import { useTheme } from "next-themes";
 import { Toaster as Sonner } from "sonner";
-import { useEffect as useEffect4, useState as useState9 } from "react";
-import { toast } from "sonner";
-import { jsx as jsx59 } from "react/jsx-runtime";
+import { useEffect as useEffect9, useState as useState13 } from "react";
+import { toast as toast2 } from "sonner";
+import { jsx as jsx65 } from "react/jsx-runtime";
 function Toaster({ theme, ...props }) {
   const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState9(false);
-  useEffect4(() => setMounted(true), []);
+  const [mounted, setMounted] = useState13(false);
+  useEffect9(() => setMounted(true), []);
   const resolved = theme ?? (mounted && resolvedTheme === "dark" ? "dark" : "light");
-  return /* @__PURE__ */ jsx59(
+  return /* @__PURE__ */ jsx65(
     Sonner,
     {
       theme: resolved,
@@ -5507,8 +6652,8 @@ function Toaster({ theme, ...props }) {
 
 // src/inline-edit.tsx
 import * as React43 from "react";
-import { Check as Check9, Pencil, X as X8 } from "lucide-react";
-import { Fragment as Fragment8, jsx as jsx60, jsxs as jsxs38 } from "react/jsx-runtime";
+import { Check as Check10, Pencil, X as X8 } from "lucide-react";
+import { Fragment as Fragment10, jsx as jsx66, jsxs as jsxs44 } from "react/jsx-runtime";
 var InlineEdit = React43.forwardRef(
   ({
     value,
@@ -5582,8 +6727,8 @@ var InlineEdit = React43.forwardRef(
       "disabled:cursor-not-allowed disabled:opacity-50",
       inputClassName
     );
-    return /* @__PURE__ */ jsx60("div", { ref, "data-inline-edit": "", className: "relative inline-flex flex-col gap-1 max-w-full", children: editing ? /* @__PURE__ */ jsxs38(Fragment8, { children: [
-      multiline ? /* @__PURE__ */ jsx60(
+    return /* @__PURE__ */ jsx66("div", { ref, "data-inline-edit": "", className: "relative inline-flex flex-col gap-1 max-w-full", children: editing ? /* @__PURE__ */ jsxs44(Fragment10, { children: [
+      multiline ? /* @__PURE__ */ jsx66(
         "textarea",
         {
           ref: inputRef,
@@ -5595,7 +6740,7 @@ var InlineEdit = React43.forwardRef(
           rows: 3,
           className: cn(sharedInputClass, "resize-none leading-relaxed py-1.5")
         }
-      ) : /* @__PURE__ */ jsx60(
+      ) : /* @__PURE__ */ jsx66(
         "input",
         {
           ref: inputRef,
@@ -5608,8 +6753,8 @@ var InlineEdit = React43.forwardRef(
           className: sharedInputClass
         }
       ),
-      showButtons && /* @__PURE__ */ jsxs38("div", { className: "flex items-center gap-1", children: [
-        /* @__PURE__ */ jsx60(
+      showButtons && /* @__PURE__ */ jsxs44("div", { className: "flex items-center gap-1", children: [
+        /* @__PURE__ */ jsx66(
           "button",
           {
             type: "button",
@@ -5624,10 +6769,10 @@ var InlineEdit = React43.forwardRef(
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
             ),
             "aria-label": "Confirm",
-            children: /* @__PURE__ */ jsx60(Check9, { className: "size-3.5" })
+            children: /* @__PURE__ */ jsx66(Check10, { className: "size-3.5" })
           }
         ),
-        /* @__PURE__ */ jsx60(
+        /* @__PURE__ */ jsx66(
           "button",
           {
             type: "button",
@@ -5642,11 +6787,11 @@ var InlineEdit = React43.forwardRef(
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
             ),
             "aria-label": "Cancel",
-            children: /* @__PURE__ */ jsx60(X8, { className: "size-3.5" })
+            children: /* @__PURE__ */ jsx66(X8, { className: "size-3.5" })
           }
         )
       ] })
-    ] }) : /* @__PURE__ */ jsxs38(
+    ] }) : /* @__PURE__ */ jsxs44(
       "span",
       {
         role: "button",
@@ -5669,8 +6814,8 @@ var InlineEdit = React43.forwardRef(
           readClassName
         ),
         children: [
-          /* @__PURE__ */ jsx60("span", { className: cn(!value && "text-muted-foreground"), children: value || placeholder }),
-          !disabled && /* @__PURE__ */ jsx60(
+          /* @__PURE__ */ jsx66("span", { className: cn(!value && "text-muted-foreground"), children: value || placeholder }),
+          !disabled && /* @__PURE__ */ jsx66(
             Pencil,
             {
               className: cn(
@@ -5691,7 +6836,7 @@ InlineEdit.displayName = "InlineEdit";
 import * as React44 from "react";
 import * as PopoverPrimitive3 from "@radix-ui/react-popover";
 import { X as X9 } from "lucide-react";
-import { jsx as jsx61, jsxs as jsxs39 } from "react/jsx-runtime";
+import { jsx as jsx67, jsxs as jsxs45 } from "react/jsx-runtime";
 var InlineDialog = PopoverPrimitive3.Root;
 InlineDialog.displayName = "InlineDialog";
 var InlineDialogTrigger = PopoverPrimitive3.Trigger;
@@ -5733,7 +6878,7 @@ var InlineDialogContent = React44.forwardRef(
     hideClose = false,
     children,
     ...props
-  }, ref) => /* @__PURE__ */ jsx61(PopoverPrimitive3.Portal, { children: /* @__PURE__ */ jsxs39(
+  }, ref) => /* @__PURE__ */ jsx67(PopoverPrimitive3.Portal, { children: /* @__PURE__ */ jsxs45(
     PopoverPrimitive3.Content,
     {
       ref,
@@ -5751,8 +6896,8 @@ var InlineDialogContent = React44.forwardRef(
       ),
       ...props,
       children: [
-        /* @__PURE__ */ jsx61("span", { className: getArrowClasses(side), "aria-hidden": "true" }),
-        !hideClose && /* @__PURE__ */ jsx61(
+        /* @__PURE__ */ jsx67("span", { className: getArrowClasses(side), "aria-hidden": "true" }),
+        !hideClose && /* @__PURE__ */ jsx67(
           PopoverPrimitive3.Close,
           {
             className: cn(
@@ -5764,7 +6909,7 @@ var InlineDialogContent = React44.forwardRef(
               "disabled:cursor-not-allowed disabled:opacity-50"
             ),
             "aria-label": "Close",
-            children: /* @__PURE__ */ jsx61(X9, { className: "size-3.5" })
+            children: /* @__PURE__ */ jsx67(X9, { className: "size-3.5" })
           }
         ),
         children
@@ -5777,7 +6922,7 @@ InlineDialogContent.displayName = "InlineDialogContent";
 // src/flag.tsx
 import * as React45 from "react";
 import { Info as Info6, CheckCircle2 as CheckCircle24, AlertTriangle as AlertTriangle4, XCircle as XCircle4, X as X10 } from "lucide-react";
-import { jsx as jsx62, jsxs as jsxs40 } from "react/jsx-runtime";
+import { jsx as jsx68, jsxs as jsxs46 } from "react/jsx-runtime";
 var DEFAULT_AUTO_DISMISS = 8e3;
 var variantBorder = {
   info: "border-l-blue-500",
@@ -5854,8 +6999,8 @@ var Flag = React45.forwardRef(
       startTimeRef.current = null;
     };
     const DefaultIcon = defaultIcons[variant];
-    const renderedIcon = icon ?? /* @__PURE__ */ jsx62(DefaultIcon, { className: cn("size-4 shrink-0 mt-0.5", variantIconColor[variant]), "aria-hidden": true });
-    return /* @__PURE__ */ jsxs40(
+    const renderedIcon = icon ?? /* @__PURE__ */ jsx68(DefaultIcon, { className: cn("size-4 shrink-0 mt-0.5", variantIconColor[variant]), "aria-hidden": true });
+    return /* @__PURE__ */ jsxs46(
       "div",
       {
         ref,
@@ -5872,12 +7017,12 @@ var Flag = React45.forwardRef(
         ),
         ...props,
         children: [
-          /* @__PURE__ */ jsxs40("div", { className: "flex gap-3 p-4 pr-10", children: [
+          /* @__PURE__ */ jsxs46("div", { className: "flex gap-3 p-4 pr-10", children: [
             renderedIcon,
-            /* @__PURE__ */ jsxs40("div", { className: "flex-1 min-w-0", children: [
-              /* @__PURE__ */ jsx62("p", { className: "text-sm font-semibold text-card-foreground leading-snug", children: title }),
-              description && /* @__PURE__ */ jsx62("p", { className: "mt-1 text-sm text-muted-foreground leading-relaxed", children: description }),
-              actions && actions.length > 0 && /* @__PURE__ */ jsx62("div", { className: "mt-3 flex flex-wrap gap-2", children: actions.map((action) => /* @__PURE__ */ jsx62(
+            /* @__PURE__ */ jsxs46("div", { className: "flex-1 min-w-0", children: [
+              /* @__PURE__ */ jsx68("p", { className: "text-sm font-semibold text-card-foreground leading-snug", children: title }),
+              description && /* @__PURE__ */ jsx68("p", { className: "mt-1 text-sm text-muted-foreground leading-relaxed", children: description }),
+              actions && actions.length > 0 && /* @__PURE__ */ jsx68("div", { className: "mt-3 flex flex-wrap gap-2", children: actions.map((action) => /* @__PURE__ */ jsx68(
                 "button",
                 {
                   type: "button",
@@ -5889,17 +7034,17 @@ var Flag = React45.forwardRef(
               )) })
             ] })
           ] }),
-          onDismiss && /* @__PURE__ */ jsx62(
+          onDismiss && /* @__PURE__ */ jsx68(
             "button",
             {
               type: "button",
               "aria-label": "Dismiss notification",
               onClick: onDismiss,
               className: "absolute top-3 right-3 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              children: /* @__PURE__ */ jsx62(X10, { className: "size-3.5", "aria-hidden": true })
+              children: /* @__PURE__ */ jsx68(X10, { className: "size-3.5", "aria-hidden": true })
             }
           ),
-          duration !== null && /* @__PURE__ */ jsx62("div", { className: "absolute bottom-0 left-0 right-0 h-0.5 bg-muted", children: /* @__PURE__ */ jsx62(
+          duration !== null && /* @__PURE__ */ jsx68("div", { className: "absolute bottom-0 left-0 right-0 h-0.5 bg-muted", children: /* @__PURE__ */ jsx68(
             "div",
             {
               className: cn("h-full transition-none", variantProgressBar[variant]),
@@ -5919,7 +7064,7 @@ var positionClasses = {
   "top-left": "top-4 left-4 flex-col"
 };
 var FlagGroup = React45.forwardRef(
-  ({ className, position = "bottom-right", children, ...props }, ref) => /* @__PURE__ */ jsx62(
+  ({ className, position = "bottom-right", children, ...props }, ref) => /* @__PURE__ */ jsx68(
     "div",
     {
       ref,
@@ -5955,7 +7100,7 @@ function useFlagGroup() {
 
 // src/responsive.tsx
 import * as React46 from "react";
-import { jsx as jsx63 } from "react/jsx-runtime";
+import { jsx as jsx69 } from "react/jsx-runtime";
 var BREAKPOINT_ORDER = ["sm", "md", "lg", "xl", "2xl"];
 var BREAKPOINT_MIN_WIDTH = {
   sm: 640,
@@ -6034,7 +7179,7 @@ var Show = React46.forwardRef(
     } else {
       visibilityClass = "";
     }
-    return /* @__PURE__ */ jsx63(
+    return /* @__PURE__ */ jsx69(
       Tag2,
       {
         ref,
@@ -6064,7 +7209,7 @@ var Hide = React46.forwardRef(
     } else {
       visibilityClass = "";
     }
-    return /* @__PURE__ */ jsx63(
+    return /* @__PURE__ */ jsx69(
       Tag2,
       {
         ref,
@@ -6131,8 +7276,8 @@ function useBreakpoint() {
 // src/country-select.tsx
 import * as React47 from "react";
 import * as PopoverPrimitive4 from "@radix-ui/react-popover";
-import { Check as Check10, ChevronDown as ChevronDown9, Search as Search3 } from "lucide-react";
-import { Fragment as Fragment9, jsx as jsx64, jsxs as jsxs41 } from "react/jsx-runtime";
+import { Check as Check11, ChevronDown as ChevronDown9, Search as Search4 } from "lucide-react";
+import { Fragment as Fragment11, jsx as jsx70, jsxs as jsxs47 } from "react/jsx-runtime";
 var COUNTRIES = [
   { code: "US", name: "United States", flag: "\u{1F1FA}\u{1F1F8}", dialCode: "+1" },
   { code: "GB", name: "United Kingdom", flag: "\u{1F1EC}\u{1F1E7}", dialCode: "+44" },
@@ -6196,8 +7341,8 @@ var CountrySelect = React47.forwardRef(
         setSearch("");
       }
     }, [open]);
-    return /* @__PURE__ */ jsxs41(PopoverPrimitive4.Root, { open, onOpenChange: setOpen, children: [
-      /* @__PURE__ */ jsx64(PopoverPrimitive4.Trigger, { asChild: true, children: /* @__PURE__ */ jsxs41(
+    return /* @__PURE__ */ jsxs47(PopoverPrimitive4.Root, { open, onOpenChange: setOpen, children: [
+      /* @__PURE__ */ jsx70(PopoverPrimitive4.Trigger, { asChild: true, children: /* @__PURE__ */ jsxs47(
         "button",
         {
           ref,
@@ -6214,12 +7359,12 @@ var CountrySelect = React47.forwardRef(
             className
           ),
           children: [
-            /* @__PURE__ */ jsx64("span", { className: "flex min-w-0 items-center gap-2.5", children: selected ? /* @__PURE__ */ jsxs41(Fragment9, { children: [
-              /* @__PURE__ */ jsx64("span", { className: "text-base leading-none", "aria-hidden": "true", children: selected.flag }),
-              /* @__PURE__ */ jsx64("span", { className: "truncate", children: selected.name }),
-              showDialCode && /* @__PURE__ */ jsx64("span", { className: "shrink-0 text-muted-foreground", children: selected.dialCode })
-            ] }) : /* @__PURE__ */ jsx64("span", { children: placeholder }) }),
-            /* @__PURE__ */ jsx64(
+            /* @__PURE__ */ jsx70("span", { className: "flex min-w-0 items-center gap-2.5", children: selected ? /* @__PURE__ */ jsxs47(Fragment11, { children: [
+              /* @__PURE__ */ jsx70("span", { className: "text-base leading-none", "aria-hidden": "true", children: selected.flag }),
+              /* @__PURE__ */ jsx70("span", { className: "truncate", children: selected.name }),
+              showDialCode && /* @__PURE__ */ jsx70("span", { className: "shrink-0 text-muted-foreground", children: selected.dialCode })
+            ] }) : /* @__PURE__ */ jsx70("span", { children: placeholder }) }),
+            /* @__PURE__ */ jsx70(
               ChevronDown9,
               {
                 className: cn(
@@ -6232,7 +7377,7 @@ var CountrySelect = React47.forwardRef(
           ]
         }
       ) }),
-      /* @__PURE__ */ jsx64(PopoverPrimitive4.Portal, { children: /* @__PURE__ */ jsxs41(
+      /* @__PURE__ */ jsx70(PopoverPrimitive4.Portal, { children: /* @__PURE__ */ jsxs47(
         PopoverPrimitive4.Content,
         {
           align: "start",
@@ -6243,9 +7388,9 @@ var CountrySelect = React47.forwardRef(
           ),
           onOpenAutoFocus: (e) => e.preventDefault(),
           children: [
-            /* @__PURE__ */ jsxs41("div", { className: "flex items-center gap-2 border-b border-border px-3 py-2.5", children: [
-              /* @__PURE__ */ jsx64(Search3, { className: "h-4 w-4 shrink-0 text-muted-foreground", "aria-hidden": "true" }),
-              /* @__PURE__ */ jsx64(
+            /* @__PURE__ */ jsxs47("div", { className: "flex items-center gap-2 border-b border-border px-3 py-2.5", children: [
+              /* @__PURE__ */ jsx70(Search4, { className: "h-4 w-4 shrink-0 text-muted-foreground", "aria-hidden": "true" }),
+              /* @__PURE__ */ jsx70(
                 "input",
                 {
                   ref: searchRef,
@@ -6260,26 +7405,26 @@ var CountrySelect = React47.forwardRef(
                   "aria-label": "Search countries"
                 }
               ),
-              search && /* @__PURE__ */ jsx64(
+              search && /* @__PURE__ */ jsx70(
                 "button",
                 {
                   type: "button",
                   onClick: () => setSearch(""),
                   className: "shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-pg-fast ease-pg-standard",
                   "aria-label": "Clear search",
-                  children: /* @__PURE__ */ jsx64("svg", { width: "14", height: "14", viewBox: "0 0 14 14", fill: "none", "aria-hidden": "true", children: /* @__PURE__ */ jsx64("path", { d: "M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round" }) })
+                  children: /* @__PURE__ */ jsx70("svg", { width: "14", height: "14", viewBox: "0 0 14 14", fill: "none", "aria-hidden": "true", children: /* @__PURE__ */ jsx70("path", { d: "M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round" }) })
                 }
               )
             ] }),
-            /* @__PURE__ */ jsx64(
+            /* @__PURE__ */ jsx70(
               "div",
               {
                 role: "listbox",
                 "aria-label": "Countries",
                 className: "max-h-64 overflow-y-auto p-1",
-                children: filtered.length === 0 ? /* @__PURE__ */ jsx64("div", { className: "py-6 text-center text-sm text-muted-foreground", children: "No countries found" }) : filtered.map((country) => {
+                children: filtered.length === 0 ? /* @__PURE__ */ jsx70("div", { className: "py-6 text-center text-sm text-muted-foreground", children: "No countries found" }) : filtered.map((country) => {
                   const isSelected = country.code === value;
-                  return /* @__PURE__ */ jsxs41(
+                  return /* @__PURE__ */ jsxs47(
                     "button",
                     {
                       role: "option",
@@ -6297,11 +7442,11 @@ var CountrySelect = React47.forwardRef(
                         isSelected && "bg-muted/60"
                       ),
                       children: [
-                        /* @__PURE__ */ jsx64("span", { className: "text-base leading-none", "aria-hidden": "true", children: country.flag }),
-                        /* @__PURE__ */ jsx64("span", { className: "flex-1 truncate text-foreground", children: country.name }),
-                        /* @__PURE__ */ jsx64("span", { className: "shrink-0 text-xs text-muted-foreground", children: country.dialCode }),
-                        isSelected && /* @__PURE__ */ jsx64(
-                          Check10,
+                        /* @__PURE__ */ jsx70("span", { className: "text-base leading-none", "aria-hidden": "true", children: country.flag }),
+                        /* @__PURE__ */ jsx70("span", { className: "flex-1 truncate text-foreground", children: country.name }),
+                        /* @__PURE__ */ jsx70("span", { className: "shrink-0 text-xs text-muted-foreground", children: country.dialCode }),
+                        isSelected && /* @__PURE__ */ jsx70(
+                          Check11,
                           {
                             className: "h-3.5 w-3.5 shrink-0 text-primary",
                             "aria-hidden": "true"
@@ -6325,7 +7470,7 @@ CountrySelect.displayName = "CountrySelect";
 // src/icon-button.tsx
 import { Loader2 as Loader23 } from "lucide-react";
 import { forwardRef as forwardRef50 } from "react";
-import { jsx as jsx65 } from "react/jsx-runtime";
+import { jsx as jsx71 } from "react/jsx-runtime";
 var variantClasses4 = {
   primary: "bg-primary text-primary-foreground border border-primary shadow-sm hover:bg-[var(--primary-hover)]",
   secondary: "bg-muted text-foreground border border-border shadow-sm hover:bg-muted/85 dark:bg-muted/35 dark:text-foreground dark:border-border dark:hover:bg-muted/55",
@@ -6365,7 +7510,7 @@ var IconButton = forwardRef50(
     "aria-label": ariaLabel,
     ...props
   }, ref) => {
-    return /* @__PURE__ */ jsx65(
+    return /* @__PURE__ */ jsx71(
       "button",
       {
         ref,
@@ -6383,7 +7528,7 @@ var IconButton = forwardRef50(
           className
         ),
         ...props,
-        children: isLoading ? /* @__PURE__ */ jsx65(Loader23, { className: cn("animate-spin", iconSizeClasses[size]) }) : children
+        children: isLoading ? /* @__PURE__ */ jsx71(Loader23, { className: cn("animate-spin", iconSizeClasses[size]) }) : children
       }
     );
   }
@@ -6394,7 +7539,7 @@ IconButton.displayName = "IconButton";
 import * as React48 from "react";
 import { createPortal as createPortal2 } from "react-dom";
 import { Clock as Clock2, ChevronDown as ChevronDown10, X as X11 } from "lucide-react";
-import { Fragment as Fragment10, jsx as jsx66, jsxs as jsxs42 } from "react/jsx-runtime";
+import { Fragment as Fragment12, jsx as jsx72, jsxs as jsxs48 } from "react/jsx-runtime";
 function pad(n) {
   return String(n).padStart(2, "0");
 }
@@ -6466,8 +7611,8 @@ function ScrollColumn({
       scrollToIndex(clamped, "smooth");
     }, 80);
   }
-  return /* @__PURE__ */ jsxs42("div", { className: "relative flex flex-col items-center", style: { width: 64 }, children: [
-    /* @__PURE__ */ jsx66(
+  return /* @__PURE__ */ jsxs48("div", { className: "relative flex flex-col items-center", style: { width: 64 }, children: [
+    /* @__PURE__ */ jsx72(
       "div",
       {
         className: "pointer-events-none absolute left-0 right-0 rounded-lg bg-primary/10",
@@ -6478,7 +7623,7 @@ function ScrollColumn({
         }
       }
     ),
-    /* @__PURE__ */ jsxs42(
+    /* @__PURE__ */ jsxs48(
       "div",
       {
         ref: containerRef,
@@ -6491,10 +7636,10 @@ function ScrollColumn({
           msOverflowStyle: "none"
         },
         children: [
-          Array.from({ length: PAD }).map((_, i) => /* @__PURE__ */ jsx66("div", { style: { height: ITEM_H } }, `pad-top-${i}`)),
+          Array.from({ length: PAD }).map((_, i) => /* @__PURE__ */ jsx72("div", { style: { height: ITEM_H } }, `pad-top-${i}`)),
           items.map((item) => {
             const isSelected = getKey(item) === getKey(selected);
-            return /* @__PURE__ */ jsx66(
+            return /* @__PURE__ */ jsx72(
               "div",
               {
                 onClick: () => {
@@ -6514,7 +7659,7 @@ function ScrollColumn({
               getKey(item)
             );
           }),
-          Array.from({ length: PAD }).map((_, i) => /* @__PURE__ */ jsx66("div", { style: { height: ITEM_H } }, `pad-bot-${i}`))
+          Array.from({ length: PAD }).map((_, i) => /* @__PURE__ */ jsx72("div", { style: { height: ITEM_H } }, `pad-bot-${i}`))
         ]
       }
     )
@@ -6617,7 +7762,7 @@ var TimePicker = React48.forwardRef(
       e.stopPropagation();
       onValueChange("");
     }
-    const panel = open ? /* @__PURE__ */ jsxs42(
+    const panel = open ? /* @__PURE__ */ jsxs48(
       "div",
       {
         ref: panelRef,
@@ -6633,24 +7778,24 @@ var TimePicker = React48.forwardRef(
           zIndex: 2e4
         },
         children: [
-          /* @__PURE__ */ jsxs42("div", { className: "flex items-center gap-1.5 border-b border-border px-4 py-2.5", children: [
-            /* @__PURE__ */ jsx66(Clock2, { className: "size-3.5 text-muted-foreground" }),
-            /* @__PURE__ */ jsx66("span", { className: "text-[13px] font-medium text-muted-foreground", children: value ? displayTime(value, use24Hour) : "\u2014" })
+          /* @__PURE__ */ jsxs48("div", { className: "flex items-center gap-1.5 border-b border-border px-4 py-2.5", children: [
+            /* @__PURE__ */ jsx72(Clock2, { className: "size-3.5 text-muted-foreground" }),
+            /* @__PURE__ */ jsx72("span", { className: "text-[13px] font-medium text-muted-foreground", children: value ? displayTime(value, use24Hour) : "\u2014" })
           ] }),
-          /* @__PURE__ */ jsxs42(
+          /* @__PURE__ */ jsxs48(
             "div",
             {
               className: "flex items-center justify-around px-2 pt-2 pb-0.5",
               style: { paddingLeft: 8, paddingRight: use24Hour ? 8 : 8 },
               children: [
-                /* @__PURE__ */ jsx66("span", { className: "w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: "Hr" }),
-                /* @__PURE__ */ jsx66("span", { className: "w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: "Min" }),
-                !use24Hour && /* @__PURE__ */ jsx66("span", { className: "w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: "AM/PM" })
+                /* @__PURE__ */ jsx72("span", { className: "w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: "Hr" }),
+                /* @__PURE__ */ jsx72("span", { className: "w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: "Min" }),
+                !use24Hour && /* @__PURE__ */ jsx72("span", { className: "w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: "AM/PM" })
               ]
             }
           ),
-          /* @__PURE__ */ jsxs42("div", { className: "flex items-center justify-around px-2 pb-3", children: [
-            /* @__PURE__ */ jsx66(
+          /* @__PURE__ */ jsxs48("div", { className: "flex items-center justify-around px-2 pb-3", children: [
+            /* @__PURE__ */ jsx72(
               ScrollColumn,
               {
                 items: hours,
@@ -6660,8 +7805,8 @@ var TimePicker = React48.forwardRef(
                 getKey: (h) => h
               }
             ),
-            /* @__PURE__ */ jsx66("div", { className: "text-[18px] font-light text-muted-foreground/50 pb-0.5", children: ":" }),
-            /* @__PURE__ */ jsx66(
+            /* @__PURE__ */ jsx72("div", { className: "text-[18px] font-light text-muted-foreground/50 pb-0.5", children: ":" }),
+            /* @__PURE__ */ jsx72(
               ScrollColumn,
               {
                 items: minutes,
@@ -6671,9 +7816,9 @@ var TimePicker = React48.forwardRef(
                 getKey: (m) => m
               }
             ),
-            !use24Hour && /* @__PURE__ */ jsxs42(Fragment10, { children: [
-              /* @__PURE__ */ jsx66("div", { className: "w-px self-stretch bg-border mx-1" }),
-              /* @__PURE__ */ jsx66(
+            !use24Hour && /* @__PURE__ */ jsxs48(Fragment12, { children: [
+              /* @__PURE__ */ jsx72("div", { className: "w-px self-stretch bg-border mx-1" }),
+              /* @__PURE__ */ jsx72(
                 ScrollColumn,
                 {
                   items: ["AM", "PM"],
@@ -6693,9 +7838,9 @@ var TimePicker = React48.forwardRef(
       if (typeof ref === "function") ref(el);
       else if (ref) ref.current = el;
     }
-    return /* @__PURE__ */ jsxs42("div", { className: cn("relative", className), children: [
-      label && /* @__PURE__ */ jsx66("p", { className: "mb-1.5 text-sm font-medium text-foreground", children: label }),
-      /* @__PURE__ */ jsxs42(
+    return /* @__PURE__ */ jsxs48("div", { className: cn("relative", className), children: [
+      label && /* @__PURE__ */ jsx72("p", { className: "mb-1.5 text-sm font-medium text-foreground", children: label }),
+      /* @__PURE__ */ jsxs48(
         "button",
         {
           ref: mergeRef,
@@ -6711,8 +7856,8 @@ var TimePicker = React48.forwardRef(
             disabled && "cursor-not-allowed opacity-50"
           ),
           children: [
-            /* @__PURE__ */ jsx66(Clock2, { className: "size-[1.0625rem] shrink-0 text-muted-foreground" }),
-            /* @__PURE__ */ jsx66(
+            /* @__PURE__ */ jsx72(Clock2, { className: "size-[1.0625rem] shrink-0 text-muted-foreground" }),
+            /* @__PURE__ */ jsx72(
               "span",
               {
                 className: cn(
@@ -6722,13 +7867,13 @@ var TimePicker = React48.forwardRef(
                 children: value ? displayTime(value, use24Hour) : placeholder
               }
             ),
-            value && !disabled ? /* @__PURE__ */ jsx66(
+            value && !disabled ? /* @__PURE__ */ jsx72(
               X11,
               {
                 className: "size-3.5 shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-150",
                 onClick: handleClear
               }
-            ) : /* @__PURE__ */ jsx66(
+            ) : /* @__PURE__ */ jsx72(
               ChevronDown10,
               {
                 className: cn(
@@ -6748,7 +7893,7 @@ TimePicker.displayName = "TimePicker";
 
 // src/heading.tsx
 import * as React49 from "react";
-import { jsx as jsx67, jsxs as jsxs43 } from "react/jsx-runtime";
+import { jsx as jsx73, jsxs as jsxs49 } from "react/jsx-runtime";
 var headingSizeClasses = {
   xs: "text-sm font-semibold",
   sm: "text-base font-semibold",
@@ -6783,7 +7928,7 @@ var Heading = React49.forwardRef(
   }, ref) => {
     const Tag2 = as ?? `h${level}`;
     const resolvedSize = size ?? defaultSizeForLevel[level] ?? "md";
-    return /* @__PURE__ */ jsx67(
+    return /* @__PURE__ */ jsx73(
       Tag2,
       {
         ref,
@@ -6827,7 +7972,7 @@ var Text = React49.forwardRef(
     children,
     ...props
   }, ref) => {
-    return /* @__PURE__ */ jsx67(
+    return /* @__PURE__ */ jsx73(
       Tag2,
       {
         ref,
@@ -6866,7 +8011,7 @@ var MetricText = React49.forwardRef(
     children,
     ...props
   }, ref) => {
-    return /* @__PURE__ */ jsxs43(
+    return /* @__PURE__ */ jsxs49(
       "span",
       {
         ref,
@@ -6878,9 +8023,9 @@ var MetricText = React49.forwardRef(
         ),
         ...props,
         children: [
-          prefix != null && /* @__PURE__ */ jsx67("span", { className: "mr-0.5 text-[0.75em] font-medium opacity-70", children: prefix }),
+          prefix != null && /* @__PURE__ */ jsx73("span", { className: "mr-0.5 text-[0.75em] font-medium opacity-70", children: prefix }),
           children,
-          suffix != null && /* @__PURE__ */ jsx67("span", { className: "ml-0.5 text-[0.75em] font-medium opacity-70", children: suffix })
+          suffix != null && /* @__PURE__ */ jsx73("span", { className: "ml-0.5 text-[0.75em] font-medium opacity-70", children: suffix })
         ]
       }
     );
@@ -6890,7 +8035,7 @@ MetricText.displayName = "MetricText";
 
 // src/progress-indicator.tsx
 import * as React50 from "react";
-import { jsx as jsx68 } from "react/jsx-runtime";
+import { jsx as jsx74 } from "react/jsx-runtime";
 var dotSizeMap = {
   sm: {
     base: "h-1.5 w-1.5",
@@ -6924,7 +8069,7 @@ var ProgressIndicator = React50.forwardRef(
       [onChange, selectedIndex, values.length]
     );
     const sizes2 = dotSizeMap[size];
-    return /* @__PURE__ */ jsx68(
+    return /* @__PURE__ */ jsx74(
       "div",
       {
         ref,
@@ -6936,7 +8081,7 @@ var ProgressIndicator = React50.forwardRef(
         ...props,
         children: values.map((label, index) => {
           const isActive = index === selectedIndex;
-          return /* @__PURE__ */ jsx68(
+          return /* @__PURE__ */ jsx74(
             "button",
             {
               type: "button",
@@ -6967,9 +8112,9 @@ ProgressIndicator.displayName = "ProgressIndicator";
 
 // src/visually-hidden.tsx
 import * as React51 from "react";
-import { jsx as jsx69 } from "react/jsx-runtime";
+import { jsx as jsx75 } from "react/jsx-runtime";
 var VisuallyHidden = React51.forwardRef(
-  ({ as: Component = "span", focusable = false, className, ...props }, ref) => /* @__PURE__ */ jsx69(
+  ({ as: Component = "span", focusable = false, className, ...props }, ref) => /* @__PURE__ */ jsx75(
     Component,
     {
       ref,
@@ -6982,11 +8127,1372 @@ var VisuallyHidden = React51.forwardRef(
   )
 );
 VisuallyHidden.displayName = "VisuallyHidden";
+
+// src/filter-chips.tsx
+import {
+  createContext as createContext5,
+  forwardRef as forwardRef55,
+  useCallback as useCallback10,
+  useContext as useContext4,
+  useEffect as useEffect15,
+  useId as useId3,
+  useMemo as useMemo9,
+  useRef as useRef14,
+  useState as useState19
+} from "react";
+import {
+  Check as Check12,
+  ChevronLeft as ChevronLeft7,
+  ChevronRight as ChevronRight9,
+  Plus,
+  Search as Search5,
+  SlidersHorizontal,
+  X as X12
+} from "lucide-react";
+
+// src/format-datetime.ts
+var MONTHS_SHORT = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec"
+];
+var DAYS_SHORT = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+var EMPTY_DATE = "\u2014";
+function parseApiDate(value) {
+  if (value === null || value === void 0 || value === "") return null;
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+  if (typeof value === "number") {
+    const fromMillis = new Date(value);
+    return Number.isNaN(fromMillis.getTime()) ? null : fromMillis;
+  }
+  const raw = value.trim();
+  const slashed = raw.match(
+    /^(\d{2})\/(\d{2})\/(\d{4})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?$/
+  );
+  if (slashed) {
+    const [, dd, mm, yyyy, hh = "0", min = "0", ss = "0"] = slashed;
+    const parsed2 = new Date(
+      Number(yyyy),
+      Number(mm) - 1,
+      Number(dd),
+      Number(hh),
+      Number(min),
+      Number(ss)
+    );
+    return Number.isNaN(parsed2.getTime()) ? null : parsed2;
+  }
+  if (/^\d+$/.test(raw)) {
+    const parsed2 = new Date(Number(raw));
+    return Number.isNaN(parsed2.getTime()) ? null : parsed2;
+  }
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+}
+function formatTime(date) {
+  const hours24 = date.getHours();
+  const hours12 = hours24 % 12 || 12;
+  const meridiem = hours24 >= 12 ? "PM" : "AM";
+  return `${String(hours12).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")} ${meridiem}`;
+}
+function formatDateOnly(date) {
+  const yy = String(date.getFullYear() % 100).padStart(2, "0");
+  return `${date.getDate()} ${MONTHS_SHORT[date.getMonth()]} '${yy}`;
+}
+function formatDateTime(date) {
+  return `${formatDateOnly(date)}, ${formatTime(date)}`;
+}
+function formatTimestamp(value, fallback = EMPTY_DATE) {
+  const date = parseApiDate(value);
+  return date ? formatDateTime(date) : fallback;
+}
+function formatDateStamp(value, fallback = EMPTY_DATE) {
+  const date = parseApiDate(value);
+  return date ? formatDateOnly(date) : fallback;
+}
+function formatTimeStamp(value, fallback = EMPTY_DATE) {
+  const date = parseApiDate(value);
+  return date ? formatTime(date) : fallback;
+}
+function formatWeekdayDate(value, fallback = EMPTY_DATE) {
+  const date = parseApiDate(value);
+  if (!date) return fallback;
+  return `${DAYS_SHORT[date.getDay()]}, ${date.getDate()} ${MONTHS_SHORT[date.getMonth()]}`;
+}
+function formatMonthLabel(monthKey2) {
+  const [year, month] = monthKey2.split("-");
+  const name = MONTHS_SHORT[Number(month) - 1];
+  if (!year || !name) return monthKey2;
+  return `${name} ${year}`;
+}
+
+// src/filter-chips.tsx
+import { Fragment as Fragment13, jsx as jsx76, jsxs as jsxs50 } from "react/jsx-runtime";
+var POPOVER_FIT = "flex max-h-[var(--radix-popover-content-available-height)] flex-col overflow-hidden";
+var FILTER_SCROLL_AREA = "min-h-0 flex-1 overflow-y-auto";
+var FilterChipGroupContext = createContext5(null);
+function FilterChipGroup({
+  children,
+  className
+}) {
+  const [openKey, setOpenKey] = useState19(null);
+  const openKeyRef = useRef14(null);
+  const frameRef = useRef14(null);
+  const handoffFromRef = useRef14(null);
+  const apply = useCallback10((next) => {
+    openKeyRef.current = next;
+    setOpenKey(next);
+  }, []);
+  const setOpen = useCallback10(
+    (key, open) => {
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+      if (!open) {
+        if (openKeyRef.current === key) apply(null);
+        return;
+      }
+      if (openKeyRef.current !== null && openKeyRef.current !== key) {
+        handoffFromRef.current = openKeyRef.current;
+        apply(null);
+        frameRef.current = requestAnimationFrame(() => {
+          frameRef.current = null;
+          apply(key);
+        });
+        return;
+      }
+      apply(key);
+    },
+    [apply]
+  );
+  useEffect15(
+    () => () => {
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+    },
+    []
+  );
+  const consumeHandoff = useCallback10((key) => {
+    if (handoffFromRef.current !== key) return false;
+    handoffFromRef.current = null;
+    return true;
+  }, []);
+  const value = useMemo9(
+    () => ({ openKey, setOpen, consumeHandoff }),
+    [openKey, setOpen, consumeHandoff]
+  );
+  return /* @__PURE__ */ jsx76(FilterChipGroupContext.Provider, { value, children: /* @__PURE__ */ jsx76("div", { className: cn("flex flex-wrap items-center gap-2", className), children }) });
+}
+function useFilterChipState(key, controlled) {
+  const group = useContext4(FilterChipGroupContext);
+  const [localOpen, setLocalOpen] = useState19(false);
+  const isControlled = controlled?.open !== void 0;
+  const onOpenChange = useCallback10(
+    (next) => {
+      controlled?.onOpenChange?.(next);
+      if (isControlled) return;
+      if (group) group.setOpen(key, next);
+      else setLocalOpen(next);
+    },
+    [controlled, isControlled, group, key]
+  );
+  const open = isControlled ? controlled.open : group ? group.openKey === key : localOpen;
+  const onCloseAutoFocus = useCallback10(
+    (event) => {
+      if (group?.consumeHandoff(key)) {
+        event.preventDefault();
+      }
+    },
+    [group, key]
+  );
+  return { open, onOpenChange, onCloseAutoFocus };
+}
+function FilterChipShell({
+  active,
+  children,
+  className
+}) {
+  return /* @__PURE__ */ jsx76(
+    "div",
+    {
+      className: cn(
+        "inline-flex h-auto shrink-0 items-center rounded-full border border-dashed border-border bg-card shadow-sm",
+        active && "border-solid border-primary bg-primary/10 shadow-none ring-1 ring-primary/30",
+        className
+      ),
+      children
+    }
+  );
+}
+function FilterChipClearButton({
+  label,
+  onClick
+}) {
+  return /* @__PURE__ */ jsx76(
+    Button,
+    {
+      type: "button",
+      variant: "ghost",
+      size: "sm",
+      "aria-label": `Clear ${label} filter`,
+      onClick,
+      className: "h-auto min-h-0 shrink-0 rounded-full border border-transparent px-2 py-1 text-primary/70 hover:text-primary",
+      children: /* @__PURE__ */ jsx76(X12, { className: "h-3 w-3" })
+    }
+  );
+}
+var FilterChipLabelTrigger = forwardRef55(({ label, active, count, className, ...props }, ref) => /* @__PURE__ */ jsx76(
+  Button,
+  {
+    ref,
+    type: "button",
+    variant: "ghost",
+    size: "sm",
+    leftIcon: !active ? /* @__PURE__ */ jsx76("span", { className: "flex h-3.5 w-3.5 items-center justify-center", children: /* @__PURE__ */ jsx76(Plus, { className: "h-3 w-3" }) }) : void 0,
+    rightIcon: active ? /* @__PURE__ */ jsx76("span", { className: "flex h-3.5 items-center justify-center", children: count != null && count > 0 ? /* @__PURE__ */ jsx76("span", { className: "rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold tabular-nums text-primary", children: count }) : (
+      /* Drawn the way Badge draws its dot: the same size-1.5 rounded
+         fill in the primary accent. A state marker, not a count. */
+      /* @__PURE__ */ jsx76("span", { className: "size-1.5 rounded-full bg-primary", "aria-hidden": true })
+    ) }) : void 0,
+    className: cn(
+      "h-auto min-h-0 shrink-0 rounded-full border border-transparent py-1",
+      active ? "pl-1.5 pr-2.5 font-semibold text-primary hover:text-primary" : "pl-2.5 pr-2.5 text-muted-foreground hover:text-foreground",
+      className
+    ),
+    ...props,
+    children: label
+  }
+));
+FilterChipLabelTrigger.displayName = "FilterChipLabelTrigger";
+function FilterChipActions({
+  onClear,
+  onApply,
+  clearDisabled,
+  applyDisabled
+}) {
+  return /* @__PURE__ */ jsxs50("div", { className: "flex shrink-0 items-center justify-between gap-2 border-t border-border px-3 py-2", children: [
+    /* @__PURE__ */ jsx76(
+      Button,
+      {
+        type: "button",
+        variant: "ghost",
+        size: "sm",
+        onClick: onClear,
+        disabled: clearDisabled,
+        className: "text-muted-foreground hover:text-foreground",
+        children: "Clear"
+      }
+    ),
+    /* @__PURE__ */ jsx76(Button, { type: "button", variant: "primary", size: "sm", onClick: onApply, disabled: applyDisabled, children: "Apply" })
+  ] });
+}
+function FilterChip({
+  chipKey,
+  label,
+  active,
+  count,
+  onClear,
+  children,
+  align = "start",
+  contentClassName,
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange,
+  onOpen
+}) {
+  const { open, onOpenChange, onCloseAutoFocus } = useFilterChipState(chipKey, {
+    open: controlledOpen,
+    onOpenChange: controlledOnOpenChange
+  });
+  return /* @__PURE__ */ jsxs50(
+    Popover,
+    {
+      open,
+      onOpenChange: (next) => {
+        onOpenChange(next);
+        if (next) onOpen?.();
+      },
+      children: [
+        /* @__PURE__ */ jsxs50(FilterChipShell, { active, children: [
+          active && onClear ? /* @__PURE__ */ jsx76(
+            FilterChipClearButton,
+            {
+              label,
+              onClick: () => {
+                onClear();
+                onOpenChange(false);
+              }
+            }
+          ) : null,
+          /* @__PURE__ */ jsx76(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ jsx76(FilterChipLabelTrigger, { label, active, count }) })
+        ] }),
+        /* @__PURE__ */ jsx76(
+          PopoverContent,
+          {
+            align,
+            className: cn("w-auto p-0", POPOVER_FIT, contentClassName),
+            onCloseAutoFocus,
+            children
+          }
+        )
+      ]
+    }
+  );
+}
+function SelectFilterChip({
+  chipKey,
+  label,
+  options,
+  selected,
+  onChange,
+  searchThreshold = 8,
+  showCount = true,
+  invert = false,
+  onInvertChange,
+  invertLabel = "Invert filter",
+  emptyText,
+  align = "start",
+  open,
+  onOpenChange
+}) {
+  const key = chipKey ?? label;
+  const chip = useFilterChipState(key, { open, onOpenChange });
+  const [draft, setDraft] = useState19(selected);
+  const [draftInvert, setDraftInvert] = useState19(invert);
+  const [query, setQuery] = useState19("");
+  const supportsInvert = !!onInvertChange;
+  const isActive = selected.length > 0;
+  const visible = useMemo9(() => {
+    const q = query.trim().toLowerCase();
+    if (!q) return options;
+    return options.filter(
+      (o) => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q)
+    );
+  }, [options, query]);
+  const toggle = (value) => setDraft(
+    (prev) => prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+  );
+  return /* @__PURE__ */ jsxs50(
+    FilterChip,
+    {
+      chipKey: key,
+      label: supportsInvert && invert && isActive ? `${label} (excluded)` : label,
+      active: isActive,
+      count: showCount ? selected.length : void 0,
+      align,
+      open: chip.open,
+      onOpenChange: chip.onOpenChange,
+      onOpen: () => {
+        setDraft(selected);
+        setDraftInvert(invert);
+        setQuery("");
+      },
+      onClear: () => {
+        onChange([]);
+        setDraft([]);
+        onInvertChange?.(false);
+        setDraftInvert(false);
+      },
+      children: [
+        /* @__PURE__ */ jsx76(
+          FilterChipPanel,
+          {
+            options: visible,
+            draft,
+            onToggle: toggle,
+            query: options.length >= searchThreshold ? query : void 0,
+            onQueryChange: setQuery,
+            searchPlaceholder: `Search ${label.toLowerCase()}`,
+            emptyText,
+            invert: supportsInvert ? draftInvert : void 0,
+            onInvertChange: setDraftInvert,
+            invertLabel
+          }
+        ),
+        /* @__PURE__ */ jsx76(
+          FilterChipActions,
+          {
+            onClear: () => {
+              onChange([]);
+              setDraft([]);
+              onInvertChange?.(false);
+              setDraftInvert(false);
+              chip.onOpenChange(false);
+            },
+            clearDisabled: draft.length === 0 && selected.length === 0 && !draftInvert && !invert,
+            onApply: () => {
+              onChange(draft);
+              onInvertChange?.(draftInvert);
+              chip.onOpenChange(false);
+            }
+          }
+        )
+      ]
+    }
+  );
+}
+function FilterChipPanel({
+  options,
+  draft,
+  onToggle,
+  query,
+  onQueryChange,
+  searchPlaceholder,
+  emptyText,
+  invert,
+  onInvertChange,
+  invertLabel
+}) {
+  return /* @__PURE__ */ jsxs50("div", { className: "flex min-h-0 w-60 flex-1 flex-col", children: [
+    query !== void 0 ? /* @__PURE__ */ jsx76("div", { className: "shrink-0 border-b border-border p-2", children: /* @__PURE__ */ jsx76(
+      Input,
+      {
+        value: query,
+        onChange: (e) => onQueryChange(e.target.value),
+        placeholder: searchPlaceholder,
+        className: "h-8 text-[12.5px]"
+      }
+    ) }) : null,
+    /* @__PURE__ */ jsx76("div", { className: cn("max-h-64 space-y-0.5 p-2", FILTER_SCROLL_AREA), children: options.length === 0 ? /* @__PURE__ */ jsx76("p", { className: "px-1 py-4 text-center text-[12.5px] text-muted-foreground", children: emptyText ?? "No matches" }) : options.map((option) => /* @__PURE__ */ jsxs50(
+      "label",
+      {
+        className: "flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-[12.5px] text-foreground hover:bg-muted/50",
+        children: [
+          /* @__PURE__ */ jsx76(
+            Checkbox,
+            {
+              checked: draft.includes(option.value),
+              onCheckedChange: () => onToggle(option.value)
+            }
+          ),
+          option.icon,
+          /* @__PURE__ */ jsx76("span", { className: "min-w-0 flex-1 truncate", children: option.label }),
+          option.hint ? /* @__PURE__ */ jsx76("span", { className: "shrink-0 text-[11px] tabular-nums text-muted-foreground", children: option.hint }) : null
+        ]
+      },
+      option.value
+    )) }),
+    invert !== void 0 ? /* @__PURE__ */ jsxs50("label", { className: "flex shrink-0 cursor-pointer items-center gap-2 border-t border-border px-3 py-2 text-[12.5px] text-foreground", children: [
+      /* @__PURE__ */ jsx76(Checkbox, { checked: invert, onCheckedChange: (c) => onInvertChange(c === true) }),
+      invertLabel
+    ] }) : null
+  ] });
+}
+function SingleSelectFilterChip({
+  chipKey,
+  label,
+  options,
+  value,
+  onChange,
+  align = "start",
+  showValueInLabel = false,
+  open,
+  onOpenChange
+}) {
+  const key = chipKey ?? label;
+  const chip = useFilterChipState(key, { open, onOpenChange });
+  const isActive = value !== "";
+  const chosen = options.find((o) => o.value === value);
+  return /* @__PURE__ */ jsx76(
+    FilterChip,
+    {
+      chipKey: key,
+      label: showValueInLabel && chosen ? `${label}: ${chosen.label}` : label,
+      active: isActive,
+      align,
+      open: chip.open,
+      onOpenChange: chip.onOpenChange,
+      onClear: () => onChange(""),
+      children: /* @__PURE__ */ jsx76("div", { className: cn("max-h-64 w-52 p-1.5", FILTER_SCROLL_AREA), children: options.map((option) => /* @__PURE__ */ jsxs50(
+        Button,
+        {
+          type: "button",
+          variant: "ghost",
+          size: "sm",
+          onClick: () => {
+            onChange(option.value);
+            chip.onOpenChange(false);
+          },
+          className: cn(
+            "w-full justify-start rounded-md px-2 py-1.5 text-[12.5px] font-normal",
+            option.value === value && "bg-primary/10 font-medium text-primary"
+          ),
+          children: [
+            option.icon,
+            /* @__PURE__ */ jsx76("span", { className: "truncate", children: option.label })
+          ]
+        },
+        option.value
+      )) })
+    }
+  );
+}
+var DATE_CHIP_TRIGGER = "[&>button]:!h-10 [&>button]:!min-h-0 [&>button]:!gap-2 [&>button]:!rounded-lg [&>button]:!px-3.5 [&>button]:!text-sm [&>button]:!font-normal [&>button]:!shadow-none [&>button>svg]:!size-4";
+var EMPTY_RELATIVE_RANGE = {
+  weeks: "",
+  days: "",
+  hours: "",
+  minutes: ""
+};
+var RELATIVE_UNITS = [
+  { key: "weeks", label: "Weeks", seconds: 7 * 24 * 60 * 60 },
+  { key: "days", label: "Days", seconds: 24 * 60 * 60 },
+  { key: "hours", label: "Hours", seconds: 60 * 60 },
+  { key: "minutes", label: "Minutes", seconds: 60 }
+];
+function relativeRangeSeconds(value) {
+  return RELATIVE_UNITS.reduce((total, unit) => {
+    const parsed = parseInt(value[unit.key] || "0", 10);
+    return total + (Number.isNaN(parsed) ? 0 : parsed) * unit.seconds;
+  }, 0);
+}
+function hasRelativeRange(value) {
+  return !!value && relativeRangeSeconds(value) > 0;
+}
+function relativeRangeToMillis(value) {
+  const seconds = relativeRangeSeconds(value);
+  if (seconds <= 0) return null;
+  const endTime = Date.now();
+  return { startTime: endTime - seconds * 1e3, endTime };
+}
+function relativeRangeLabel(value) {
+  const parts = RELATIVE_UNITS.flatMap((unit) => {
+    const n = parseInt(value[unit.key] || "0", 10);
+    return !n || Number.isNaN(n) ? [] : [`${n}${unit.key[0]}`];
+  });
+  return parts.length ? `Last ${parts.join(" ")}` : "";
+}
+function DateRangeFilterChip({
+  chipKey = "date",
+  label = "Date",
+  value,
+  onChange,
+  relativeValue,
+  onRelativeChange,
+  min,
+  max,
+  outOfRangeHint,
+  align = "start",
+  open,
+  onOpenChange
+}) {
+  const chip = useFilterChipState(chipKey, { open, onOpenChange });
+  const [draft, setDraft] = useState19(value);
+  const [relativeDraft, setRelativeDraft] = useState19(
+    relativeValue ?? EMPTY_RELATIVE_RANGE
+  );
+  const supportsRelative = !!onRelativeChange;
+  const [mode, setMode] = useState19(
+    hasRelativeRange(relativeValue) ? "relative" : "absolute"
+  );
+  const relativeLabel = hasRelativeRange(relativeValue) ? relativeRangeLabel(relativeValue) : "";
+  const isActive = !!(value.from && value.to) || !!relativeLabel;
+  const isPartial = !!draft.from !== !!draft.to;
+  const outside = (d) => !!d && (!!min && d < min || !!max && d > max);
+  const outOfRange = outside(draft.from) || outside(draft.to);
+  const emptyRange = { from: "", to: "" };
+  const isRelative = supportsRelative && mode === "relative";
+  const commit = (range, relative) => {
+    onChange(range);
+    onRelativeChange?.(relative);
+    setDraft(range);
+    setRelativeDraft(relative);
+    chip.onOpenChange(false);
+  };
+  return /* @__PURE__ */ jsxs50(
+    FilterChip,
+    {
+      chipKey,
+      label: relativeLabel ? `${label}: ${relativeLabel}` : isActive ? `${label}: ${value.from} \u2192 ${value.to}` : label,
+      active: isActive,
+      align,
+      open: chip.open,
+      onOpenChange: chip.onOpenChange,
+      onOpen: () => {
+        setDraft(value);
+        setRelativeDraft(relativeValue ?? EMPTY_RELATIVE_RANGE);
+        setMode(hasRelativeRange(relativeValue) ? "relative" : "absolute");
+      },
+      onClear: () => {
+        onChange(emptyRange);
+        onRelativeChange?.(EMPTY_RELATIVE_RANGE);
+        setDraft(emptyRange);
+        setRelativeDraft(EMPTY_RELATIVE_RANGE);
+      },
+      children: [
+        /* @__PURE__ */ jsxs50("div", { className: "w-72 space-y-3 p-3", children: [
+          supportsRelative ? /* @__PURE__ */ jsx76(Tabs, { value: mode, onValueChange: (v) => setMode(v), children: /* @__PURE__ */ jsxs50(TabsList, { className: "w-full", children: [
+            /* @__PURE__ */ jsx76(TabsTrigger, { value: "absolute", className: "flex-1", children: "Date range" }),
+            /* @__PURE__ */ jsx76(TabsTrigger, { value: "relative", className: "flex-1", children: "Last\u2026" })
+          ] }) }) : null,
+          isRelative ? /* @__PURE__ */ jsx76("div", { className: "grid grid-cols-2 gap-2", children: RELATIVE_UNITS.map((unit) => /* @__PURE__ */ jsxs50("label", { className: "space-y-1.5", children: [
+            /* @__PURE__ */ jsx76("span", { className: "text-[11px] font-medium text-muted-foreground", children: unit.label }),
+            /* @__PURE__ */ jsx76(
+              Input,
+              {
+                type: "number",
+                min: 0,
+                inputMode: "numeric",
+                placeholder: "0",
+                value: relativeDraft[unit.key],
+                onChange: (e) => setRelativeDraft((prev) => ({ ...prev, [unit.key]: e.target.value })),
+                className: "h-8 text-[12.5px]"
+              }
+            )
+          ] }, unit.key)) }) : /* @__PURE__ */ jsxs50(Fragment13, { children: [
+            /* @__PURE__ */ jsxs50("div", { className: "space-y-1", children: [
+              /* @__PURE__ */ jsx76("p", { className: "text-[11px] font-medium text-muted-foreground", children: "From" }),
+              /* @__PURE__ */ jsx76(
+                DatePicker,
+                {
+                  value: draft.from,
+                  onChange: (v) => setDraft((d) => ({ ...d, from: v })),
+                  min,
+                  max,
+                  placeholder: "Select start date",
+                  className: DATE_CHIP_TRIGGER
+                }
+              )
+            ] }),
+            /* @__PURE__ */ jsxs50("div", { className: "space-y-1", children: [
+              /* @__PURE__ */ jsx76("p", { className: "text-[11px] font-medium text-muted-foreground", children: "To" }),
+              /* @__PURE__ */ jsx76(
+                DatePicker,
+                {
+                  value: draft.to,
+                  onChange: (v) => setDraft((d) => ({ ...d, to: v })),
+                  min: draft.from || min,
+                  max,
+                  placeholder: "Select end date",
+                  className: DATE_CHIP_TRIGGER
+                }
+              )
+            ] }),
+            isPartial ? /* @__PURE__ */ jsx76("p", { className: "text-[11px] text-muted-foreground", children: "Pick both ends of the range." }) : null,
+            outOfRange && outOfRangeHint ? /* @__PURE__ */ jsx76("p", { className: "text-[11px] text-destructive", children: outOfRangeHint }) : null
+          ] })
+        ] }),
+        /* @__PURE__ */ jsx76(
+          FilterChipActions,
+          {
+            onClear: () => commit(emptyRange, EMPTY_RELATIVE_RANGE),
+            clearDisabled: !draft.from && !draft.to && !hasRelativeRange(relativeDraft) && !value.from && !value.to && !relativeLabel,
+            applyDisabled: isRelative ? !hasRelativeRange(relativeDraft) : isPartial || outOfRange,
+            onApply: () => isRelative ? commit(emptyRange, relativeDraft) : commit(draft, EMPTY_RELATIVE_RANGE)
+          }
+        )
+      ]
+    }
+  );
+}
+var monthKey = (year, monthIndex) => `${year}-${String(monthIndex + 1).padStart(2, "0")}`;
+var yearOf = (monthKeyValue) => Number(monthKeyValue.slice(0, 4));
+function MonthRangeFilterChip({
+  chipKey,
+  label = "Period",
+  bounds,
+  value,
+  defaultRange,
+  monthsWithData,
+  onChange
+}) {
+  const chip = useFilterChipState(chipKey ?? label);
+  const minYear = yearOf(bounds.start);
+  const maxYear = yearOf(bounds.end);
+  const [draft, setDraft] = useState19(value);
+  const [awaitingEnd, setAwaitingEnd] = useState19(false);
+  const [year, setYear] = useState19(() => yearOf(value.end) || maxYear);
+  const isDefault = value.start === defaultRange.start && value.end === defaultRange.end;
+  const pick = (month) => {
+    if (!awaitingEnd) {
+      setDraft({ start: month, end: month });
+      setAwaitingEnd(true);
+      return;
+    }
+    setDraft(
+      (prev) => month < prev.start ? { start: month, end: prev.end } : { start: prev.start, end: month }
+    );
+    setAwaitingEnd(false);
+  };
+  const reset = () => {
+    setDraft(defaultRange);
+    setAwaitingEnd(false);
+  };
+  const summary = `${formatMonthLabel(draft.start)} \u2013 ${formatMonthLabel(draft.end)}`;
+  return /* @__PURE__ */ jsxs50(
+    Popover,
+    {
+      open: chip.open,
+      onOpenChange: (next) => {
+        chip.onOpenChange(next);
+        if (next) {
+          setDraft(value);
+          setAwaitingEnd(false);
+          setYear(yearOf(value.end) || maxYear);
+        }
+      },
+      children: [
+        /* @__PURE__ */ jsx76(FilterChipShell, { active: true, children: /* @__PURE__ */ jsx76(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ jsx76(
+          FilterChipLabelTrigger,
+          {
+            label: `${label}: ${formatMonthLabel(value.start)} \u2013 ${formatMonthLabel(value.end)}`,
+            active: true
+          }
+        ) }) }),
+        /* @__PURE__ */ jsxs50(PopoverContent, { align: "end", className: "w-60 p-3", onCloseAutoFocus: chip.onCloseAutoFocus, children: [
+          /* @__PURE__ */ jsxs50("div", { className: "flex items-center justify-between", children: [
+            /* @__PURE__ */ jsx76(
+              IconButton,
+              {
+                "aria-label": "Previous year",
+                variant: "ghost",
+                size: "xs",
+                disabled: year <= minYear,
+                onClick: () => setYear((prev) => prev - 1),
+                children: /* @__PURE__ */ jsx76(ChevronLeft7, { className: "h-3.5 w-3.5" })
+              }
+            ),
+            /* @__PURE__ */ jsx76("span", { className: "text-[12.5px] font-semibold text-foreground", children: year }),
+            /* @__PURE__ */ jsx76(
+              IconButton,
+              {
+                "aria-label": "Next year",
+                variant: "ghost",
+                size: "xs",
+                disabled: year >= maxYear,
+                onClick: () => setYear((prev) => prev + 1),
+                children: /* @__PURE__ */ jsx76(ChevronRight9, { className: "h-3.5 w-3.5" })
+              }
+            )
+          ] }),
+          /* @__PURE__ */ jsx76("div", { className: "mt-2 grid grid-cols-4 gap-1", children: MONTHS_SHORT.map((monthLabel, index) => {
+            const monthValue = monthKey(year, index);
+            const inBounds = monthValue >= bounds.start && monthValue <= bounds.end;
+            const isEdge = monthValue === draft.start || monthValue === draft.end;
+            const isBetween = monthValue > draft.start && monthValue < draft.end;
+            const hasData = monthsWithData.has(monthValue);
+            return /* @__PURE__ */ jsxs50(
+              Button,
+              {
+                type: "button",
+                variant: isEdge ? "primary" : "ghost",
+                size: "sm",
+                disabled: !inBounds,
+                "aria-pressed": isEdge || isBetween,
+                "aria-label": `${monthLabel} ${year}${hasData ? ", has receipts" : ""}`,
+                onClick: () => pick(monthValue),
+                className: cn(
+                  "relative h-auto min-h-0 w-full justify-center rounded-md px-0 pb-2.5 pt-1.5 text-[12px]",
+                  !isEdge && "text-foreground hover:bg-muted/60",
+                  isBetween && "bg-primary/15 text-primary"
+                ),
+                children: [
+                  monthLabel,
+                  hasData && /* @__PURE__ */ jsx76(
+                    "span",
+                    {
+                      "aria-hidden": true,
+                      className: cn(
+                        "absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full",
+                        isEdge ? "bg-primary-foreground" : "bg-primary"
+                      )
+                    }
+                  )
+                ]
+              },
+              monthValue
+            );
+          }) }),
+          /* @__PURE__ */ jsx76("p", { className: "mt-2 truncate text-[11px] text-muted-foreground", title: summary, children: awaitingEnd ? `${formatMonthLabel(draft.start)} \u2013 pick an end month` : summary }),
+          /* @__PURE__ */ jsx76(Separator, { className: "my-2" }),
+          /* @__PURE__ */ jsxs50("div", { className: "flex items-center justify-between gap-2", children: [
+            /* @__PURE__ */ jsx76(
+              Button,
+              {
+                variant: "ghost",
+                size: "sm",
+                leftIcon: /* @__PURE__ */ jsx76(X12, { className: "h-3 w-3" }),
+                onClick: reset,
+                disabled: isDefault && draft.start === defaultRange.start && draft.end === defaultRange.end,
+                className: "text-muted-foreground hover:text-foreground",
+                children: "Reset"
+              }
+            ),
+            /* @__PURE__ */ jsx76(
+              Button,
+              {
+                variant: "primary",
+                size: "sm",
+                onClick: () => {
+                  onChange(draft);
+                  chip.onOpenChange(false);
+                },
+                children: "Apply"
+              }
+            )
+          ] })
+        ] })
+      ]
+    }
+  );
+}
+function TextFilterChip({
+  chipKey,
+  label = "Text",
+  value,
+  onChange,
+  fieldLabel,
+  placeholder,
+  hint,
+  inputMode = "text",
+  align = "start",
+  open,
+  onOpenChange
+}) {
+  const key = chipKey ?? label;
+  const chip = useFilterChipState(key, { open, onOpenChange });
+  const [draft, setDraft] = useState19(value);
+  const isActive = !!value.trim();
+  const apply = () => {
+    onChange(draft.trim());
+    chip.onOpenChange(false);
+  };
+  return /* @__PURE__ */ jsxs50(
+    FilterChip,
+    {
+      chipKey: key,
+      label: isActive ? `${label}: ${value.trim()}` : label,
+      active: isActive,
+      align,
+      open: chip.open,
+      onOpenChange: chip.onOpenChange,
+      onOpen: () => setDraft(value),
+      onClear: () => {
+        onChange("");
+        setDraft("");
+      },
+      children: [
+        /* @__PURE__ */ jsxs50("div", { className: "w-64 space-y-1.5 p-3", children: [
+          /* @__PURE__ */ jsx76("p", { className: "text-[11px] font-medium text-muted-foreground", children: fieldLabel ?? `${label} contains` }),
+          /* @__PURE__ */ jsx76(
+            Input,
+            {
+              type: "text",
+              inputMode,
+              autoComplete: "off",
+              placeholder,
+              value: draft,
+              onChange: (e) => setDraft(e.target.value),
+              onKeyDown: (e) => {
+                if (e.key !== "Enter") return;
+                e.preventDefault();
+                apply();
+              },
+              className: "h-8 text-[12.5px]"
+            }
+          ),
+          hint ? /* @__PURE__ */ jsx76("p", { className: "text-[11px] text-muted-foreground", children: hint }) : null
+        ] }),
+        /* @__PURE__ */ jsx76(
+          FilterChipActions,
+          {
+            onClear: () => {
+              onChange("");
+              setDraft("");
+              chip.onOpenChange(false);
+            },
+            clearDisabled: !draft && !value,
+            onApply: apply
+          }
+        )
+      ]
+    }
+  );
+}
+function NumberRangeFilterChip({
+  chipKey = "amount",
+  label = "Amount",
+  value,
+  onChange,
+  prefix,
+  hint,
+  align = "start",
+  open,
+  onOpenChange
+}) {
+  const chip = useFilterChipState(chipKey, { open, onOpenChange });
+  const [draft, setDraft] = useState19(value);
+  const isActive = !!(value.min || value.max);
+  const inverted = !!draft.min && !!draft.max && Number(draft.min) > Number(draft.max);
+  return /* @__PURE__ */ jsxs50(
+    FilterChip,
+    {
+      chipKey,
+      label,
+      active: isActive,
+      align,
+      open: chip.open,
+      onOpenChange: chip.onOpenChange,
+      onOpen: () => setDraft(value),
+      onClear: () => {
+        onChange({ min: "", max: "" });
+        setDraft({ min: "", max: "" });
+      },
+      children: [
+        /* @__PURE__ */ jsxs50("div", { className: "w-56 space-y-3 p-3", children: [
+          ["min", "max"].map((end) => /* @__PURE__ */ jsxs50("label", { className: "block space-y-1", children: [
+            /* @__PURE__ */ jsx76("span", { className: "text-[11px] font-medium capitalize text-muted-foreground", children: end }),
+            /* @__PURE__ */ jsxs50("div", { className: "relative", children: [
+              prefix ? /* @__PURE__ */ jsx76("span", { className: "pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[12.5px] text-muted-foreground", children: prefix }) : null,
+              /* @__PURE__ */ jsx76(
+                Input,
+                {
+                  type: "number",
+                  inputMode: "decimal",
+                  value: draft[end],
+                  onChange: (e) => setDraft((d) => ({ ...d, [end]: e.target.value })),
+                  className: cn("h-8 text-[12.5px]", prefix && "pl-6")
+                }
+              )
+            ] })
+          ] }, end)),
+          inverted ? /* @__PURE__ */ jsx76("p", { className: "text-[11px] text-destructive", children: "Min must not exceed max." }) : hint ? /* @__PURE__ */ jsx76("p", { className: "text-[11px] text-muted-foreground", children: hint }) : null
+        ] }),
+        /* @__PURE__ */ jsx76(
+          FilterChipActions,
+          {
+            onClear: () => {
+              const empty = { min: "", max: "" };
+              onChange(empty);
+              setDraft(empty);
+              chip.onOpenChange(false);
+            },
+            clearDisabled: !draft.min && !draft.max && !value.min && !value.max,
+            applyDisabled: inverted,
+            onApply: () => {
+              onChange(draft);
+              chip.onOpenChange(false);
+            }
+          }
+        )
+      ]
+    }
+  );
+}
+function AddFilterMenu({
+  chipKey = "__add-filter",
+  filters,
+  visibleKeys = [],
+  onAddFilter,
+  onRemoveFilter,
+  onSelectValue,
+  label = "Filter",
+  align = "start",
+  open: controlledOpen,
+  onOpenChange: controlledOnOpenChange
+}) {
+  const { open, onOpenChange, onCloseAutoFocus } = useFilterChipState(chipKey, {
+    open: controlledOpen,
+    onOpenChange: controlledOnOpenChange
+  });
+  const [query, setQuery] = useState19("");
+  const [storedCursor, setCursor] = useState19(0);
+  const listRef = useRef14(null);
+  const listId = useId3();
+  const q = query.trim().toLowerCase();
+  const rows = useMemo9(() => {
+    const out = [];
+    if (q) {
+      const valueMatches = filters.flatMap(
+        (f) => (f.options ?? []).filter((o) => o.label.toLowerCase().includes(q)).map((option) => ({ filter: f, option }))
+      );
+      if (valueMatches.length && onSelectValue) {
+        out.push({ kind: "heading", id: "h-values", text: "Values" });
+        for (const { filter, option } of valueMatches.slice(0, 20)) {
+          out.push({
+            kind: "value",
+            id: `v-${filter.key}-${option.value}`,
+            filter,
+            option
+          });
+        }
+      }
+      const nameMatches = filters.filter((f) => f.label.toLowerCase().includes(q));
+      if (nameMatches.length) {
+        out.push({ kind: "heading", id: "h-fields", text: "Filters" });
+        for (const filter of nameMatches) {
+          out.push({ kind: "filter", id: `f-${filter.key}`, filter });
+        }
+      }
+      return out;
+    }
+    out.push({
+      kind: "heading",
+      id: "h-all",
+      text: onRemoveFilter ? "Show filters" : "All filters"
+    });
+    for (const filter of filters) {
+      out.push({ kind: "filter", id: `f-${filter.key}`, filter });
+    }
+    return out;
+  }, [filters, q, onSelectValue, onRemoveFilter]);
+  const selectable = useMemo9(
+    () => rows.map((r, i) => r.kind === "heading" ? -1 : i).filter((i) => i >= 0),
+    [rows]
+  );
+  const cursor = selectable.includes(storedCursor) ? storedCursor : selectable[0] ?? -1;
+  useEffect15(() => {
+    if (cursor < 0) return;
+    listRef.current?.querySelector(`[data-row-index="${cursor}"]`)?.scrollIntoView({ block: "nearest" });
+  }, [cursor]);
+  const choose = (row) => {
+    if (row.kind === "value") {
+      onSelectValue?.(row.filter.key, row.option.value);
+      onAddFilter(row.filter.key);
+      onOpenChange(false);
+      setQuery("");
+      return;
+    }
+    if (row.kind !== "filter") return;
+    if (onRemoveFilter && visibleKeys.includes(row.filter.key)) {
+      onRemoveFilter(row.filter.key);
+    } else {
+      onAddFilter(row.filter.key);
+      if (!onRemoveFilter) {
+        onOpenChange(false);
+        setQuery("");
+      }
+    }
+  };
+  const moveCursor = (delta) => {
+    if (!selectable.length) return;
+    const at = selectable.indexOf(cursor);
+    const next = selectable[(at + delta + selectable.length) % selectable.length];
+    setCursor(next);
+  };
+  const onKeyDown = (e) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      moveCursor(1);
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      moveCursor(-1);
+    } else if (e.key === "Enter") {
+      const row = rows[cursor];
+      if (!row || row.kind === "heading") return;
+      e.preventDefault();
+      choose(row);
+    }
+  };
+  const activeCount = filters.filter((f) => (f.activeCount ?? 0) > 0).length;
+  return /* @__PURE__ */ jsxs50(
+    Popover,
+    {
+      open,
+      onOpenChange: (next) => {
+        onOpenChange(next);
+        if (next) setQuery("");
+      },
+      children: [
+        /* @__PURE__ */ jsx76(FilterChipShell, { active: false, children: /* @__PURE__ */ jsx76(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ jsx76(
+          FilterChipLabelTrigger,
+          {
+            label,
+            active: false,
+            rightIcon: /* @__PURE__ */ jsx76(SlidersHorizontal, { className: "h-3 w-3" }),
+            "aria-label": activeCount > 0 ? `${label}. ${activeCount} filters applied.` : label
+          }
+        ) }) }),
+        /* @__PURE__ */ jsxs50(
+          PopoverContent,
+          {
+            align,
+            className: cn("w-72 p-0", POPOVER_FIT),
+            onKeyDown,
+            onCloseAutoFocus,
+            children: [
+              /* @__PURE__ */ jsxs50("div", { className: "flex h-10 shrink-0 items-center gap-2 border-b border-border px-3", children: [
+                /* @__PURE__ */ jsx76(Search5, { className: "size-3.5 shrink-0 text-muted-foreground", "aria-hidden": true }),
+                /* @__PURE__ */ jsx76(
+                  "input",
+                  {
+                    autoFocus: true,
+                    value: query,
+                    onChange: (e) => setQuery(e.target.value),
+                    placeholder: "Search filters and values",
+                    "aria-controls": listId,
+                    "aria-activedescendant": cursor >= 0 ? `${listId}-${cursor}` : void 0,
+                    className: "h-full flex-1 bg-transparent text-[12.5px] outline-none placeholder:text-muted-foreground"
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsx76(
+                "div",
+                {
+                  ref: listRef,
+                  id: listId,
+                  role: "listbox",
+                  className: cn("max-h-80 p-1", FILTER_SCROLL_AREA),
+                  children: rows.length === 0 ? /* @__PURE__ */ jsxs50("p", { className: "px-2 py-6 text-center text-[12.5px] text-muted-foreground", children: [
+                    "Nothing matches \u201C",
+                    query,
+                    "\u201D."
+                  ] }) : rows.map(
+                    (row, i) => row.kind === "heading" ? /* @__PURE__ */ jsx76(
+                      "div",
+                      {
+                        className: "px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground",
+                        children: row.text
+                      },
+                      row.id
+                    ) : /* @__PURE__ */ jsx76(
+                      "div",
+                      {
+                        id: `${listId}-${i}`,
+                        "data-row-index": i,
+                        role: "option",
+                        "aria-selected": i === cursor,
+                        onMouseEnter: () => setCursor(i),
+                        onClick: () => choose(row),
+                        className: cn(
+                          "flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px] text-foreground",
+                          i === cursor && "bg-muted"
+                        ),
+                        children: row.kind === "value" ? /* @__PURE__ */ jsxs50(Fragment13, { children: [
+                          row.option.icon,
+                          /* @__PURE__ */ jsx76("span", { className: "min-w-0 flex-1 truncate", children: row.option.label }),
+                          /* @__PURE__ */ jsx76("span", { className: "shrink-0 text-[11px] text-muted-foreground", children: row.filter.label })
+                        ] }) : /* @__PURE__ */ jsxs50(Fragment13, { children: [
+                          /* @__PURE__ */ jsx76("span", { className: "min-w-0 flex-1 truncate", children: row.filter.label }),
+                          row.filter.activeCount ? /* @__PURE__ */ jsx76("span", { className: "shrink-0 rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold tabular-nums text-primary", children: row.filter.activeCount }) : null,
+                          visibleKeys.includes(row.filter.key) ? /* @__PURE__ */ jsx76(
+                            Check12,
+                            {
+                              "aria-label": "Shown in the toolbar",
+                              className: "h-3.5 w-3.5 shrink-0 text-primary"
+                            }
+                          ) : null
+                        ] })
+                      },
+                      row.id
+                    )
+                  )
+                }
+              )
+            ]
+          }
+        )
+      ]
+    }
+  );
+}
+function FilterToolbar({
+  search,
+  chips,
+  actions,
+  className
+}) {
+  return (
+    // `items-start` keeps the actions level with the FIRST line once the chips
+    // wrap onto a second.
+    /* @__PURE__ */ jsxs50("div", { className: cn("flex items-start gap-2", className), children: [
+      /* @__PURE__ */ jsxs50("div", { className: "flex min-w-0 flex-1 flex-wrap items-center gap-2", children: [
+        search,
+        chips ? /* @__PURE__ */ jsx76(FilterChipGroup, { className: "contents", children: chips }) : null
+      ] }),
+      actions ? /* @__PURE__ */ jsx76("div", { className: "flex min-h-8 shrink-0 items-center gap-2", children: actions }) : null
+    ] })
+  );
+}
+function ToolbarButton({ className, ...props }) {
+  return /* @__PURE__ */ jsx76(
+    Button,
+    {
+      type: "button",
+      variant: "outline",
+      size: "sm",
+      className: cn(
+        "h-auto min-h-0 shrink-0 py-1 text-muted-foreground hover:text-foreground",
+        className
+      ),
+      ...props
+    }
+  );
+}
+
+// src/calendar-date-chip.tsx
+import { useState as useState20 } from "react";
+import { jsx as jsx77, jsxs as jsxs51 } from "react/jsx-runtime";
+var PICK_MODES = [
+  { value: "single", label: "Single date" },
+  { value: "range", label: "Date range" }
+];
+var toKey = (d) => {
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${d.getFullYear()}-${month}-${day}`;
+};
+var fromKey = (key) => parseApiDate(key) ?? void 0;
+function CalendarDateFilterChip({
+  chipKey,
+  label = "Date",
+  value,
+  onChange,
+  presets,
+  allowSingle = true,
+  numberOfMonths = 2,
+  align = "start",
+  open,
+  onOpenChange
+}) {
+  const key = chipKey ?? label;
+  const chip = useFilterChipState(key, { open, onOpenChange });
+  const [mode, setMode] = useState20("single");
+  const [singleDate, setSingleDate] = useState20(void 0);
+  const [range, setRange] = useState20(void 0);
+  const [presetDraft, setPresetDraft] = useState20("");
+  const activePreset = presets?.find((p) => p.value === value?.preset);
+  const isActive = !!value?.from;
+  const chipLabel = !isActive ? label : activePreset ? `${label}: ${activePreset.label}` : value.to && value.to !== value.from ? `${label}: ${formatDateOnly(fromKey(value.from))} \u2013 ${formatDateOnly(fromKey(value.to))}` : `${label}: ${formatDateOnly(fromKey(value.from))}`;
+  const reseed = () => {
+    setPresetDraft(value?.preset ?? "");
+    const from = value?.from ? fromKey(value.from) : void 0;
+    const to = value?.to ? fromKey(value.to) : void 0;
+    const isSpan = !!value?.to && value.to !== value.from;
+    setMode(isSpan || !allowSingle ? "range" : "single");
+    setSingleDate(isSpan ? void 0 : from);
+    setRange(isSpan ? { from, to } : void 0);
+  };
+  const clear = () => {
+    onChange(void 0);
+    setPresetDraft("");
+    setSingleDate(void 0);
+    setRange(void 0);
+    setMode(allowSingle ? "single" : "range");
+  };
+  const apply = () => {
+    if (presetDraft) {
+      const chosen = presets?.find((p) => p.value === presetDraft);
+      if (chosen) {
+        const span = chosen.resolve();
+        onChange({ preset: chosen.value, ...span });
+      }
+    } else if (mode === "single" && singleDate) {
+      const k = toKey(singleDate);
+      onChange({ preset: "", from: k, to: k });
+    } else if (mode === "range" && range?.from) {
+      const to = range.to ?? range.from;
+      onChange({ preset: "", from: toKey(range.from), to: toKey(to) });
+    } else {
+      onChange(void 0);
+    }
+    chip.onOpenChange(false);
+  };
+  const hasDraft = !!presetDraft || !!singleDate || !!range?.from;
+  return /* @__PURE__ */ jsxs51(
+    FilterChip,
+    {
+      chipKey: key,
+      label: chipLabel,
+      active: isActive,
+      align,
+      open: chip.open,
+      onOpenChange: chip.onOpenChange,
+      onOpen: reseed,
+      onClear: clear,
+      children: [
+        /* @__PURE__ */ jsxs51("div", { className: "w-auto p-3", children: [
+          presets?.length ? /* @__PURE__ */ jsx77("div", { className: "mb-3 flex flex-wrap gap-1.5", children: presets.map((p) => /* @__PURE__ */ jsx77(
+            Button,
+            {
+              type: "button",
+              variant: "ghost",
+              size: "sm",
+              onClick: () => {
+                const next = presetDraft === p.value ? "" : p.value;
+                setPresetDraft(next);
+                if (next) {
+                  setSingleDate(void 0);
+                  setRange(void 0);
+                }
+              },
+              className: cn(
+                "h-auto min-h-0 rounded-full border px-2.5 py-1 text-[11.5px] font-normal",
+                presetDraft === p.value ? "border-primary bg-primary/10 font-medium text-primary" : "border-border text-muted-foreground hover:text-foreground"
+              ),
+              children: p.label
+            },
+            p.value
+          )) }) : null,
+          allowSingle ? /* @__PURE__ */ jsx77("div", { className: "mb-3 flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1", children: PICK_MODES.map((m) => /* @__PURE__ */ jsx77(
+            Button,
+            {
+              type: "button",
+              variant: "ghost",
+              size: "sm",
+              onClick: () => setMode(m.value),
+              className: cn(
+                "h-auto min-h-0 flex-1 whitespace-nowrap rounded-md px-2.5 py-1.5 text-xs font-medium",
+                mode === m.value ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              ),
+              children: m.label
+            },
+            m.value
+          )) }) : null,
+          mode === "single" && allowSingle ? /* @__PURE__ */ jsx77(
+            Calendar,
+            {
+              mode: "single",
+              selected: singleDate,
+              onSelect: (d) => {
+                setSingleDate(d);
+                setPresetDraft("");
+              },
+              className: "bg-transparent p-0"
+            }
+          ) : /* @__PURE__ */ jsx77(
+            Calendar,
+            {
+              mode: "range",
+              selected: range,
+              onSelect: (r) => {
+                setRange(r);
+                setPresetDraft("");
+              },
+              numberOfMonths,
+              className: "bg-transparent p-0"
+            }
+          )
+        ] }),
+        /* @__PURE__ */ jsx77(
+          FilterChipActions,
+          {
+            onClear: () => {
+              clear();
+              chip.onOpenChange(false);
+            },
+            clearDisabled: !hasDraft && !isActive,
+            applyDisabled: !hasDraft,
+            onApply: apply
+          }
+        )
+      ]
+    }
+  );
+}
 export {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
+  AddFilterMenu,
   Alert,
   AlertDescription,
   AlertTitle,
@@ -7011,6 +9517,7 @@ export {
   ButtonGroup,
   COUNTRIES,
   Calendar,
+  CalendarDateFilterChip,
   CalendarDayButton,
   Callout,
   CalloutIcon,
@@ -7035,6 +9542,7 @@ export {
   CheckboxSelect,
   Code,
   CodeBlock,
+  ColumnManager,
   Command,
   CommandEmpty,
   CommandGroup,
@@ -7043,11 +9551,16 @@ export {
   CommandList,
   CommandSeparator,
   CommandShortcut,
+  CopyableCell,
   CountrySelect,
   CurrencyAmountInput,
+  DAYS_SHORT,
   DashboardAreaChartTemplate,
+  DataCardList,
   DataTable,
+  DataTableCard,
   DatePicker,
+  DateRangeFilterChip,
   Dialog,
   DialogClose,
   DialogContent,
@@ -7078,6 +9591,8 @@ export {
   DropdownMenuSubContent,
   DropdownMenuSubTrigger,
   DropdownMenuTrigger,
+  EMPTY_DATE,
+  EMPTY_RELATIVE_RANGE,
   EmptyState,
   Field,
   FieldContent,
@@ -7089,6 +9604,13 @@ export {
   FieldSeparator,
   FieldSet,
   FieldTitle,
+  FilterChip,
+  FilterChipActions,
+  FilterChipClearButton,
+  FilterChipGroup,
+  FilterChipLabelTrigger,
+  FilterChipShell,
+  FilterToolbar,
   Flag,
   FlagGroup,
   Flex,
@@ -7119,6 +9641,7 @@ export {
   Label,
   Link,
   Lozenge,
+  MONTHS_SHORT,
   Menu,
   MenuDivider,
   MenuItem,
@@ -7126,6 +9649,8 @@ export {
   MetricSparklineCard,
   MetricText,
   MiniSparklineChartCard,
+  MonthRangeFilterChip,
+  NumberRangeFilterChip,
   OtpInput,
   PageHeader,
   Pagination,
@@ -7146,14 +9671,17 @@ export {
   RadioGroup,
   RadioGroupItem,
   RankedBarListTemplate,
+  RotatingSearchInput,
   ScrollArea,
   ScrollBar,
   SectionMessage,
   SectionMessageActions,
   SectionMessageContent,
   SectionMessageTitle,
+  SegmentedTabs,
   Select,
   SelectContent,
+  SelectFilterChip,
   SelectGroup,
   SelectItem,
   SelectLabel,
@@ -7170,6 +9698,7 @@ export {
   SideNavHeader,
   SideNavItem,
   SideNavSection,
+  SingleSelectFilterChip,
   Slider,
   Spinner,
   SplitButton,
@@ -7181,6 +9710,7 @@ export {
   StatusBadge,
   Switch,
   TableRowSkeleton,
+  TableToolbarActions,
   Tabs,
   TabsContent,
   TabsList,
@@ -7188,17 +9718,35 @@ export {
   Tag,
   TagGroup,
   Text,
+  TextFilterChip,
   Textarea,
   TimePicker,
   Toaster,
+  ToolbarButton,
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
+  UnderlineTabs,
   VisuallyHidden,
+  applyColumnPreferences,
   cn,
-  toast,
+  formatDateOnly,
+  formatDateStamp,
+  formatDateTime,
+  formatMonthLabel,
+  formatTime,
+  formatTimeStamp,
+  formatTimestamp,
+  formatWeekdayDate,
+  frozenColumn,
+  hasRelativeRange,
+  parseApiDate,
+  relativeRangeToMillis,
+  toast2 as toast,
   useBreakpoint,
+  useColumnPreferences,
+  useFilterChipState,
   useFlagGroup,
   useForm,
   useSpotlight

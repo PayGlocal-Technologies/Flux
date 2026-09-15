@@ -209,6 +209,8 @@ export type {
 
 // Tabs & Accordion
 export { Tabs, TabsList, TabsTrigger, TabsContent } from "./tabs";
+export { UnderlineTabs, SegmentedTabs } from "./tab-presets";
+export type { UnderlineTab, SegmentedTabOption } from "./tab-presets";
 export { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "./accordion";
 
 // Messaging & Feedback
@@ -232,8 +234,34 @@ export type { ProgressProps, ProgressTrackerStep, ProgressTrackerProps } from ".
 export { Shimmer, StatCardSkeleton, TableRowSkeleton, ChartSkeleton } from "./skeleton";
 
 // Data display
-export { DataTable } from "./data-table";
-export type { Column, DataTableDensity, DataTableExpandable, DataTableFooterSummary, DataTableHeaderStyle } from "./data-table";
+export { DataTable, frozenColumn } from "./data-table";
+export type {
+  Column,
+  DataTableDensity,
+  DataTableExpandable,
+  DataTableFooterSummary,
+  DataTableHeaderStyle,
+  DataTablePagination,
+  DataTableSorting,
+  DataTableSortState,
+  SortOrder,
+} from "./data-table";
+export { DataTableCard, TableToolbarActions } from "./data-table-card";
+export { DataCardList } from "./data-card-list";
+export type { DataCardListProps } from "./data-card-list";
+export { CopyableCell } from "./copyable-cell";
+export type { CopyableCellProps } from "./copyable-cell";
+export { RotatingSearchInput } from "./rotating-search-input";
+export type { RotatingSearchInputProps } from "./rotating-search-input";
+export type { DataTableCardProps } from "./data-table-card";
+export { ColumnManager, useColumnPreferences, applyColumnPreferences } from "./column-manager";
+export type {
+  ColumnManagerProps,
+  ColumnPreferences,
+  ManagedColumn,
+  UseColumnPreferencesOptions,
+  UseColumnPreferencesResult,
+} from "./column-manager";
 export { EmptyState } from "./empty-state";
 export { PageHeader } from "./page-header";
 export { Code, CodeBlock } from "./code";
@@ -331,3 +359,68 @@ export type { ProgressIndicatorProps } from "./progress-indicator";
 // Utility
 export { VisuallyHidden } from "./visually-hidden";
 export type { VisuallyHiddenProps } from "./visually-hidden";
+
+// Filters
+export {
+  FilterChipGroup,
+  useFilterChipState,
+  FilterChipShell,
+  FilterChipClearButton,
+  FilterChipLabelTrigger,
+  FilterChipActions,
+  FilterChip,
+  SelectFilterChip,
+  SingleSelectFilterChip,
+  DateRangeFilterChip,
+  NumberRangeFilterChip,
+  TextFilterChip,
+  MonthRangeFilterChip,
+  EMPTY_RELATIVE_RANGE,
+  hasRelativeRange,
+  relativeRangeToMillis,
+  AddFilterMenu,
+  FilterToolbar,
+  ToolbarButton,
+} from "./filter-chips";
+
+// The calendar-based date chip, for a filter people reach for by looking
+// rather than by typing two dates.
+export { CalendarDateFilterChip } from "./calendar-date-chip";
+export type {
+  CalendarDateValue,
+  CalendarDatePreset,
+  CalendarDateFilterChipProps,
+  CalendarRange,
+  DatePickMode,
+} from "./calendar-date-chip";
+export type {
+  FilterChipOption,
+  FilterChipControl,
+  SelectFilterChipProps,
+  SingleSelectFilterChipProps,
+  DateRangeValue,
+  DateRangeFilterChipProps,
+  NumberRangeValue,
+  NumberRangeFilterChipProps,
+  TextFilterChipProps,
+  RelativeRangeValue,
+  MonthRange,
+  AddFilterDefinition,
+  AddFilterMenuProps,
+} from "./filter-chips";
+
+// Date & time formatting (the app-wide "27 Jul '26, 09:49 AM" form)
+export {
+  parseApiDate,
+  formatTime,
+  formatDateOnly,
+  formatDateTime,
+  formatTimestamp,
+  formatDateStamp,
+  formatMonthLabel,
+  formatTimeStamp,
+  formatWeekdayDate,
+  EMPTY_DATE,
+  MONTHS_SHORT,
+  DAYS_SHORT,
+} from "./format-datetime";

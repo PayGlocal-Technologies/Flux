@@ -1,6 +1,6 @@
 import { ClassValue } from 'clsx';
 import * as React$1 from 'react';
-import { ButtonHTMLAttributes, HTMLAttributes, ReactNode, ComponentProps, AnchorHTMLAttributes } from 'react';
+import { ButtonHTMLAttributes, HTMLAttributes, ReactNode, ComponentProps, AnchorHTMLAttributes, CSSProperties, ComponentPropsWithoutRef } from 'react';
 import * as class_variance_authority_types from 'class-variance-authority/types';
 import * as LabelPrimitive from '@radix-ui/react-label';
 import { VariantProps } from 'class-variance-authority';
@@ -654,6 +654,80 @@ declare const TabsList: React$1.ForwardRefExoticComponent<Omit<TabsPrimitive.Tab
 declare const TabsTrigger: React$1.ForwardRefExoticComponent<Omit<TabsPrimitive.TabsTriggerProps & React$1.RefAttributes<HTMLButtonElement>, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
 declare const TabsContent: React$1.ForwardRefExoticComponent<Omit<TabsPrimitive.TabsContentProps & React$1.RefAttributes<HTMLDivElement>, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 
+/**
+ * Two presets over the `Tabs` primitives, for the two jobs a tab row actually
+ * does. They are separate components on purpose, so a page can show both
+ * without the reader having to work out which row governs what:
+ *
+ * - {@link UnderlineTabs} is the **page-level** bar that segments a view into
+ *   sections — full-width, one sliding indicator, the thing a URL usually
+ *   follows.
+ * - {@link SegmentedTabs} is the **compact scoping strip** for a required
+ *   single choice that qualifies the content beside it: which status a list is
+ *   filtered by, which period a summary describes.
+ *
+ * Neither is a filter chip. A chip is for an *optional* filter that can be
+ * cleared; both of these always have exactly one option selected, so neither
+ * ever renders a clear affordance.
+ */
+interface UnderlineTab {
+    value: string;
+    /**
+     * A plain string for an ordinary tab; a node when the tab carries an
+     * annotation beside its name, such as a status badge showing the state of
+     * the section behind it.
+     */
+    label: ReactNode;
+}
+/**
+ * Page-level tab bar with a single shared indicator that slides between tabs,
+ * rather than each tab drawing its own underline.
+ *
+ * The indicator's position and width are measured from the DOM: text tabs have
+ * different widths, so this cannot be derived from props or state. It sits
+ * flush on the row's own bottom border instead of floating below the label.
+ *
+ * `actions` renders flush right on the same row, tabs staying left-aligned,
+ * which is where a page puts its primary CTA.
+ */
+declare function UnderlineTabs({ tabs, value, onValueChange, actions, className, }: {
+    tabs: readonly UnderlineTab[];
+    value: string;
+    onValueChange: (value: string) => void;
+    actions?: ReactNode;
+    className?: string;
+}): React$1.JSX.Element;
+interface SegmentedTabOption<T extends string = string> {
+    value: T;
+    label: string;
+}
+/**
+ * The compact strip that scopes the content beside it.
+ *
+ * Plain underlined triggers, not the `Tabs` pill look: no container
+ * background, border or padding — a gap row of triggers, each just an
+ * underline and a colour change when active. Still Radix `Tabs` underneath, so
+ * keyboard navigation and `aria-selected` come free; only the classes differ.
+ *
+ * With `collapseToSelect`, the strip becomes a `Select` below `md`. Both
+ * controls drive the same state, so resizing mid-session can never leave the
+ * two disagreeing about which option is chosen.
+ */
+declare function SegmentedTabs<T extends string>({ options, value, onValueChange, label, collapseToSelect, className, }: {
+    options: readonly SegmentedTabOption<T>[];
+    value: T;
+    onValueChange: (value: T) => void;
+    /** Accessible name for both controls. */
+    label?: string;
+    /**
+     * Swap to a `Select` below `md`. Leave on for a strip that would otherwise
+     * crowd a narrow screen; turn it off where the row already has the room and
+     * a dropdown would read as a different control appearing.
+     */
+    collapseToSelect?: boolean;
+    className?: string;
+}): React$1.JSX.Element;
+
 declare const Accordion: React$1.ForwardRefExoticComponent<(AccordionPrimitive.AccordionSingleProps | AccordionPrimitive.AccordionMultipleProps) & React$1.RefAttributes<HTMLDivElement>>;
 declare const AccordionItem: React$1.ForwardRefExoticComponent<Omit<AccordionPrimitive.AccordionItemProps & React$1.RefAttributes<HTMLDivElement>, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 declare const AccordionTrigger: React$1.ForwardRefExoticComponent<Omit<AccordionPrimitive.AccordionTriggerProps & React$1.RefAttributes<HTMLButtonElement>, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
@@ -753,7 +827,106 @@ declare function ChartSkeleton({ height }: {
 
 type DataTableDensity = "default" | "comfortable" | "compact";
 type DataTableHeaderStyle = "surface" | "minimal";
-type DataTableFooterSummary = "range" | "count";
+/**
+ * Footer summary text.
+ * - `range` — "Showing 1–15 of 141 results" (or "Showing 1–15" when no total
+ *   is knowable, i.e. cursor pagination).
+ * - `count` — "141 items".
+ * - `none` — no summary, just the pager.
+ */
+type DataTableFooterSummary = "range" | "count" | "none";
+type SortOrder = "ascend" | "descend";
+/** `null` means unsorted — the table is in the order the data arrived in. */
+type DataTableSortState = {
+    columnKey: string;
+    order: SortOrder;
+} | null;
+/** Controls shared by every paginated mode. */
+type PagerCommon = {
+    /**
+     * Summary text at the left of the footer. Defaults to `range`.
+     */
+    summary?: DataTableFooterSummary;
+    /** Noun after the number when `summary="count"`. Default `item` / `items`. */
+    countLabels?: {
+        singular: string;
+        plural: string;
+    };
+    /**
+     * Page-size choices. Pass these — with `onPageSizeChange` — and the footer
+     * grows a "Rows per page" picker at its far left. Omit and there is none.
+     *
+     * This lives here rather than being hand-passed as a footer slot because a
+     * grid that had to hand-roll its own page-size control is how two different
+     * pagers end up in the same app.
+     */
+    pageSizeOptions?: readonly number[];
+    onPageSizeChange?: (size: number) => void;
+    /** Escape hatch: an extra control at the far left, before the summary. */
+    leading?: ReactNode;
+};
+/**
+ * How the table pages. Which member you use is decided by the endpoint, not by
+ * taste:
+ *
+ * - `client` — every row is already in `data`; the table slices it. The
+ *   default when `pagination` is omitted.
+ * - `page` — the response carries a row **total**, so the footer can show
+ *   "Showing 1–15 of 141 results" and a full numbered strip with ellipses.
+ * - `cursor` — the response carries no total (a `nextCursor` /
+ *   `exclusiveStartKey` API). The footer shows "Showing 1–15" with **no**
+ *   total and no page count, and the numbered strip is only ever the page
+ *   before, the current page, and — when `hasNext` says so — the page after.
+ *   Those are the only pages a cursor can actually reach in one step, so they
+ *   are the only ones offered.
+ * - `none` — no footer at all.
+ */
+type DataTablePagination = ({
+    mode: "client";
+    /** Rows per page. Default 10. */
+    pageSize?: number;
+} & PagerCommon) | ({
+    mode: "page";
+    /** 1-indexed. */
+    page: number;
+    pageSize: number;
+    /** Total rows across all pages, from the response. */
+    total: number;
+    onPageChange: (page: number) => void;
+} & PagerCommon) | ({
+    mode: "cursor";
+    /** 1-indexed, for the "Showing x–y" range and the page marker. */
+    page: number;
+    pageSize: number;
+    /** Whether a page exists after this one. Drives the next control. */
+    hasNext: boolean;
+    /** Defaults to `page > 1`. */
+    hasPrev?: boolean;
+    onNext: () => void;
+    onPrev: () => void;
+} & PagerCommon) | {
+    mode: "none";
+};
+/**
+ * Sorting, modelled on antd's `Table`: a column opts in with `sorter`, and the
+ * table reports state as `{ columnKey, order }` with antd's `"ascend"` /
+ * `"descend"` vocabulary.
+ *
+ * The one deliberate difference is that client and server sorting are told
+ * apart by the **column**, not by a table-level flag: `sorter: true` means "the
+ * caller orders this", a comparator means "the table orders this". A grid can
+ * therefore mix the two, which matters when one column is a derived value the
+ * server does not know about.
+ */
+type DataTableSorting = {
+    /**
+     * Controlled sort state. Omit for uncontrolled — the table remembers, which
+     * is all a client-sorted grid needs.
+     */
+    value?: DataTableSortState;
+    /** Fires on every header activation, with the state being moved to. */
+    onChange?: (next: DataTableSortState) => void;
+};
 /**
  * Row expansion: a disclosure column plus a full-width panel rendered directly
  * beneath the expanded row. Use it when the detail belongs *with* the row in
@@ -797,6 +970,33 @@ type Column<T> = {
     wrap?: boolean;
     /** Extra classes on `<th>` / `<td>` (e.g. wider horizontal padding per column) */
     cellClassName?: string;
+    /**
+     * Inline styles on `<th>` / `<td>`.
+     *
+     * For a value Tailwind cannot generate a class for because it is computed —
+     * a sticky column's `left`, which is the running total of the widths before
+     * it. Expressing that as a class means keeping a hand-written lookup table of
+     * every offset the layout can produce, and silently getting the wrong one the
+     * moment a column width changes. See `frozenColumn`.
+     */
+    cellStyle?: CSSProperties;
+    /**
+     * Makes this header a sort control.
+     *
+     * - `true` — the **caller** orders the rows (a server-side `sortBy` query).
+     *   The table reports the change through `sorting.onChange` and leaves `data`
+     *   exactly as given.
+     * - a comparator — the **table** orders the rows with it, before paging.
+     *   Same contract as `Array.prototype.sort`'s argument, and the same as
+     *   antd's `sorter`.
+     */
+    sorter?: boolean | ((a: T, b: T) => number);
+    /**
+     * The orders this header cycles through before returning to unsorted.
+     * Default `["ascend", "descend"]`. Pass `["descend", "ascend"]` for a column
+     * where "most recent" or "largest" is the obvious first click.
+     */
+    sortDirections?: SortOrder[];
     render: (row: T, index: number) => ReactNode;
 };
 interface DataTableProps<T> {
@@ -806,13 +1006,13 @@ interface DataTableProps<T> {
     skeletonRows?: number;
     emptyTitle?: string;
     emptyDescription?: string;
-    pageSize?: number;
-    /** Controlled page number (1-indexed). Enables server-side pagination. */
-    page?: number;
-    /** Called when the user changes page in controlled mode. */
-    onPageChange?: (page: number) => void;
-    /** Total row count for server-side pagination (overrides data.length for page calculations). */
-    totalRows?: number;
+    /**
+     * Pagination and the footer that carries it. Omit for client-side paging at
+     * 10 rows a page. See {@link DataTablePagination}.
+     */
+    pagination?: DataTablePagination;
+    /** Column sorting. See {@link DataTableSorting}. */
+    sorting?: DataTableSorting;
     className?: string;
     rowKey: (row: T) => string;
     /** Optional hover CTA shown on the right of every row */
@@ -863,28 +1063,448 @@ interface DataTableProps<T> {
     tableLayout?: "auto" | "fixed" | "content";
     theadClassName?: string;
     headerStyle?: DataTableHeaderStyle;
-    /** Footer: paginated range vs simple `n items` */
-    footerSummary?: DataTableFooterSummary;
-    /** Noun after the count when `footerSummary="count"` (default singular / plural `item` / `items`). */
-    footerCountLabels?: {
-        singular: string;
-        plural: string;
-    };
     /** With `density="compact"`, use tighter cell gutters (`pl-1.5 pr-2.5` vs `px-3`). Footer keeps normal horizontal padding. */
     snug?: boolean;
-    /**
-     * Extra control at the far left of the built-in footer, before the
-     * "Showing x–y of N" summary — a rows-per-page picker, typically.
-     *
-     * Without it a grid that needs a page-size control has to abandon the
-     * built-in footer and hand-roll one, which is how two different pagers end up
-     * in the same app.
-     */
-    footerLeading?: ReactNode;
     /** Per-row disclosure panel rendered beneath the row. See `DataTableExpandable`. */
     expandable?: DataTableExpandable<T>;
 }
-declare function DataTable<T>({ columns, data, isLoading, skeletonRows, emptyTitle, emptyDescription, pageSize, page: controlledPage, onPageChange, totalRows, className, rowKey, rowCta, rowAction, onRowClick, density, tableLayout, theadClassName, headerStyle, footerSummary, footerCountLabels, snug, expandable, footerLeading, }: DataTableProps<T>): React$1.JSX.Element;
+declare function DataTable<T>({ columns, data, isLoading, skeletonRows, emptyTitle, emptyDescription, pagination, sorting, className, rowKey, rowCta, rowAction, onRowClick, density, tableLayout, theadClassName, headerStyle, snug, expandable, }: DataTableProps<T>): React$1.JSX.Element;
+/**
+ * The classes and offset for a column frozen to the left edge, so a grid that
+ * pins its identifier columns does not have to reinvent the recipe. Five
+ * feature files in the internal console had five copies of it, all carrying the
+ * same two faults below.
+ *
+ * Spread the result onto the column:
+ *
+ * ```tsx
+ * let left = 0;
+ * columns.map((col) => {
+ *   if (!FROZEN.includes(col.key)) return col;
+ *   const frozen = { ...col, ...frozenColumn({ left, isLast: col.key === lastFrozen }) };
+ *   left += widthOf(col);
+ *   return frozen;
+ * });
+ * ```
+ *
+ * Two things it gets right that a hand-rolled version tends not to:
+ *
+ * **The background is opaque and is the table's own.** It has to be opaque or
+ * the rows scrolling underneath show through the pinned block. It should not be
+ * a tint, because a tint at full strength next to a row that highlights at 40%
+ * makes the frozen block the heaviest thing on screen — the divider and the
+ * shadow are what say "pinned", and the shadow is the honest signal anyway,
+ * since it is what reads as content passing underneath.
+ *
+ * **It follows the row's hover.** The frozen cells are part of the row; pinning
+ * them to a fixed colour makes a hovered row highlight in two different shades
+ * and read as two rows. The hover colour is mixed rather than given an alpha,
+ * for the same opacity reason.
+ */
+declare function frozenColumn({ left, right, isLast, }: {
+    /** Offset from the left edge in px — the widths of the frozen columns before this one. */
+    left?: number;
+    /** Offset from the right edge in px, for a column pinned to that side instead. */
+    right?: number;
+    /** The column at the boundary, which carries the divider and the shadow. */
+    isLast?: boolean;
+}): Pick<Column<unknown>, "cellClassName" | "cellStyle">;
+
+/**
+ * The canonical table surface: one bordered card holding a title, tabs, a
+ * filter toolbar, the grid, and a footer — in that order, with the same
+ * dividers and gutters every time.
+ *
+ * `DataTable` on its own is the grid. This is everything around it, and it
+ * exists because that surrounding chrome is where tables actually drift: one
+ * feature puts its filters above the card, another inside it; one draws a
+ * divider under the tabs, another does not; one pads the toolbar `py-3` and the
+ * next `py-2.5`. None of that is a decision a feature should be making.
+ *
+ * Pagination goes through `pagination`, in every mode — including cursor APIs
+ * that carry no row total. The `footer` slot is for a footer that is genuinely
+ * not a pager; passing one hides the table's own.
+ */
+interface DataTableCardProps<T> {
+    columns: Column<T>[];
+    data: T[];
+    rowKey: (row: T) => string;
+    isLoading?: boolean;
+    /**
+     * Section title. For a grid that names itself — an analytics section like
+     * "Top 10 Merchants by Volume" — rather than a page-level grid, whose name is
+     * the page header. Renders above `tabs`.
+     */
+    title?: string;
+    /** One line under the title. Only meaningful with `title`. */
+    description?: string;
+    /** Controls on the title row, flush right (a period toggle, Refresh, …). */
+    actions?: ReactNode;
+    /** Tab bar near the top of the card, above the toolbar. */
+    tabs?: ReactNode;
+    /** Filters / search / action buttons, as a row inside the card top. */
+    toolbar?: ReactNode;
+    /**
+     * A non-pager footer inside the card bottom. Hides the table's own footer, so
+     * do NOT use it for pagination — that is what `pagination` is for, in every
+     * mode. Hand-rolling a pager here is how two different pagers end up in one
+     * app.
+     */
+    footer?: ReactNode;
+    emptyTitle?: string;
+    emptyDescription?: string;
+    /**
+     * Replaces the grid when there are no rows — an illustrated placeholder,
+     * typically.
+     *
+     * `emptyTitle` / `emptyDescription` give the table's own text-only empty
+     * state, which keeps the column headers and is right for "nothing matched
+     * your filters". This is for the first-run case, where there is no data yet
+     * because none has ever existed, and a drawn state says that better than a
+     * header row over nothing.
+     */
+    emptyState?: ReactNode;
+    /**
+     * Replaces the rows entirely when the request failed.
+     *
+     * Distinct from an empty result with error-worded copy: that keeps the
+     * column headers, which is right for "nothing matched" and wrong for "we
+     * could not load this" — headers imply data was fetched and found empty.
+     */
+    errorState?: ReactNode;
+    /** See {@link DataTablePagination}. Omit for client-side paging at 10/page. */
+    pagination?: DataTablePagination;
+    /** See {@link DataTableSorting}. */
+    sorting?: DataTableSorting;
+    rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
+    /**
+     * Makes the whole row a click target, for a grid that drills into a detail
+     * view. Passed straight through, so it brings the keyboard affordances with
+     * it and does not fire for clicks landing on a button, link or form control
+     * inside a cell.
+     */
+    onRowClick?: (row: T, index: number) => void;
+    /** Defaults to "content"; pass "fixed" for grids with frozen sticky columns. */
+    tableLayout?: "auto" | "fixed" | "content";
+    /** Per-row disclosure panel rendered beneath the row. */
+    expandable?: DataTableExpandable<T>;
+    /** Row rhythm. Defaults to `compact`, which is what a data-dense grid wants. */
+    density?: DataTableDensity;
+    skeletonRows?: number;
+    /**
+     * CSS max-height for the internally scrolling body, so the toolbar and footer
+     * stay put while the rows scroll and the page itself does not grow.
+     *
+     * The default assumes a page header plus this card's toolbar; a card that
+     * also carries a `tabs` row needs a smaller cap, or the page starts scrolling
+     * as well. Pass `"none"` to let the card grow with its content instead.
+     */
+    maxBodyHeight?: string;
+    className?: string;
+}
+declare function DataTableCard<T>({ columns, data, rowKey, isLoading, title, description, actions, tabs, toolbar, footer, emptyTitle, emptyDescription, emptyState, errorState, pagination, sorting, rowAction, onRowClick, tableLayout, expandable, density, skeletonRows, maxBodyHeight, className, }: DataTableCardProps<T>): React$1.JSX.Element;
+/** Right-aligned group for toolbar action buttons. */
+declare function TableToolbarActions({ children }: {
+    children: ReactNode;
+}): React$1.JSX.Element;
+
+/**
+ * The narrow-viewport counterpart to {@link DataTableCard}: the same records as
+ * a stack of cards.
+ *
+ * It is a separate component rather than a mode of the table on purpose. A
+ * card list is not a table with its columns hidden — it chooses a handful of
+ * fields, gives them a hierarchy, and drops the rest. Folding that into
+ * `DataTableCard` would mean one component carrying two layouts and a
+ * breakpoint, and every table paying for props it does not use.
+ *
+ * Pair the two with CSS, not a media-query hook:
+ *
+ * ```tsx
+ * <DataTableCard className="hidden lg:block" … />
+ * <DataCardList className="lg:hidden" … />
+ * ```
+ *
+ * Both render; CSS shows one. A JS breakpoint would have to start with a guess
+ * on the server, so one cohort sees the wrong layout on first paint, and a
+ * resize across the breakpoint unmounts the visible half — taking scroll
+ * position and any open row with it.
+ *
+ * What it owns is the surface, not the card: the bordered container, the
+ * loading skeletons, the empty state and the pager. Those are the four things
+ * every hand-rolled card list in the apps reimplemented, and the four that had
+ * drifted. The card itself stays with the feature, via `renderCard` — that is
+ * the part that genuinely differs per record.
+ */
+interface DataCardListProps<T> {
+    rows: T[];
+    rowKey: (row: T) => string;
+    /** One record as a card. The only part a feature has to write. */
+    renderCard: (row: T, index: number) => ReactNode;
+    isLoading?: boolean;
+    /**
+     * The loading placeholder for one card. Omit for a generic card-shaped
+     * shimmer — good enough for most lists, and worth replacing only where the
+     * real card has a distinctive shape worth pre-announcing.
+     */
+    renderSkeleton?: (index: number) => ReactNode;
+    skeletonCount?: number;
+    emptyTitle?: string;
+    emptyDescription?: string;
+    /**
+     * Replaces the list when there are no rows — an illustrated placeholder,
+     * typically. Same split as `DataTableCard`: the title/description pair is the
+     * plain "nothing matched" state, this is the drawn first-run one.
+     */
+    emptyState?: ReactNode;
+    /**
+     * Replaces the rows entirely when the request failed.
+     *
+     * Distinct from an empty result with error-worded copy: that keeps the
+     * column headers, which is right for "nothing matched" and wrong for "we
+     * could not load this" — headers imply data was fetched and found empty.
+     */
+    errorState?: ReactNode;
+    /**
+     * The same {@link DataTablePagination} the table takes, so a list and the
+     * table beside it cannot disagree about which page they are on. Rendered as
+     * a compact Prev / Next pager rather than a numbered strip: a row of page
+     * numbers is the first thing to go wrong on a phone.
+     */
+    pagination?: DataTablePagination;
+    /** Wraps the list in the same bordered card the table uses. Default true. */
+    bordered?: boolean;
+    className?: string;
+}
+declare function DataCardList<T>({ rows, rowKey, renderCard, isLoading, renderSkeleton, skeletonCount, emptyTitle, emptyDescription, emptyState, errorState, pagination, bordered, className, }: DataCardListProps<T>): React$1.JSX.Element;
+
+interface CopyableCellProps {
+    /**
+     * The full value. This is what reaches the clipboard, the tooltip and the
+     * accessible name — always, even when `display` shortens what is on screen.
+     * Shortening what is shown must never shorten what the user walks away with.
+     */
+    value?: string | null;
+    /** What to render instead of `value` — an elided form, typically. */
+    display?: string;
+    /** The noun in the tooltip and the toast: "Transaction ID copied". */
+    label?: string;
+    /**
+     * Makes the value the handle that opens the row, rendered as a link. Without
+     * it the value is plain text that can still be copied.
+     *
+     * The copy button stops propagation, so an id that opens a row does not also
+     * open it when copied.
+     */
+    onClick?: () => void;
+    /** Render the value in the primary colour. */
+    accent?: boolean;
+    monospace?: boolean;
+    /** What an absent value renders as. Default the em dash every grid uses. */
+    fallback?: string;
+    /**
+     * - `inline` (default) — the value, with its own copy button beside it.
+     * - `cell` — the **whole** element is the copy target and the value
+     *   underlines on hover. For a fixed-width column where a separate button
+     *   would cost more room than the value it copies.
+     *
+     * `cell` ignores `onClick`: a cell cannot both copy and open the row on the
+     * same click.
+     */
+    variant?: "inline" | "cell";
+    /**
+     * Keep the copy button invisible until the row (or any `group` ancestor) is
+     * hovered, or the button itself is focused. Opacity only — it keeps its
+     * space, so revealing it never shifts the row.
+     *
+     * Defaults to `true`, which is what a table wants: twelve permanent copy
+     * buttons are twelve pieces of chrome competing with the data. Pass `false`
+     * for a detail field, where there is no row to hover and the control would
+     * simply never appear. Pointer-coarse devices have no hover to give, so it
+     * stays visible there regardless.
+     */
+    revealOnHover?: boolean;
+    /**
+     * Announce the copy with a toast. Off for a field whose tick and tooltip are
+     * feedback enough, and where a toast per copy would be noise.
+     */
+    showToast?: boolean;
+    /** Extra classes on the value itself, e.g. a muted secondary placement. */
+    valueClassName?: string;
+    className?: string;
+}
+/**
+ * The canonical identifier cell: a value plus a copy button that fades in on
+ * the row's hover.
+ *
+ * Reveal-on-hover is the point. A table of twelve ids with twelve permanent
+ * copy buttons is twelve pieces of chrome competing with the data; the row the
+ * pointer is on is the only one whose button is useful.
+ *
+ * It relies on the row's own `group` class, which every `DataTable` `<tr>`
+ * already carries. Outside a DataTable row, pass `className="group"` on an
+ * ancestor or the button stays hidden.
+ */
+declare function CopyableCell({ value, display, label, onClick, accent, monospace, fallback, variant, revealOnHover, showToast, valueClassName, className, }: CopyableCellProps): React$1.JSX.Element;
+
+interface RotatingSearchInputProps {
+    /** Controlled value. Omit to let the field own it. */
+    value?: string;
+    /** Fires on the debounced value, not on every keystroke. */
+    onSearch: (value: string) => void;
+    /** The hints to cycle through: "Amount", "Transaction ID", "Email". */
+    words: string[];
+    /** Debounce before `onSearch` fires. Default 300ms. */
+    debounceDelay?: number;
+    className?: string;
+    /** Screen-reader name for the field. */
+    ariaLabel?: string;
+}
+/**
+ * The table search box: one field whose placeholder cycles through what it can
+ * actually match — "Search by Amount", then "Transaction ID", then "Email".
+ *
+ * That rotation is the whole point. A single grid search usually spans half a
+ * dozen fields, and a static "Search" placeholder tells the user none of them,
+ * so they guess at what is searchable and conclude the box is broken when their
+ * guess misses. Naming the fields in turn costs no space and answers it.
+ *
+ * `onSearch` is debounced, so a search that hits the network fires once the
+ * user pauses rather than once per keystroke.
+ */
+declare function RotatingSearchInput({ value, onSearch, words, debounceDelay, className, ariaLabel, }: RotatingSearchInputProps): React$1.JSX.Element;
+
+/**
+ * A column as the manager sees it: a key and something to call it in the list.
+ * `label` is separate from the table's `header` because a header can be a node
+ * (an icon, a tooltip, a two-line stack) and this list needs plain text.
+ */
+interface ManagedColumn {
+    key: string;
+    label: string;
+}
+interface ColumnManagerProps {
+    /** Every manageable column, in the table's *declared* order. */
+    columns: ManagedColumn[];
+    /** Current arrangement, as column keys. */
+    order: string[];
+    onOrderChange: (order: string[]) => void;
+    /**
+     * Column keys currently hidden. Omit — along with `onHiddenKeysChange` — to
+     * drop the tick boxes entirely and keep this a reorder-only popover.
+     */
+    hiddenKeys?: string[];
+    onHiddenKeysChange?: (hidden: string[]) => void;
+    /**
+     * Columns that cannot be **hidden**. Says nothing about where they sit — a
+     * column the table cannot do without is still one the user may want to move.
+     *
+     * They keep a tick box rather than losing it, so the list reads as one set of
+     * columns with some locked rather than as two lists — but the box is grey,
+     * not primary, because nobody chose it.
+     */
+    fixedKeys?: string[];
+    /**
+     * Columns that cannot be **reordered**. Says nothing about whether they can
+     * be hidden.
+     *
+     * The usual case is a frozen (sticky) column: its left offset is the running
+     * total of the widths of the frozen columns before it, so the block only
+     * works while they stay first and contiguous — drag one into the middle and
+     * it keeps `left-0`, leaving a pinned column floating over the scrolling
+     * ones. Hiding it is fine; that just shortens the block.
+     *
+     * A key can appear in both lists, and then neither control is offered.
+     */
+    pinnedKeys?: string[];
+    /**
+     * Why a fixed column cannot be hidden, shown on hover and focus. A disabled
+     * control that stays silent leaves the user to guess whether they are doing
+     * something wrong, so every caller should say something; the default is
+     * deliberately generic so a missing one is still an answer.
+     */
+    fixedReason?: string;
+    /**
+     * Why a pinned column cannot be moved, shown on hover. Same reasoning as
+     * `fixedReason`: a dead affordance should say why it is dead.
+     */
+    pinnedReason?: string;
+    /**
+     * Discards the saved arrangement so the table falls back to `columns`' own
+     * order with nothing hidden. Separate from `onOrderChange` rather than
+     * passing the default order through it, since "no saved preference" is its
+     * own state in the caller, not just another arrangement.
+     */
+    onReset: () => void;
+    /** Trigger label. Default "Columns". */
+    label?: string;
+    /** Render the trigger as an icon-only button — for a crowded toolbar. */
+    iconOnly?: boolean;
+    /** Extra classes on the trigger button. */
+    className?: string;
+    /** Popover alignment against the trigger. Default "end". */
+    align?: "start" | "center" | "end";
+}
+/**
+ * Column manager: drag to reorder, tick to show or hide, with locked columns
+ * and a reset. One implementation for every grid in every app, so a merchant
+ * and an internal operator arrange their columns the same way.
+ *
+ * Reordering is @dnd-kit, the same stack the dashboard's widget grid uses, so
+ * the rows animate out of each other's way as one is dragged past them. A
+ * hand-rolled pointer drag can reorder the list correctly and still feel wrong:
+ * without a per-row transform the rows simply teleport into their new slots,
+ * and there is nothing to follow.
+ *
+ * dnd-kit is `external` in the build rather than bundled, because both
+ * consuming apps already depend on it — two copies of `DndContext` in one app
+ * is the kind of thing that breaks only in the app, never in the library.
+ *
+ * Keyboard users reorder without a mouse at all: Space picks a row up, the
+ * arrows move it, Space drops it, Escape abandons it, and dnd-kit announces
+ * each step as it goes.
+ */
+declare function ColumnManager({ columns, order, onOrderChange, hiddenKeys, onHiddenKeysChange, fixedKeys, pinnedKeys, fixedReason, pinnedReason, onReset, label, iconOnly, className, align, }: ColumnManagerProps): React$1.JSX.Element;
+interface ColumnPreferences {
+    order: string[];
+    hidden: string[];
+}
+interface UseColumnPreferencesOptions {
+    /**
+     * `localStorage` key. Omit and the arrangement lives only for the session —
+     * which is what a grid whose columns depend on the signed-in user's role
+     * wants, since a saved order from another role would resurrect columns that
+     * no longer exist.
+     */
+    storageKey?: string;
+}
+interface UseColumnPreferencesResult extends ColumnPreferences {
+    setOrder: (order: string[]) => void;
+    setHidden: (hidden: string[]) => void;
+    reset: () => void;
+    /** Spread straight onto `<ColumnManager>`. */
+    managerProps: Pick<ColumnManagerProps, "order" | "onOrderChange" | "hiddenKeys" | "onHiddenKeysChange" | "onReset">;
+}
+/**
+ * Owns a grid's column arrangement, optionally persisted.
+ *
+ * `defaultOrder` is the source of truth for which columns exist: a stored order
+ * is reconciled against it on every read, so a column added in a release shows
+ * up for someone who saved an arrangement before it existed, and a removed one
+ * disappears instead of leaving a hole.
+ */
+declare function useColumnPreferences(defaultOrder: string[], { storageKey }?: UseColumnPreferencesOptions): UseColumnPreferencesResult;
+/**
+ * Applies a saved arrangement to a built column list.
+ *
+ * `pinnedKeys` stay where they are declared regardless of the saved order —
+ * for the trailing "action" column, which is a utility, not a data field
+ * anybody wants to move. Columns missing from `order` (a field that only
+ * exists for some roles, say) are appended before them rather than dropped.
+ */
+declare function applyColumnPreferences<T extends {
+    key: string;
+}>(columns: T[], { order, hidden }?: Partial<ColumnPreferences>, pinnedKeys?: string[]): T[];
 
 interface EmptyStateProps {
     icon?: LucideIcon;
@@ -963,10 +1583,19 @@ interface DatePickerProps {
     onChange: (v: string) => void;
     placeholder?: string;
     className?: string;
+    /** Earliest selectable date, `YYYY-MM-DD`. Days before it are struck out. */
     min?: string;
+    /**
+     * Latest selectable date, `YYYY-MM-DD`.
+     *
+     * Its absence is why a feature ended up hand-rolling a whole date chip to
+     * enforce an upper bound on Apply instead — an error after the fact, where
+     * the calendar could have said so before the click.
+     */
+    max?: string;
     label?: string;
 }
-declare function DatePicker({ value, onChange, placeholder, className, min, label }: DatePickerProps): React$1.JSX.Element;
+declare function DatePicker({ value, onChange, placeholder, className, min, max, label }: DatePickerProps): React$1.JSX.Element;
 
 /**
  * Chart primitives from shadcn/ui (Recharts composition layer).
@@ -1333,4 +1962,555 @@ interface VisuallyHiddenProps extends React$1.HTMLAttributes<HTMLElement> {
 }
 declare const VisuallyHidden: React$1.ForwardRefExoticComponent<VisuallyHiddenProps & React$1.RefAttributes<HTMLElement>>;
 
-export { Accordion, AccordionContent, AccordionItem, AccordionTrigger, Alert, AlertDescription, type AlertProps, AlertTitle, type AttentionListItem, AttentionListTemplate, type AttentionListTemplateProps, Avatar, AvatarFallback, AvatarGroup, type AvatarGroupItem, type AvatarGroupProps, AvatarImage, AvatarTag, type AvatarTagProps, type AvatarTagSize, Badge, type BadgeProps, type BadgeTrailIcon, type BadgeVariant, Banner, type BannerProps, Blanket, type BlanketProps, Box, type BoxProps, Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, type Breakpoint, Button, ButtonGroup, type ButtonGroupProps, type ButtonProps, COUNTRIES, Calendar, CalendarDayButton, type CalendarProps, Callout, CalloutIcon, type CalloutProps, CalloutText, CalloutTitle, type CalloutVariant, Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, CategoryBarChartTemplate, type CategoryBarChartTemplateProps, type CategoryBarPoint, type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartSkeleton, ChartStyle, ChartTooltip, ChartTooltipContent, Checkbox, type CheckboxProps, CheckboxSelect, type CheckboxSelectOption, type CheckboxSelectProps, Code, CodeBlock, type CodeBlockProps, type CodeProps, type Column, Command, CommandEmpty, type CommandEmptyProps, CommandGroup, type CommandGroupProps, CommandInput, type CommandInputProps, CommandItem, type CommandItemProps, CommandList, type CommandListProps, type CommandProps, CommandSeparator, type CommandSeparatorProps, CommandShortcut, type CommandShortcutProps, type Country, CountrySelect, type CountrySelectProps, CurrencyAmountInput, type DashboardAreaChartPoint, DashboardAreaChartTemplate, type DashboardAreaChartTemplateProps, DataTable, type DataTableDensity, type DataTableExpandable, type DataTableFooterSummary, type DataTableHeaderStyle, DatePicker, Dialog, DialogClose, DialogContent, DialogDescription, DialogPortal, DialogTitle, DialogTrigger, Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, EmptyState, Field, type FieldConfig, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSeparator, FieldSet, FieldTitle, type FieldsConfig, Flag, type FlagAction, FlagGroup, type FlagGroupPosition, type FlagGroupProps, type FlagProps, type FlagVariant, Flex, type FlexAlign, type FlexDirection, type FlexJustify, type FlexProps, type FlexWrap, Form, FormControl, FormDescription, FormError, type FormErrors, FormField, type FormFieldProps, FormItem, FormLabel, type FormProps, type FormValues, Grid, type GridCols, type GridFlow, type GridProps, GroupedBarChartTemplate, type GroupedBarChartTemplateProps, type GroupedBarSeries, Heading, type HeadingProps, Hide, type HideProps, IconButton, type IconButtonProps, Inline, InlineDialog, InlineDialogContent, type InlineDialogContentProps, type InlineDialogProps, InlineDialogTrigger, InlineEdit, type InlineEditProps, type InlineProps, Input, InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText, InputGroupTextarea, Label, type LayoutSpacing, Link, type LinkProps, Lozenge, type LozengeProps, Menu, MenuDivider, MenuItem, type MenuItemProps, type MenuProps, MenuSection, type MenuSectionProps, MetricSparklineCard, type MetricSparklineCardProps, type MetricSparklinePoint, MetricText, type MetricTextProps, MiniSparklineChartCard, type MiniSparklineChartCardProps, type MiniSparklinePoint, type MiniSparklineStat, OtpInput, type OtpInputProps, PageHeader, Pagination, PaginationContent, type PaginationContentProps, PaginationEllipsis, type PaginationEllipsisProps, PaginationItem, type PaginationItemProps, PaginationLink, type PaginationLinkProps, PaginationNext, type PaginationNextProps, PaginationPrevious, type PaginationPreviousProps, type PaginationProps, PasswordInput, type PasswordInputProps, Popover, PopoverAnchor, PopoverContent, PopoverTrigger, Progress, ProgressIndicator, type ProgressIndicatorProps, type ProgressProps, ProgressTracker, type ProgressTrackerProps, type ProgressTrackerStep, RadioGroup, RadioGroupItem, type RadioGroupItemProps, type RankedBarItem, RankedBarListTemplate, type RankedBarListTemplateProps, type RegisterResult, type ResponsiveCols, ScrollArea, ScrollBar, SectionMessage, SectionMessageActions, SectionMessageContent, type SectionMessageProps, SectionMessageTitle, type SectionMessageVariant, Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, type SelectTriggerSize, SelectValue, Separator, Shimmer, Show, type ShowProps, SideNav, SideNavFooter, SideNavHeader, SideNavItem, type SideNavItemProps, type SideNavProps, SideNavSection, Slider, type SliderProps, Spinner, type SpinnerProps, SplitButton, SplitButtonItem, type SplitButtonItemProps, type SplitButtonProps, Spotlight, SpotlightCard, type SpotlightCardProps, type SpotlightProps, type SpotlightStep, Stack, type StackProps, StatCardSkeleton, StatusBadge, type StatusBadgeProps, Switch, type SwitchProps, TableRowSkeleton, Tabs, TabsContent, TabsList, TabsTrigger, Tag, TagGroup, type TagGroupProps, type TagProps, Text, type TextProps, Textarea, TimePicker, type TimePickerProps, Toaster, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, type UseBreakpointReturn, type UseFlagGroupReturn, type UseFormReturn, type UseSpotlightReturn, type ValidatorRule, VisuallyHidden, type VisuallyHiddenProps, cn, useBreakpoint, useFlagGroup, useForm, useSpotlight };
+interface FilterChipOption {
+    value: string;
+    label: string;
+    /** Optional leading glyph — a flag, a brand mark, a status dot. */
+    icon?: ReactNode;
+    /** Secondary text to the right, e.g. a matching count. */
+    hint?: string;
+}
+/**
+ * Wraps a row of filter chips so only one popover is open at a time — and,
+ * crucially, so switching between two chips does not make the second one flash.
+ *
+ * The flash comes from every chip sharing one `openChip` value while Radix
+ * reports the two halves of the switch as separate events: the chip being
+ * *opened* fires `onOpenChange(true)` and the chip being *dismissed* fires
+ * `onOpenChange(false)`. A naive `setOpenChip(open ? key : null)` lets whichever
+ * event lands second win, so when the dismissal lands second it wipes out the
+ * chip that just opened — it mounts, paints, and unmounts.
+ *
+ * The fix is that a close only counts if the chip closing is still the one on
+ * screen. A stale dismissal from the chip the user just left is then a no-op,
+ * whatever order the events arrive in. This lives here rather than in each
+ * toolbar because it is invisible until it is wrong, and it was wrong in every
+ * toolbar that hand-rolled it.
+ */
+declare function FilterChipGroup({ children, className, }: {
+    children: ReactNode;
+    className?: string;
+}): React$1.JSX.Element;
+/**
+ * Open state for one chip. Inside a {@link FilterChipGroup} the group owns it
+ * so opening this chip closes its siblings; outside one, the chip keeps its own
+ * state, so a lone chip works with no wrapper.
+ *
+ * Every chip below calls this rather than taking `open` / `onOpenChange` props,
+ * which is what stops a call site from reintroducing the flicker by wiring the
+ * state up itself. A chip that genuinely needs outside control can still pass
+ * `open` / `onOpenChange` — a mounted-but-hidden twin of a chip, say — and
+ * those win.
+ */
+declare function useFilterChipState(key: string, controlled?: {
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+}): {
+    open: boolean;
+    onOpenChange: (open: boolean) => void;
+    /** Spread onto the chip's `PopoverContent`. See below. */
+    onCloseAutoFocus: (event: Event) => void;
+};
+/** The `open` / `onOpenChange` pair every chip accepts for outside control. */
+interface FilterChipControl {
+    open?: boolean;
+    onOpenChange?: (open: boolean) => void;
+}
+/**
+ * Every filter chip is built from three pieces: this visual shell (the dashed
+ * pill), a label trigger that opens the popover, and — only once the filter has
+ * a value — a separate clear button to its left.
+ *
+ * The clear button and the trigger are two independent `<button>`s side by side
+ * rather than one button whose leading icon doubles as a clear action: clicking
+ * × must clear *without* opening the popover, and a real `<button>` cannot nest
+ * inside another. Keeping them siblings means stopping the clear click from
+ * also opening the popover needs no `stopPropagation` gymnastics — they are
+ * simply two separate click targets.
+ *
+ * Inactive it reads as an "add a filter" affordance: a dashed outline in the
+ * muted border colour. Active it flips to a solid primary ring with a tinted
+ * fill, so an applied filter is unmistakable at a glance rather than a subtle
+ * recolour of the same dashed outline.
+ */
+declare function FilterChipShell({ active, children, className, }: {
+    active: boolean;
+    children: ReactNode;
+    className?: string;
+}): React$1.JSX.Element;
+/**
+ * Leading × segment, rendered only when the filter is active.
+ *
+ * A `Button` rather than an `IconButton` so the `h-auto` / `min-h-0` height
+ * override behaves the same way the label trigger's already does: IconButton
+ * sizes with Tailwind's `size-*` utility, which a plain `h-auto` does not
+ * reliably beat the way it beats Button's `h-9`.
+ */
+declare function FilterChipClearButton({ label, onClick, }: {
+    label: string;
+    onClick: () => void;
+}): React$1.JSX.Element;
+/**
+ * Trailing label segment — the actual `PopoverTrigger` target.
+ *
+ * A leading plus shows only while inactive, since once active the clear button
+ * to its left already carries a leading icon. A trailing dot then marks
+ * "active"; `count` replaces it with a number when *how many* values are
+ * applied is worth saying.
+ *
+ * Must forward its ref and spread the rest of its props onto the underlying
+ * Button: `PopoverTrigger asChild` clones its single child to inject
+ * onClick/ref/aria-*, and a component that swallows those renders a chip that
+ * looks right and does nothing when clicked.
+ */
+declare const FilterChipLabelTrigger: React$1.ForwardRefExoticComponent<{
+    label: string;
+    active: boolean;
+    /** Show this number instead of the plain active dot. */
+    count?: number;
+} & Omit<Omit<ButtonProps & React$1.RefAttributes<HTMLButtonElement>, "ref">, "children"> & React$1.RefAttributes<HTMLButtonElement>>;
+/**
+ * Apply / Clear footer shared by every panel, so the two buttons sit in the
+ * same place and read the same wherever a chip's editor puts them.
+ *
+ * Both buttons **commit and close**. Clear is not "untick everything and let me
+ * carry on" — that reading leaves the panel open over a filter that is still
+ * applied, so the chip still reads "Type 1" while the list in front of you
+ * shows nothing ticked, and closing the panel silently keeps the old filter.
+ * Clear is the same act as the chip's own little x, reached from inside the
+ * panel: it drops the filter and gets out of the way.
+ */
+declare function FilterChipActions({ onClear, onApply, clearDisabled, applyDisabled, }: {
+    onClear: () => void;
+    onApply: () => void;
+    clearDisabled?: boolean;
+    applyDisabled?: boolean;
+}): React$1.JSX.Element;
+/**
+ * The full chip — shell, clear button, trigger and popover — with the editor
+ * supplied as `children`. Build a bespoke chip on this rather than reassembling
+ * the pieces, so a one-off filter still opens, closes and clears like the rest.
+ */
+declare function FilterChip({ chipKey, label, active, count, onClear, children, align, contentClassName, open: controlledOpen, onOpenChange: controlledOnOpenChange, onOpen, }: {
+    /** Identity within a {@link FilterChipGroup}. Must be unique in the row. */
+    chipKey: string;
+    label: string;
+    active: boolean;
+    count?: number;
+    /** Omit to hide the × segment — for a chip that cannot be emptied. */
+    onClear?: () => void;
+    children: ReactNode;
+    align?: "start" | "center" | "end";
+    contentClassName?: string;
+    /** Fires when the popover opens — the hook for seeding a draft from the
+     *  applied value, so an abandoned edit never leaks into the next open. */
+    onOpen?: () => void;
+} & FilterChipControl): React$1.JSX.Element;
+interface SelectFilterChipProps extends FilterChipControl {
+    /** Identity within a group. Defaults to `label`. */
+    chipKey?: string;
+    label: string;
+    options: FilterChipOption[];
+    selected: string[];
+    onChange: (next: string[]) => void;
+    /** Show a search box above the list once there are this many options. Default 8. */
+    searchThreshold?: number;
+    /** Show the applied count on the chip instead of the plain active dot. */
+    showCount?: boolean;
+    /**
+     * Adds an "Invert filter" tick below the list, turning the chosen set into an
+     * exclusion. Pass both to enable it; omit for a plain include-only chip.
+     *
+     * It is staged with the options and applied with them, because inverting
+     * without changing the set is still a change to what the table shows, and
+     * committing it on the tick would make this one control in the panel behave
+     * differently from the rest.
+     */
+    invert?: boolean;
+    onInvertChange?: (next: boolean) => void;
+    /** Label for the invert tick. Default "Invert filter". */
+    invertLabel?: string;
+    /** Empty-list line, for options that arrive from a request. */
+    emptyText?: string;
+    align?: "start" | "center" | "end";
+}
+/**
+ * The workhorse chip: a checkbox list staged behind Apply, so ticking four
+ * boxes is one query rather than four. Escaping or clicking away discards the
+ * draft — the applied value only changes on Apply or Clear.
+ */
+declare function SelectFilterChip({ chipKey, label, options, selected, onChange, searchThreshold, showCount, invert, onInvertChange, invertLabel, emptyText, align, open, onOpenChange, }: SelectFilterChipProps): React$1.JSX.Element;
+interface SingleSelectFilterChipProps extends FilterChipControl {
+    chipKey?: string;
+    label: string;
+    options: FilterChipOption[];
+    value: string;
+    onChange: (next: string) => void;
+    align?: "start" | "center" | "end";
+    /** Show the chosen option's label on the chip instead of the field name. */
+    showValueInLabel?: boolean;
+}
+/**
+ * One-of-many. Picking applies immediately — there is nothing to stage when a
+ * choice replaces rather than accumulates, and an Apply button for a single
+ * click is a step that only costs the user time.
+ */
+declare function SingleSelectFilterChip({ chipKey, label, options, value, onChange, align, showValueInLabel, open, onOpenChange, }: SingleSelectFilterChipProps): React$1.JSX.Element;
+interface DateRangeValue {
+    /** `yyyy-mm-dd`, or "" for unset. */
+    from: string;
+    to: string;
+}
+/**
+ * "Last N weeks / days / hours / minutes", counted back from now.
+ *
+ * A duration rather than a pair of dates, because that is what it is: "last 2
+ * days" means two days before *now*, and resolving it to fixed timestamps when
+ * the user picks it quietly freezes it at the moment of the click. The chip
+ * reports the duration; the caller resolves it at request time with
+ * {@link relativeRangeToMillis}.
+ *
+ * Every field is a string because each is a text input, and "" is a field the
+ * user has not filled in — distinct from "0".
+ */
+interface RelativeRangeValue {
+    weeks: string;
+    days: string;
+    hours: string;
+    minutes: string;
+}
+declare const EMPTY_RELATIVE_RANGE: RelativeRangeValue;
+/** Whether a relative range names any span at all. */
+declare function hasRelativeRange(value: RelativeRangeValue | undefined): boolean;
+/**
+ * Resolves a relative range to absolute epoch millis, evaluated at call time.
+ *
+ * Deliberately not memoised and never computed during render: "last 2 days"
+ * means two days before now, and now moves. Call it in the handler that builds
+ * the request.
+ */
+declare function relativeRangeToMillis(value: RelativeRangeValue): {
+    startTime: number;
+    endTime: number;
+} | null;
+interface DateRangeFilterChipProps extends FilterChipControl {
+    chipKey?: string;
+    label?: string;
+    value: DateRangeValue;
+    onChange: (next: DateRangeValue) => void;
+    /**
+     * Turns on the "Last…" tab beside the date range. Omit both and the chip is
+     * absolute-only.
+     *
+     * The two modes are exclusive by construction: applying one clears the other,
+     * because a range that is both "last 7 days" and "1–31 Jan" cannot be
+     * honoured and nothing downstream should have to guess which half won.
+     */
+    relativeValue?: RelativeRangeValue;
+    onRelativeChange?: (next: RelativeRangeValue) => void;
+    /** Earliest / latest selectable date, `YYYY-MM-DD`. */
+    min?: string;
+    max?: string;
+    /** Shown under the fields when a picked date falls outside `min`/`max`. */
+    outOfRangeHint?: string;
+    align?: "start" | "center" | "end";
+}
+/**
+ * From / To, staged behind Apply. A half-filled range cannot be applied: an
+ * open-ended date filter reads as a bug far more often than it is what someone
+ * meant, and the disabled Apply says so without an error message.
+ */
+declare function DateRangeFilterChip({ chipKey, label, value, onChange, relativeValue, onRelativeChange, min, max, outOfRangeHint, align, open, onOpenChange, }: DateRangeFilterChipProps): React$1.JSX.Element;
+interface MonthRange {
+    /** Inclusive "YYYY-MM" bounds. Both ends compare as plain strings. */
+    start: string;
+    end: string;
+}
+/**
+ * Month RANGE chip: pick a start month and an end month on the same year grid.
+ *
+ * Distinct from MonthFilterChip below, which ticks an arbitrary SET of months.
+ * A range is the right shape when the value is going into a request rather than
+ * being matched client-side — a start/end pair is what a "from month, to month"
+ * endpoint takes, and a set of months is not expressible in one.
+ *
+ * The value is never empty: a caller sending it to an API always has some window
+ * in force, so "Reset" restores `defaultRange` rather than clearing to nothing,
+ * and the chip renders the range it is on at all times. That is deliberate — a
+ * filter that silently governs a request should say what it is set to, not read
+ * as unset while quietly bounding every row on screen.
+ *
+ * Clicking cycles the way a date-range picker does: the first click starts a new
+ * range, the second closes it, and a click before the open start moves the start
+ * instead of making a backwards range.
+ */
+declare function MonthRangeFilterChip({ chipKey, label, bounds, value, defaultRange, monthsWithData, onChange, }: {
+    chipKey?: string;
+    label?: string;
+    /** The outer limits the grid lets the merchant navigate and pick within. */
+    bounds: MonthRange;
+    /** The range currently in force. Always set — see the note above. */
+    value: MonthRange;
+    /** What Reset goes back to, typically the window the page opens on. */
+    defaultRange: MonthRange;
+    /** Months with a row behind them, as "YYYY-MM". Drives the grid's dots. */
+    monthsWithData: Set<string>;
+    onChange: (next: MonthRange) => void;
+}): React$1.JSX.Element;
+interface TextFilterChipProps extends FilterChipControl {
+    chipKey?: string;
+    label?: string;
+    value: string;
+    onChange: (next: string) => void;
+    /** Field label inside the panel. Defaults to `<label> contains`. */
+    fieldLabel?: string;
+    placeholder?: string;
+    /** One line under the field — what the match actually does, typically. */
+    hint?: string;
+    /** Soft keyboard hint on touch devices. */
+    inputMode?: "text" | "email" | "tel" | "numeric" | "url" | "search";
+    align?: "start" | "center" | "end";
+}
+/**
+ * One free-text value, staged behind Apply.
+ *
+ * Deliberately not a live-filtering input: this chip sits in a toolbar whose
+ * other chips all commit on Apply, and a field that filtered as you typed would
+ * be the one control on the row that behaves differently. Enter applies, so it
+ * still costs one keystroke.
+ *
+ * The applied value is trimmed — a trailing space pasted in with an address is
+ * not something the user meant to search for.
+ */
+declare function TextFilterChip({ chipKey, label, value, onChange, fieldLabel, placeholder, hint, inputMode, align, open, onOpenChange, }: TextFilterChipProps): React$1.JSX.Element;
+interface NumberRangeValue {
+    min: string;
+    max: string;
+}
+interface NumberRangeFilterChipProps extends FilterChipControl {
+    chipKey?: string;
+    label?: string;
+    value: NumberRangeValue;
+    onChange: (next: NumberRangeValue) => void;
+    /** Prefix inside each field — a currency symbol, typically. */
+    prefix?: string;
+    /** One line under the fields — what the bounds mean, or which field they match. */
+    hint?: string;
+    align?: "start" | "center" | "end";
+}
+/**
+ * Min / Max, staged behind Apply. Unlike a date range, one end alone is a
+ * perfectly ordinary request ("over ₹10,000"), so a half-filled range applies.
+ */
+declare function NumberRangeFilterChip({ chipKey, label, value, onChange, prefix, hint, align, open, onOpenChange, }: NumberRangeFilterChipProps): React$1.JSX.Element;
+interface AddFilterDefinition {
+    key: string;
+    label: string;
+    /**
+     * The values this filter accepts, so the search can match them directly.
+     * Omit for a filter whose values are not a list — a date or amount range —
+     * and it will still be findable by name.
+     */
+    options?: FilterChipOption[];
+    /** How many values are currently applied. Drives the count beside the name. */
+    activeCount?: number;
+}
+interface AddFilterMenuProps extends FilterChipControl {
+    chipKey?: string;
+    /** Every filter this toolbar can offer, including ones already shown. */
+    filters: AddFilterDefinition[];
+    /** Keys already on screen as their own chip. */
+    visibleKeys?: string[];
+    /** Reveal a filter as its own chip. */
+    onAddFilter: (key: string) => void;
+    /**
+     * Take a filter back out of the toolbar. Omit and a shown filter is simply
+     * marked as shown; supply it and the row becomes a toggle.
+     *
+     * Removing must also clear whatever that filter had selected — a filter that
+     * is still narrowing the table from somewhere the user cannot see it is worse
+     * than one they have to scroll to.
+     */
+    onRemoveFilter?: (key: string) => void;
+    /** Apply a value picked straight out of the search results. */
+    onSelectValue?: (filterKey: string, value: string) => void;
+    label?: string;
+    align?: "start" | "center" | "end";
+}
+/**
+ * "Filter" — a searchable way to reach every filter a table has, instead of a
+ * second-class drawer of leftovers.
+ *
+ * Two things it does that a nested accordion of checkbox groups does not.
+ * Typing searches filter **names and their values at once**, so someone who
+ * knows they want "USD" finds it without first knowing it lives under
+ * Currency. And choosing anything here promotes that filter to a real chip in
+ * the toolbar, so there is exactly one place a filter can be — beside its
+ * peers — rather than some being chips and some being hidden rows.
+ *
+ * That also means the toolbar scales: a table with twenty filters shows the
+ * three or four in use and keeps the rest one keystroke away.
+ */
+declare function AddFilterMenu({ chipKey, filters, visibleKeys, onAddFilter, onRemoveFilter, onSelectValue, label, align, open: controlledOpen, onOpenChange: controlledOnOpenChange, }: AddFilterMenuProps): React$1.JSX.Element;
+/**
+ * The row a table's filters live in: search at the left, chips beside it,
+ * actions pinned right.
+ *
+ * Search and chips share one wrapping flex, so a chip that does not fit wraps
+ * to the next line starting **under the search box** — a toolbar with three
+ * filters is one line, one with eight grows a second, and nothing is ever
+ * scrolled out of sight. Giving each group its own box instead would wrap the
+ * chips inside their own column and leave a ragged left edge.
+ *
+ * Wraps its chips in a {@link FilterChipGroup}, so a toolbar built with it gets
+ * the one-open-at-a-time behaviour without opting in.
+ */
+declare function FilterToolbar({ search, chips, actions, className, }: {
+    search?: ReactNode;
+    chips?: ReactNode;
+    actions?: ReactNode;
+    className?: string;
+}): React$1.JSX.Element;
+/**
+ * The pill action button that sits at the right of a table toolbar — Refresh,
+ * Columns, Export, Report.
+ *
+ * It exists because `Button size="sm"` is `h-9`, which towers over the chips
+ * beside it; every toolbar that wanted a level row was overriding the same four
+ * classes by hand. Having it here means a toolbar's actions match its chips
+ * without each one rediscovering that.
+ */
+declare function ToolbarButton({ className, ...props }: ComponentPropsWithoutRef<typeof Button>): React$1.JSX.Element;
+
+type DatePickMode = "single" | "range";
+/** What the calendar hands back while the user is picking. */
+type CalendarRange = {
+    from: Date | undefined;
+    to?: Date | undefined;
+};
+/**
+ * A named span offered above the calendar — "Today", "Last 30 Days".
+ *
+ * `resolve` runs when the preset is chosen, not when it is declared, so "last
+ * 7 days" is counted from the day the user picks it rather than from whenever
+ * the options array happened to be built.
+ */
+interface CalendarDatePreset {
+    value: string;
+    label: string;
+    resolve: () => {
+        from: string;
+        to: string;
+    };
+}
+/**
+ * The applied value: a span, plus which preset produced it.
+ *
+ * `preset` is `""` when the dates were picked by hand, and `to` equals `from`
+ * for a single day — so a caller that only wants a window can read `from`/`to`
+ * and ignore the rest.
+ */
+interface CalendarDateValue {
+    preset: string;
+    /** YYYY-MM-DD */
+    from: string;
+    /** YYYY-MM-DD */
+    to: string;
+}
+interface CalendarDateFilterChipProps extends FilterChipControl {
+    chipKey?: string;
+    label?: string;
+    value?: CalendarDateValue;
+    onChange: (next: CalendarDateValue | undefined) => void;
+    /** Named spans above the calendar. Omit for a calendar-only chip. */
+    presets?: readonly CalendarDatePreset[];
+    /** Offer "Single date" alongside "Date range". Default true. */
+    allowSingle?: boolean;
+    /** Months shown side by side in range mode. Default 2. */
+    numberOfMonths?: number;
+    align?: "start" | "center" | "end";
+}
+/**
+ * A date filter over a real calendar, with optional named spans.
+ *
+ * Distinct from {@link DateRangeFilterChip}, which is two typed date fields.
+ * This one is for a filter people reach for by *looking* — "the week of the
+ * 14th", "that Tuesday" — where a pair of text inputs makes you count days in
+ * your head. Both exist because both are right somewhere, and picking between
+ * them is a call about the filter, not about the toolbar.
+ *
+ * Five features in pg-dashboard-v2 had built this chip separately, each with
+ * its own preset list and its own value shape. They are the same control.
+ */
+declare function CalendarDateFilterChip({ chipKey, label, value, onChange, presets, allowSingle, numberOfMonths, align, open, onOpenChange, }: CalendarDateFilterChipProps): React$1.JSX.Element;
+
+/**
+ * The app-wide date and time format.
+ *
+ * Every timestamp a PayGlocal dashboard shows a user goes through here, so a
+ * transaction row, a settlement detail page, an audit log line and a chart
+ * tooltip all read the same: `27 Jul '26, 09:49 AM`.
+ *
+ * Nothing here goes through `toLocaleDateString` / `toLocaleTimeString`. That
+ * is deliberate: Intl output varies with the machine's locale, so the same
+ * record would read differently for an operator in Bengaluru and a merchant in
+ * Frankfurt, and a screenshot in a support ticket would not match what the
+ * agent sees. These build the string from fixed tables instead.
+ *
+ * Times are rendered in the **viewer's own timezone**, which is what every
+ * `Date` getter below returns. That is the right default for an operations
+ * console — "did this settle before close of business *here*" is the question
+ * being asked — but it does mean two people in different zones see different
+ * clock times for one event, so anywhere that matters should label the zone.
+ */
+declare const MONTHS_SHORT: readonly ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+declare const DAYS_SHORT: readonly ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+/** What an absent or unparseable value renders as, everywhere. */
+declare const EMPTY_DATE = "\u2014";
+/**
+ * Parses the shapes PayGlocal APIs actually send, in the order they are most
+ * likely to appear:
+ *
+ * - `DD/MM/YYYY HH:mm:ss` — the transactions search response's
+ *   `formattedCreationDateTime`. Tried **first**, because `new Date()` reads
+ *   `03/07/2026` as *March 7th* under US parsing rules, silently swapping the
+ *   day and month for the first twelve days of every month.
+ * - epoch milliseconds, as a number **or a string** — several endpoints send
+ *   `"1771329858260"`. The string form needs `Number()` first: the `Date`
+ *   constructor reads a string as a date *format*, not a count of
+ *   milliseconds, so `new Date("1771329858260")` is an Invalid Date.
+ * - ISO 8601 — `settlementDate`, and most newer endpoints.
+ */
+declare function parseApiDate(value: string | number | Date | null | undefined): Date | null;
+/** `09:49 AM` — 12-hour, zero-padded, uppercase meridiem. */
+declare function formatTime(date: Date): string;
+/** `27 Jul '26` — the date half, on its own. */
+declare function formatDateOnly(date: Date): string;
+/** `27 Jul '26, 09:49 AM` — the canonical form. */
+declare function formatDateTime(date: Date): string;
+/**
+ * Any API value → `27 Jul '26, 09:49 AM`.
+ *
+ * This is the one to reach for in a column renderer or a detail field: it takes
+ * whatever shape the endpoint sends, and returns the em dash rather than
+ * "Invalid Date" when there is nothing to show.
+ *
+ * `fallback` is what an absent or unparseable value renders as. It defaults to
+ * the em dash; pass `""` where the timestamp sits inside a sentence that should
+ * simply omit it rather than show a placeholder.
+ */
+declare function formatTimestamp(value: string | number | Date | null | undefined, fallback?: string): string;
+/** Any API value → `27 Jul '26`, with no time of day. */
+declare function formatDateStamp(value: string | number | Date | null | undefined, fallback?: string): string;
+/** Any API value → `09:49 AM`, with no date. */
+declare function formatTimeStamp(value: string | number | Date | null | undefined, fallback?: string): string;
+/**
+ * `Mon, 27 Jul` — weekday and date, no year. For a date close enough to the
+ * present that naming the day of the week reads better than a bare calendar
+ * date, such as a "next settlement" line.
+ */
+declare function formatWeekdayDate(value: string | number | Date | null | undefined, fallback?: string): string;
+/** `Jan 2026` — a month key (`YYYY-MM`) as a label. */
+declare function formatMonthLabel(monthKey: string): string;
+
+export { Accordion, AccordionContent, AccordionItem, AccordionTrigger, type AddFilterDefinition, AddFilterMenu, type AddFilterMenuProps, Alert, AlertDescription, type AlertProps, AlertTitle, type AttentionListItem, AttentionListTemplate, type AttentionListTemplateProps, Avatar, AvatarFallback, AvatarGroup, type AvatarGroupItem, type AvatarGroupProps, AvatarImage, AvatarTag, type AvatarTagProps, type AvatarTagSize, Badge, type BadgeProps, type BadgeTrailIcon, type BadgeVariant, Banner, type BannerProps, Blanket, type BlanketProps, Box, type BoxProps, Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, type Breakpoint, Button, ButtonGroup, type ButtonGroupProps, type ButtonProps, COUNTRIES, Calendar, CalendarDateFilterChip, type CalendarDateFilterChipProps, type CalendarDatePreset, type CalendarDateValue, CalendarDayButton, type CalendarProps, type CalendarRange, Callout, CalloutIcon, type CalloutProps, CalloutText, CalloutTitle, type CalloutVariant, Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, CategoryBarChartTemplate, type CategoryBarChartTemplateProps, type CategoryBarPoint, type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartSkeleton, ChartStyle, ChartTooltip, ChartTooltipContent, Checkbox, type CheckboxProps, CheckboxSelect, type CheckboxSelectOption, type CheckboxSelectProps, Code, CodeBlock, type CodeBlockProps, type CodeProps, type Column, ColumnManager, type ColumnManagerProps, type ColumnPreferences, Command, CommandEmpty, type CommandEmptyProps, CommandGroup, type CommandGroupProps, CommandInput, type CommandInputProps, CommandItem, type CommandItemProps, CommandList, type CommandListProps, type CommandProps, CommandSeparator, type CommandSeparatorProps, CommandShortcut, type CommandShortcutProps, CopyableCell, type CopyableCellProps, type Country, CountrySelect, type CountrySelectProps, CurrencyAmountInput, DAYS_SHORT, type DashboardAreaChartPoint, DashboardAreaChartTemplate, type DashboardAreaChartTemplateProps, DataCardList, type DataCardListProps, DataTable, DataTableCard, type DataTableCardProps, type DataTableDensity, type DataTableExpandable, type DataTableFooterSummary, type DataTableHeaderStyle, type DataTablePagination, type DataTableSortState, type DataTableSorting, type DatePickMode, DatePicker, DateRangeFilterChip, type DateRangeFilterChipProps, type DateRangeValue, Dialog, DialogClose, DialogContent, DialogDescription, DialogPortal, DialogTitle, DialogTrigger, Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, EMPTY_DATE, EMPTY_RELATIVE_RANGE, EmptyState, Field, type FieldConfig, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSeparator, FieldSet, FieldTitle, type FieldsConfig, FilterChip, FilterChipActions, FilterChipClearButton, type FilterChipControl, FilterChipGroup, FilterChipLabelTrigger, type FilterChipOption, FilterChipShell, FilterToolbar, Flag, type FlagAction, FlagGroup, type FlagGroupPosition, type FlagGroupProps, type FlagProps, type FlagVariant, Flex, type FlexAlign, type FlexDirection, type FlexJustify, type FlexProps, type FlexWrap, Form, FormControl, FormDescription, FormError, type FormErrors, FormField, type FormFieldProps, FormItem, FormLabel, type FormProps, type FormValues, Grid, type GridCols, type GridFlow, type GridProps, GroupedBarChartTemplate, type GroupedBarChartTemplateProps, type GroupedBarSeries, Heading, type HeadingProps, Hide, type HideProps, IconButton, type IconButtonProps, Inline, InlineDialog, InlineDialogContent, type InlineDialogContentProps, type InlineDialogProps, InlineDialogTrigger, InlineEdit, type InlineEditProps, type InlineProps, Input, InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText, InputGroupTextarea, Label, type LayoutSpacing, Link, type LinkProps, Lozenge, type LozengeProps, MONTHS_SHORT, type ManagedColumn, Menu, MenuDivider, MenuItem, type MenuItemProps, type MenuProps, MenuSection, type MenuSectionProps, MetricSparklineCard, type MetricSparklineCardProps, type MetricSparklinePoint, MetricText, type MetricTextProps, MiniSparklineChartCard, type MiniSparklineChartCardProps, type MiniSparklinePoint, type MiniSparklineStat, type MonthRange, MonthRangeFilterChip, NumberRangeFilterChip, type NumberRangeFilterChipProps, type NumberRangeValue, OtpInput, type OtpInputProps, PageHeader, Pagination, PaginationContent, type PaginationContentProps, PaginationEllipsis, type PaginationEllipsisProps, PaginationItem, type PaginationItemProps, PaginationLink, type PaginationLinkProps, PaginationNext, type PaginationNextProps, PaginationPrevious, type PaginationPreviousProps, type PaginationProps, PasswordInput, type PasswordInputProps, Popover, PopoverAnchor, PopoverContent, PopoverTrigger, Progress, ProgressIndicator, type ProgressIndicatorProps, type ProgressProps, ProgressTracker, type ProgressTrackerProps, type ProgressTrackerStep, RadioGroup, RadioGroupItem, type RadioGroupItemProps, type RankedBarItem, RankedBarListTemplate, type RankedBarListTemplateProps, type RegisterResult, type RelativeRangeValue, type ResponsiveCols, RotatingSearchInput, type RotatingSearchInputProps, ScrollArea, ScrollBar, SectionMessage, SectionMessageActions, SectionMessageContent, type SectionMessageProps, SectionMessageTitle, type SectionMessageVariant, type SegmentedTabOption, SegmentedTabs, Select, SelectContent, SelectFilterChip, type SelectFilterChipProps, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, type SelectTriggerSize, SelectValue, Separator, Shimmer, Show, type ShowProps, SideNav, SideNavFooter, SideNavHeader, SideNavItem, type SideNavItemProps, type SideNavProps, SideNavSection, SingleSelectFilterChip, type SingleSelectFilterChipProps, Slider, type SliderProps, type SortOrder, Spinner, type SpinnerProps, SplitButton, SplitButtonItem, type SplitButtonItemProps, type SplitButtonProps, Spotlight, SpotlightCard, type SpotlightCardProps, type SpotlightProps, type SpotlightStep, Stack, type StackProps, StatCardSkeleton, StatusBadge, type StatusBadgeProps, Switch, type SwitchProps, TableRowSkeleton, TableToolbarActions, Tabs, TabsContent, TabsList, TabsTrigger, Tag, TagGroup, type TagGroupProps, type TagProps, Text, TextFilterChip, type TextFilterChipProps, type TextProps, Textarea, TimePicker, type TimePickerProps, Toaster, ToolbarButton, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, type UnderlineTab, UnderlineTabs, type UseBreakpointReturn, type UseColumnPreferencesOptions, type UseColumnPreferencesResult, type UseFlagGroupReturn, type UseFormReturn, type UseSpotlightReturn, type ValidatorRule, VisuallyHidden, type VisuallyHiddenProps, applyColumnPreferences, cn, formatDateOnly, formatDateStamp, formatDateTime, formatMonthLabel, formatTime, formatTimeStamp, formatTimestamp, formatWeekdayDate, frozenColumn, hasRelativeRange, parseApiDate, relativeRangeToMillis, useBreakpoint, useColumnPreferences, useFilterChipState, useFlagGroup, useForm, useSpotlight };

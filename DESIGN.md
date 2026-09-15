@@ -477,19 +477,213 @@ When you need mode-specific overrides use the `dark:` prefix:
 const columns: Column<Row>[] = [
   { key: "name", header: "Name", render: (r) => r.name },
   { key: "status", header: "Status", render: (r) => <StatusBadge status={r.status} /> },
-  { key: "amount", header: "Amount", render: (r) => <MetricText>{r.amount}</MetricText> },
+  { key: "amount", header: "Amount", align: "right", render: (r) => r.amount },
 ];
 
 <DataTable
   data={rows}
   columns={columns}
-  pageSize={20}
-  density="comfortable"    // "compact" | "comfortable" | "spacious"
-  headerStyle="bordered"   // "plain" | "bordered" | "filled"
+  rowKey={(r) => r.id}
+  density="comfortable"    // "default" | "comfortable" | "compact"
+  headerStyle="surface"    // "surface" | "minimal"
   isLoading={loading}
-  emptyState={<EmptyState title="No transactions" />}
+  emptyTitle="No transactions"
+  emptyDescription="Nothing matches the current filters."
 />
 ```
+
+### The table surface, and its narrow-viewport twin
+
+`DataTable` is the grid. **`DataTableCard` is everything around it** — the
+bordered card, the title, the tabs, the toolbar, the footer — and it exists
+because that chrome is where tables actually drift: one feature puts its filters
+above the card, another inside it; one pads the toolbar `py-3` and the next
+`py-2.5`. None of that is a decision a feature should be making.
+
+Below the table's breakpoint, pair it with **`DataCardList`** rather than hiding
+columns. A card list is not a table with its columns hidden — it picks a handful
+of fields, gives them a hierarchy and drops the rest — which is why it is its
+own component and not a mode of the card.
+
+```tsx
+<DataTableCard className="hidden lg:block" … pagination={pagination} />
+<DataCardList  className="lg:hidden"      … pagination={pagination} />
+```
+
+Both mount and CSS shows one. **Never a breakpoint hook**: it has to guess on
+the server, so one cohort sees the wrong layout on first paint, and a resize
+across the breakpoint unmounts the visible half, taking scroll position and any
+open row with it. Hand both the *same* `pagination` object and the two surfaces
+cannot disagree about which page they are on.
+
+`errorState` and `emptyState` are separate slots on both. An error must not keep
+the column headers: headers over nothing read as "we fetched and found none",
+which is the one thing a failed request has not established.
+
+### Pagination — one prop, every mode
+
+Which member of `pagination` a table uses is decided by **the endpoint**, not by
+taste. Never hand-roll a pager beside the table; there is exactly one footer.
+
+| Response shape | Mode | Footer shows |
+|---|---|---|
+| All rows already in `data` | `client` | Full numbered strip; table slices |
+| Carries a row **total** | `page` | `Showing 1–15 of 141 results`, numbered strip with ellipses |
+| Carries a **cursor**, no total | `cursor` | `Showing 1–15` — no total, no page count |
+| — | `none` | No footer |
+
+```tsx
+// Has a total → every page is one click away.
+pagination={{ mode: "page", page, pageSize: 15, total: res.totalCount, onPageChange: setPage }}
+
+// No total → number only the pages a cursor can step to: previous, current,
+// and (when hasNext) next. On page 2 that reads 1 · 2 · 3, so the next page is
+// a visible number rather than a bare arrow. Never invent a total.
+pagination={{
+  mode: "cursor",
+  page,
+  pageSize: 15,
+  hasNext: !!res.nextCursor,
+  onNext: () => goForward(res.nextCursor),
+  onPrev: () => goBack(),
+}}
+```
+
+Rows per page is the same prop, not a bespoke footer:
+
+```tsx
+pagination={{ ...pager, pageSizeOptions: [15, 25, 50, 100], onPageSizeChange: setPageSize }}
+```
+
+### Sorting
+
+Modelled on antd's `Table`. A column opts in with `sorter`; state is
+`{ columnKey, order }` with `"ascend"` / `"descend"`. **Client and server
+sorting are told apart by the column**, so one grid can mix them.
+
+```tsx
+// The table sorts these rows itself, before paging.
+{ key: "name", header: "Name", sorter: (a, b) => a.name.localeCompare(b.name), render: … }
+
+// `true` = the caller orders the rows (a server query); the table only reports
+// the click. Money and dates almost always want "largest first" first.
+{ key: "amount", header: "Amount", sorter: true, sortDirections: ["descend", "ascend"], render: … }
+
+<DataTable … sorting={{ value: sort, onChange: setSort }} />   // omit for uncontrolled
+```
+
+A third activation always returns to unsorted, so the order the data arrived in
+stays reachable.
+
+### Column manager
+
+One column editor for every grid — drag to reorder, tick to show or hide,
+locked columns with a stated reason, and a reset.
+
+```tsx
+const prefs = useColumnPreferences(DEFAULT_ORDER, { storageKey: "txn-columns" });
+const columns = applyColumnPreferences(allColumns, prefs);   // "action" stays pinned last
+
+<ColumnManager columns={managed} {...prefs.managerProps} fixedKeys={["txn"]} fixedReason="…" />
+```
+
+Never copy this popover into a feature folder. Two copies drift, and they did.
+
+### Filter chips
+
+The table toolbar. Dashed pills that open a staged editor; active pills flip to
+a solid primary ring. `FilterToolbar` lays out search / chips / actions and
+wraps the chips in a `FilterChipGroup`.
+
+```tsx
+<FilterToolbar
+  search={<SearchInput />}
+  chips={
+    <>
+      <DateRangeFilterChip value={date} onChange={setDate} />
+      <SelectFilterChip label="Status" options={STATUS} selected={status} onChange={setStatus} />
+      <NumberRangeFilterChip value={amount} onChange={setAmount} prefix="₹" />
+      <AddFilterMenu filters={defs} visibleKeys={visible} onAddFilter={reveal} onSelectValue={apply} />
+    </>
+  }
+  actions={<Button>Export</Button>}
+/>
+```
+
+**Never hold an `openChip` state in a page.** The group owns it, and that is
+not a tidiness point — it is the fix for a real flicker. Every chip sharing one
+`openChip` value while Radix reports a switch as two separate events means
+`setOpenChip(open ? key : null)` lets whichever event lands second win; when the
+dismissal lands second it wipes out the chip that just opened, so it mounts,
+paints and unmounts. The group makes a close count only if the chip closing is
+still the one on screen.
+
+Reaching a filter that is not on screen is `AddFilterMenu`, not a "More
+filters" drawer of leftovers: typing searches filter **names and values at
+once**, and choosing anything promotes that filter to a real chip, so there is
+exactly one place a filter can be.
+
+Build a bespoke filter on `FilterChip`, never by reassembling `FilterChipShell`
+by hand — the shared piece is what keeps opening, clearing and staging
+identical everywhere.
+
+**There is a chip for every shape, so a feature never writes one.**
+
+| Chip | For |
+| --- | --- |
+| `SelectFilterChip` | multi-select; search past 8 options, count on the pill, optional invert |
+| `SingleSelectFilterChip` | one-of-many; applies on pick, nothing to stage |
+| `DateRangeFilterChip` | two typed date fields, optional "Last N days" tab, optional min/max |
+| `CalendarDateFilterChip` | a real calendar, single or range, optional named presets |
+| `NumberRangeFilterChip` | min / max, optional currency prefix |
+| `TextFilterChip` | one free-text value; Enter applies |
+| `MonthRangeFilterChip` | start / end month on a year grid |
+
+Choose between the two date chips by how people reach for the filter: typed
+fields for a span they already know, a calendar for "that Tuesday" or "the week
+of the 14th", where two text inputs make you count days in your head.
+
+**Both footer buttons commit and close.** Apply commits the draft; Clear drops
+the filter. Clear is not "untick everything and carry on" — that leaves the
+panel open over a filter still in force, so the chip reads `Status 2` above a
+list showing nothing ticked, and closing the panel silently keeps the old
+value. Clear stays live whenever there is anything to drop, including an
+applied value whose draft has just been emptied by hand.
+
+**A relative range is a duration, not a pair of dates.** "Last 2 days" resolved
+when the user picks it is frozen at that moment; `DateRangeFilterChip` reports
+the duration and you call `relativeRangeToMillis` in the handler that builds the
+request, where now is still now. The absolute and relative modes are exclusive —
+applying one clears the other, so a request is never built from both.
+
+pg-dashboard-v2 once carried nine of these chips itself, 1375 lines, assembling
+the same popover and the same staged draft and only borrowing the shell. That
+duplication is exactly what let the two apps drift: none of those chips passed
+`count`, so no filter in that app showed how many options were chosen while
+pg-internal-v2's did, and none wired `onCloseAutoFocus`, so the flicker above
+survived there long after it was fixed everywhere else. Both apps now hold only
+value-shape adapters.
+
+### Dates and times
+
+Every timestamp a user sees goes through the shared formatter, so a table row,
+a detail page and a chart tooltip all read `27 Jul '26, 09:49 AM`.
+
+```tsx
+import { formatTimestamp, formatDateStamp } from "@payglocal_ui/flux-ui";
+
+formatTimestamp(row.createdAt)   // "27 Jul '26, 09:49 AM", or "—"
+formatDateStamp(row.settledOn)   // "27 Jul '26"
+```
+
+It takes every shape PayGlocal endpoints actually send — `DD/MM/YYYY HH:mm:ss`,
+ISO 8601, and epoch millis as a number *or* a string — and returns the em dash
+rather than `Invalid Date` when there is nothing to show.
+
+**Never use `toLocaleDateString` / `toLocaleTimeString` for a displayed
+timestamp.** Intl output varies with the machine's locale, so the same record
+reads differently for an operator in Bengaluru and a merchant in Frankfurt, and
+a screenshot in a support ticket stops matching what the agent sees.
 
 ---
 

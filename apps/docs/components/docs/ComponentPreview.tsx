@@ -168,6 +168,8 @@ import { CalendarPlayground } from "@/components/docs/playgrounds/CalendarPlaygr
 import { CardPlayground } from "@/components/docs/playgrounds/CardPlayground";
 import { ChartPlayground } from "@/components/docs/playgrounds/ChartPlayground";
 import { DataTablePlayground } from "@/components/docs/playgrounds/DataTablePlayground";
+import { ColumnManagerPlayground } from "@/components/docs/playgrounds/ColumnManagerPlayground";
+import { FilterChipsPlayground } from "@/components/docs/playgrounds/FilterChipsPlayground";
 import { DropdownMenuPlayground } from "@/components/docs/playgrounds/DropdownMenuPlayground";
 import { FieldPlayground } from "@/components/docs/playgrounds/FieldPlayground";
 import { InputGroupPlayground } from "@/components/docs/playgrounds/InputGroupPlayground";
@@ -440,6 +442,10 @@ export function ComponentPreview({ slug }: { slug: string }) {
       );
     case "data-table":
       return <DataTablePlayground />;
+    case "column-manager":
+      return <ColumnManagerPlayground />;
+    case "filter-chips":
+      return <FilterChipsPlayground />;
     case "date-picker":
       return (
         <Stack gap="lg" className="mx-auto w-full max-w-xs self-center text-left">

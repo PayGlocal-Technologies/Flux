@@ -162,6 +162,12 @@ export function getComponentNavGroups(): ComponentNavGroup[] {
         { title: "Chart", href: "/docs/components/chart" },
         { title: "Chart templates", href: "/docs/components/chart-templates" },
         { title: "Data table", href: "/docs/components/data-table" },
+        { title: "Data table card", href: "/docs/components/data-table-card" },
+        { title: "Data card list", href: "/docs/components/data-card-list" },
+        { title: "Copyable cell", href: "/docs/components/copyable-cell" },
+        { title: "Rotating search input", href: "/docs/components/rotating-search-input" },
+        { title: "Column manager", href: "/docs/components/column-manager" },
+        { title: "Filter chips", href: "/docs/components/filter-chips" },
       ],
     },
   ];
