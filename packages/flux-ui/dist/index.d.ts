@@ -961,7 +961,25 @@ type DataTableExpandable<T> = {
 type Column<T> = {
     key: string;
     header: ReactNode;
-    /** Table column width, e.g. `48px`, `18%`, `minmax(12rem,1fr)` (fixed layout) */
+    /**
+     * Table column width: `48px`, `18%`, or `minmax(12rem, 1fr)` for a floor
+     * that can still grow into whatever the other columns leave over.
+     *
+     * `minmax(min, max)` is translated rather than passed straight through: this
+     * is a real `<table>`/`<colgroup>`, and `minmax()` is a CSS Grid function
+     * that is not a legal `width` value outside a grid — the browser drops the
+     * whole declaration and the column gets no floor at all. `min` becomes the
+     * `<col>`'s `min-width`, and `max` becomes its `width` unless `max` is `1fr`
+     * (or any other flex unit), in which case no `width` is set and the column
+     * takes its share of whatever `table-layout: fixed` has left over, the same
+     * way a grid track's `1fr` would.
+     *
+     * `overflow-x-auto` on the table's own scroll container is what makes the
+     * floor mean something: once every column's minimum no longer fits, the
+     * table grows past its container and scrolls instead of every column
+     * shrinking under its `min-width` and the header text — deliberately not
+     * truncated, see the `<th>` render below — overlapping the column beside it.
+     */
     width?: string;
     minWidth?: number;
     maxWidth?: number;

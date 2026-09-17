@@ -3786,6 +3786,32 @@ function SortIndicator({ order }) {
     }
   );
 }
+function parseMinMaxWidth(width) {
+  if (!width) return null;
+  const match = /^minmax\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)$/.exec(width.trim());
+  return match ? { min: match[1], max: match[2] } : null;
+}
+function isFlexUnit(value) {
+  return /^[\d.]*fr$/.test(value.trim());
+}
+function colWidthStyle(col) {
+  const parsed = parseMinMaxWidth(col.width);
+  if (!parsed) {
+    return {
+      width: col.width ?? (col.minWidth != null ? `${col.minWidth}px` : void 0),
+      minWidth: col.minWidth,
+      maxWidth: col.maxWidth
+    };
+  }
+  return {
+    width: isFlexUnit(parsed.max) ? void 0 : parsed.max,
+    // An explicit numeric `minWidth`/`maxWidth` alongside a `minmax()` string
+    // is not a combination any caller uses today; the string wins because it
+    // is the more specific of the two.
+    minWidth: parsed.min,
+    maxWidth: isFlexUnit(parsed.max) ? col.maxWidth : void 0
+  };
+}
 function DataTable({
   columns,
   data,
@@ -3932,17 +3958,7 @@ function DataTable({
                 children: [
                   tableLayout === "fixed" && !isEmpty && /* @__PURE__ */ jsxs31("colgroup", { children: [
                     hasExpand ? /* @__PURE__ */ jsx50("col", { style: { width: 40 } }) : null,
-                    columns.map((col) => /* @__PURE__ */ jsx50(
-                      "col",
-                      {
-                        style: {
-                          width: col.width ?? (col.minWidth != null ? `${col.minWidth}px` : void 0),
-                          minWidth: col.minWidth,
-                          maxWidth: col.maxWidth
-                        }
-                      },
-                      col.key
-                    )),
+                    columns.map((col) => /* @__PURE__ */ jsx50("col", { style: colWidthStyle(col) }, col.key)),
                     hasAction ? /* @__PURE__ */ jsx50("col", { style: { width: 0 } }) : null
                   ] }),
                   /* @__PURE__ */ jsx50(

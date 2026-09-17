@@ -177,7 +177,25 @@ export type DataTableExpandable<T> = {
 export type Column<T> = {
   key: string;
   header: ReactNode;
-  /** Table column width, e.g. `48px`, `18%`, `minmax(12rem,1fr)` (fixed layout) */
+  /**
+   * Table column width: `48px`, `18%`, or `minmax(12rem, 1fr)` for a floor
+   * that can still grow into whatever the other columns leave over.
+   *
+   * `minmax(min, max)` is translated rather than passed straight through: this
+   * is a real `<table>`/`<colgroup>`, and `minmax()` is a CSS Grid function
+   * that is not a legal `width` value outside a grid — the browser drops the
+   * whole declaration and the column gets no floor at all. `min` becomes the
+   * `<col>`'s `min-width`, and `max` becomes its `width` unless `max` is `1fr`
+   * (or any other flex unit), in which case no `width` is set and the column
+   * takes its share of whatever `table-layout: fixed` has left over, the same
+   * way a grid track's `1fr` would.
+   *
+   * `overflow-x-auto` on the table's own scroll container is what makes the
+   * floor mean something: once every column's minimum no longer fits, the
+   * table grows past its container and scrolls instead of every column
+   * shrinking under its `min-width` and the header text — deliberately not
+   * truncated, see the `<th>` render below — overlapping the column beside it.
+   */
   width?: string;
   minWidth?: number;
   maxWidth?: number;
@@ -423,6 +441,51 @@ function SortIndicator({ order }: { order: SortOrder | null }) {
       )}
     />
   );
+}
+
+/**
+ * `minmax(A, B)` → its two halves, tolerant of whichever whitespace someone
+ * wrote it with. `null` for anything else, including a plain length like
+ * `"180px"` — that already IS a valid `width` and passes through untouched.
+ */
+function parseMinMaxWidth(width: string | undefined): { min: string; max: string } | null {
+  if (!width) return null;
+  const match = /^minmax\(\s*([^,]+?)\s*,\s*([^)]+?)\s*\)$/.exec(width.trim());
+  return match ? { min: match[1], max: match[2] } : null;
+}
+
+/** `1fr`, `2fr`, … — a Grid flex unit, meaningless as a table `width`. */
+function isFlexUnit(value: string): boolean {
+  return /^[\d.]*fr$/.test(value.trim());
+}
+
+/**
+ * A column's `width` as the three real CSS properties a `<col>` understands.
+ *
+ * Anything that is not a `minmax(...)` string passes through exactly as it did
+ * before this existed, so a plain `"48px"` or `"18%"` column is untouched.
+ */
+function colWidthStyle(col: Pick<Column<unknown>, "width" | "minWidth" | "maxWidth">): {
+  width: string | number | undefined;
+  minWidth: string | number | undefined;
+  maxWidth: string | number | undefined;
+} {
+  const parsed = parseMinMaxWidth(col.width);
+  if (!parsed) {
+    return {
+      width: col.width ?? (col.minWidth != null ? `${col.minWidth}px` : undefined),
+      minWidth: col.minWidth,
+      maxWidth: col.maxWidth,
+    };
+  }
+  return {
+    width: isFlexUnit(parsed.max) ? undefined : parsed.max,
+    // An explicit numeric `minWidth`/`maxWidth` alongside a `minmax()` string
+    // is not a combination any caller uses today; the string wins because it
+    // is the more specific of the two.
+    minWidth: parsed.min,
+    maxWidth: isFlexUnit(parsed.max) ? col.maxWidth : undefined,
+  };
 }
 
 export function DataTable<T>({
@@ -706,14 +769,7 @@ export function DataTable<T>({
             <colgroup>
               {hasExpand ? <col style={{ width: 40 }} /> : null}
               {columns.map((col) => (
-                <col
-                  key={col.key}
-                  style={{
-                    width: col.width ?? (col.minWidth != null ? `${col.minWidth}px` : undefined),
-                    minWidth: col.minWidth,
-                    maxWidth: col.maxWidth,
-                  }}
-                />
+                <col key={col.key} style={colWidthStyle(col)} />
               ))}
               {/* Zero-width column: the action floats out of it as an overlay,
                   so the last data column stays flush and nothing trails it. */}
