@@ -2859,7 +2859,7 @@ function useSpotlight(steps, initialStep = 0) {
       else setCurrentStep((s) => s + 1);
     },
     goBack: () => setCurrentStep((s) => Math.max(0, s - 1)),
-    goTo: (step) => setCurrentStep(Math.max(0, Math.min(step, steps.length - 1)))
+    goTo: (step2) => setCurrentStep(Math.max(0, Math.min(step2, steps.length - 1)))
   };
 }
 
@@ -3904,20 +3904,20 @@ var Progress = React36.forwardRef(({ className, value, variant = "default", size
 ] }));
 Progress.displayName = "Progress";
 var ProgressTracker = React36.forwardRef(
-  ({ className, steps, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime47.jsx)("div", { ref, className: cn("flex items-start", className), ...props, children: steps.map((step, i) => /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(React36.Fragment, { children: [
+  ({ className, steps, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime47.jsx)("div", { ref, className: cn("flex items-start", className), ...props, children: steps.map((step2, i) => /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(React36.Fragment, { children: [
     /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)("div", { className: "flex flex-col items-center gap-1.5 min-w-0", children: [
       /* @__PURE__ */ (0, import_jsx_runtime47.jsx)("div", { className: cn(
         "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold transition-colors",
-        step.status === "complete" && "bg-primary border-primary text-primary-foreground",
-        step.status === "current" && "bg-primary/10 border-primary text-primary",
-        step.status === "upcoming" && "bg-card border-border text-muted-foreground"
-      ), children: step.status === "complete" ? /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(import_lucide_react23.Check, { className: "size-4", strokeWidth: 2.5 }) : i + 1 }),
+        step2.status === "complete" && "bg-primary border-primary text-primary-foreground",
+        step2.status === "current" && "bg-primary/10 border-primary text-primary",
+        step2.status === "upcoming" && "bg-card border-border text-muted-foreground"
+      ), children: step2.status === "complete" ? /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(import_lucide_react23.Check, { className: "size-4", strokeWidth: 2.5 }) : i + 1 }),
       /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)("div", { className: "text-center px-1", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime47.jsx)("p", { className: cn("text-xs font-medium", step.status === "upcoming" ? "text-muted-foreground" : "text-foreground"), children: step.label }),
-        step.description && /* @__PURE__ */ (0, import_jsx_runtime47.jsx)("p", { className: "text-[11px] text-muted-foreground mt-0.5", children: step.description })
+        /* @__PURE__ */ (0, import_jsx_runtime47.jsx)("p", { className: cn("text-xs font-medium", step2.status === "upcoming" ? "text-muted-foreground" : "text-foreground"), children: step2.label }),
+        step2.description && /* @__PURE__ */ (0, import_jsx_runtime47.jsx)("p", { className: "text-[11px] text-muted-foreground mt-0.5", children: step2.description })
       ] })
     ] }),
-    i < steps.length - 1 && /* @__PURE__ */ (0, import_jsx_runtime47.jsx)("div", { className: "flex-1 mt-4 mx-1", children: /* @__PURE__ */ (0, import_jsx_runtime47.jsx)("div", { className: cn("h-0.5 w-full rounded-full transition-colors", step.status === "complete" ? "bg-primary" : "bg-border") }) })
+    i < steps.length - 1 && /* @__PURE__ */ (0, import_jsx_runtime47.jsx)("div", { className: "flex-1 mt-4 mx-1", children: /* @__PURE__ */ (0, import_jsx_runtime47.jsx)("div", { className: cn("h-0.5 w-full rounded-full transition-colors", step2.status === "complete" ? "bg-primary" : "bg-border") }) })
   ] }, i)) })
 );
 ProgressTracker.displayName = "ProgressTracker";
@@ -4531,7 +4531,7 @@ var PAGE_BUTTON = "w-7 h-7 rounded-md flex items-center justify-center text-[12p
 var PAGE_BUTTON_IDLE = "text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed";
 var PAGE_BUTTON_ACTIVE = "bg-primary text-primary-foreground shadow-sm";
 function DataTableFooter({
-  pad: pad2,
+  pad: pad3,
   summary,
   countLabels,
   leading,
@@ -4572,7 +4572,7 @@ function DataTableFooter({
     {
       className: cn(
         "flex items-center gap-4 flex-wrap border-t border-border",
-        pad2,
+        pad3,
         summary === "none" && !showRowsPerPage && !leading ? "justify-end" : "justify-between"
       ),
       children: [
@@ -4920,7 +4920,7 @@ function CopyableCell({
     valueClassName
   );
   const elided = display !== void 0 && display !== value;
-  const copyHint = copied ? "Copied" : elided ? `Copy ${value}` : `Copy ${label}`;
+  const copyHint = copied ? "Copied" : `Copy ${label}`;
   if (variant === "cell") {
     return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(TooltipProvider, { delayDuration: 200, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Tooltip, { children: [
       /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(
@@ -4958,31 +4958,45 @@ function CopyableCell({
       /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(TooltipContent, { side: "top", className: "text-xs", children: copied ? "Copied" : "Copy" })
     ] }) });
   }
+  const valueNode = onClick ? (
+    // A bare <button>, deliberately, where the rest of flux would reach for
+    // `Button variant="link"`. That variant hard-codes `text-[15px]`, and
+    // the obvious override — `text-[inherit]` — does not beat it: Tailwind
+    // and tailwind-merge read `text-[<non-length>]` as a COLOUR, so the
+    // size class survives and the cell renders 2px larger than every other
+    // cell in the row. Preflight already gives a bare button `font: inherit`,
+    // so this simply inherits the cell's size at whatever density the table
+    // is using, which is what a cell should do.
+    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+      "button",
+      {
+        type: "button",
+        onClick,
+        title: elided ? void 0 : value,
+        "aria-label": elided ? value : void 0,
+        className: cn(
+          "cursor-pointer bg-transparent p-0 text-left underline-offset-4",
+          "hover:underline focus-visible:underline focus-visible:outline-none",
+          text
+        ),
+        children: display ?? value
+      }
+    )
+  ) : /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+    "span",
+    {
+      className: text,
+      title: elided ? void 0 : value,
+      "aria-hidden": elided || void 0,
+      children: display ?? value
+    }
+  );
   return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)("div", { className: cn("group/copy flex min-w-0 items-center gap-1", className), children: [
-    onClick ? (
-      // A bare <button>, deliberately, where the rest of flux would reach for
-      // `Button variant="link"`. That variant hard-codes `text-[15px]`, and
-      // the obvious override — `text-[inherit]` — does not beat it: Tailwind
-      // and tailwind-merge read `text-[<non-length>]` as a COLOUR, so the
-      // size class survives and the cell renders 2px larger than every other
-      // cell in the row. Preflight already gives a bare button `font: inherit`,
-      // so this simply inherits the cell's size at whatever density the table
-      // is using, which is what a cell should do.
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
-        "button",
-        {
-          type: "button",
-          onClick,
-          title: value,
-          className: cn(
-            "cursor-pointer bg-transparent p-0 text-left underline-offset-4",
-            "hover:underline focus-visible:underline focus-visible:outline-none",
-            text
-          ),
-          children: display ?? value
-        }
-      )
-    ) : /* @__PURE__ */ (0, import_jsx_runtime53.jsx)("span", { className: text, title: value, children: display ?? value }),
+    elided ? /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(TooltipProvider, { delayDuration: 200, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Tooltip, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(TooltipTrigger, { asChild: true, children: valueNode }),
+      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(TooltipContent, { side: "top", className: "text-xs", children: value })
+    ] }) }) : valueNode,
+    elided && !onClick && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)("span", { className: "sr-only", children: value }),
     /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(TooltipProvider, { delayDuration: 200, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Tooltip, { children: [
       /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(TooltipTrigger, { asChild: true, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
         Button,
@@ -5922,6 +5936,7 @@ function CalendarDayButton({
 // src/date-picker.tsx
 var import_react14 = require("react");
 var import_react_dom = require("react-dom");
+var import_react_remove_scroll = require("react-remove-scroll");
 var import_lucide_react33 = require("lucide-react");
 var import_framer_motion = require("framer-motion");
 var import_jsx_runtime62 = require("react/jsx-runtime");
@@ -5941,30 +5956,117 @@ var MONTHS = [
 ];
 var DAYS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
 var PRIMARY = "#0061E3";
-var PANEL_W = 296;
+var CALENDAR_W = 296;
+var TIME_COL_W = 58;
+var TIME_ITEM_H = 28;
+var TIME_COL_H = 232;
 function daysInMonth(y, m) {
   return new Date(y, m + 1, 0).getDate();
 }
 function firstDayOf(y, m) {
   return new Date(y, m, 1).getDay();
 }
-function parseYMD(s) {
+function pad(n) {
+  return String(n).padStart(2, "0");
+}
+function parseValue(s) {
   if (!s) return null;
-  const [y, m, d] = s.split("-").map(Number);
+  const [datePart, timePart = ""] = s.trim().split(/[ T]/);
+  const [y, m, d] = datePart.split("-").map(Number);
   if (!y || !m || !d) return null;
-  return { y, m: m - 1, d };
+  const [hh = 0, mm = 0, ss = 0] = timePart ? timePart.split(":").map(Number) : [];
+  return {
+    y,
+    m: m - 1,
+    d,
+    hh: Number.isFinite(hh) ? hh : 0,
+    mm: Number.isFinite(mm) ? mm : 0,
+    ss: Number.isFinite(ss) ? ss : 0
+  };
+}
+function parseYMD(s) {
+  const p = parseValue(s);
+  return p ? { y: p.y, m: p.m, d: p.d } : null;
 }
 function toYMD(y, m, d) {
-  return `${y}-${String(m + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+  return `${y}-${pad(m + 1)}-${pad(d)}`;
 }
-function displayDate(ymd) {
-  const p = parseYMD(ymd);
+function formatValue(p, showTime, showSecond) {
+  const date = toYMD(p.y, p.m, p.d);
+  if (!showTime) return date;
+  return showSecond ? `${date} ${pad(p.hh)}:${pad(p.mm)}:${pad(p.ss)}` : `${date} ${pad(p.hh)}:${pad(p.mm)}`;
+}
+function displayTime(p, showSecond) {
+  const period = p.hh < 12 ? "AM" : "PM";
+  const h12 = p.hh % 12 === 0 ? 12 : p.hh % 12;
+  const base = showSecond ? `${pad(h12)}:${pad(p.mm)}:${pad(p.ss)}` : `${pad(h12)}:${pad(p.mm)}`;
+  return `${base} ${period}`;
+}
+function displayValue(value, showTime, showSecond) {
+  const p = parseValue(value);
   if (!p) return "";
-  return `${String(p.d).padStart(2, "0")} ${MONTHS[p.m].slice(0, 3)} ${p.y}`;
+  const date = `${pad(p.d)} ${MONTHS[p.m].slice(0, 3)} ${p.y}`;
+  return showTime ? `${date}, ${displayTime(p, showSecond)}` : date;
 }
-function DatePicker({ value, onChange, placeholder = "Select date", className, min, max, label }) {
+function step(n) {
+  return Math.max(1, Math.floor(n ?? 1));
+}
+function TimeColumn({
+  label,
+  items,
+  selected,
+  onSelect,
+  render
+}) {
+  const ref = (0, import_react14.useRef)(null);
+  const index = items.indexOf(selected);
+  (0, import_react14.useEffect)(() => {
+    const el = ref.current;
+    if (!el || index < 0) return;
+    el.scrollTo({ top: index * TIME_ITEM_H, behavior: "smooth" });
+  }, [index]);
+  return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: "flex flex-col border-l border-border", style: { width: TIME_COL_W }, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)("div", { className: "py-1 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: label }),
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
+      "div",
+      {
+        ref,
+        className: "overflow-y-auto",
+        style: { height: TIME_COL_H, scrollbarWidth: "none", msOverflowStyle: "none" },
+        children: [
+          items.map((item) => {
+            const active = item === selected;
+            return /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+              "button",
+              {
+                type: "button",
+                onClick: () => onSelect(item),
+                className: cn(
+                  "flex w-full items-center justify-center rounded-md text-[13px] font-medium transition-colors",
+                  active ? "font-semibold text-white" : "text-foreground hover:bg-muted"
+                ),
+                style: { height: TIME_ITEM_H, background: active ? PRIMARY : void 0 },
+                children: render ? render(item) : String(item)
+              },
+              String(item)
+            );
+          }),
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)("div", { style: { height: TIME_COL_H - TIME_ITEM_H } })
+        ]
+      }
+    )
+  ] });
+}
+function DatePicker({ value, onChange, placeholder = "Select date", className, min, max, label, showTime = false, showNow = true }) {
   const today = /* @__PURE__ */ new Date();
-  const parsed = parseYMD(value);
+  const parsed = parseValue(value);
+  const timeOptions = (0, import_react14.useMemo)(
+    () => typeof showTime === "object" ? showTime : {},
+    [showTime]
+  );
+  const withTime = showTime !== false && showTime !== void 0;
+  const use12Hours = timeOptions.use12Hours ?? true;
+  const showSecond = timeOptions.showSecond ?? false;
   const [open, setOpen] = (0, import_react14.useState)(false);
   const [panelPos, setPanelPos] = (0, import_react14.useState)({ top: 0, left: 0 });
   const [viewYear, setViewYear] = (0, import_react14.useState)(parsed?.y ?? today.getFullYear());
@@ -5983,34 +6085,39 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
       setViewMonth(parsed.m);
     }
   }, [value]);
+  const columnCount = withTime ? (showSecond ? 3 : 2) + (use12Hours ? 1 : 0) : 0;
+  const PANEL_W2 = CALENDAR_W + columnCount * TIME_COL_W;
+  const PANEL_H2 = withTime ? 392 : 340;
   function openPanel() {
     if (!triggerRef.current) return;
     const trigger = triggerRef.current;
     const vw = window.innerWidth;
     const vh = window.innerHeight;
-    const PANEL_H2 = 340;
     trigger.scrollIntoView({ block: "center", behavior: "auto" });
     requestAnimationFrame(() => {
       if (!triggerRef.current) return;
       const rect = triggerRef.current.getBoundingClientRect();
       let left = rect.left;
-      if (left + PANEL_W > vw - 8) left = vw - PANEL_W - 8;
+      if (left + PANEL_W2 > vw - 8) left = vw - PANEL_W2 - 8;
+      if (left < 8) left = 8;
       let top = rect.bottom + 6;
       if (top + PANEL_H2 > vh - 8) top = rect.top - PANEL_H2 - 6;
+      if (top < 8) top = 8;
       setPanelPos({ top, left });
       setOpen(true);
     });
+  }
+  function closePanel() {
+    setOpen(false);
+    setYearMenu(false);
+    setMonthMenu(false);
   }
   (0, import_react14.useEffect)(() => {
     if (!open) return;
     function handler(e) {
       const inTrigger = triggerRef.current?.contains(e.target);
       const inPanel = panelRef.current?.contains(e.target);
-      if (!inTrigger && !inPanel) {
-        setOpen(false);
-        setYearMenu(false);
-        setMonthMenu(false);
-      }
+      if (!inTrigger && !inPanel) closePanel();
     }
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
@@ -6053,18 +6160,251 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
     cells.push({ d, m, y, current: false });
   }
   const years = Array.from({ length: 15 }, (_, i) => today.getFullYear() - 2 + i);
+  const fallback = parseValue(`2000-01-01 ${timeOptions.defaultValue ?? "00:00"}`);
+  const current = parsed ?? {
+    y: today.getFullYear(),
+    m: today.getMonth(),
+    d: today.getDate(),
+    hh: fallback.hh,
+    mm: fallback.mm,
+    ss: fallback.ss
+  };
+  const emit = (0, import_react14.useCallback)(
+    (next) => onChange(formatValue(next, withTime, showSecond)),
+    [onChange, withTime, showSecond]
+  );
+  function patchTime(patch) {
+    emit({ ...current, ...patch });
+  }
+  const hourStep = step(timeOptions.hourStep);
+  const minuteStep = step(timeOptions.minuteStep);
+  const secondStep = step(timeOptions.secondStep);
+  const hourItems = use12Hours ? Array.from({ length: Math.ceil(12 / hourStep) }, (_, i) => i * hourStep % 12) : Array.from({ length: Math.ceil(24 / hourStep) }, (_, i) => i * hourStep);
+  const minuteItems = Array.from({ length: Math.ceil(60 / minuteStep) }, (_, i) => i * minuteStep);
+  const secondItems = Array.from({ length: Math.ceil(60 / secondStep) }, (_, i) => i * secondStep);
+  const selectedHour = use12Hours ? current.hh % 12 : current.hh;
+  const selectedMeridiem = current.hh < 12 ? "AM" : "PM";
+  function selectHour(h) {
+    if (!use12Hours) return patchTime({ hh: h });
+    patchTime({ hh: selectedMeridiem === "AM" ? h : h + 12 });
+  }
+  function selectMeridiem(p) {
+    const base = current.hh % 12;
+    patchTime({ hh: p === "AM" ? base : base + 12 });
+  }
   function selectDay(cell) {
     if (!cell.current) {
       setViewYear(cell.y);
       setViewMonth(cell.m);
     }
     if (cell.current && isDisabled(cell.y, cell.m, cell.d)) return;
-    onChange(toYMD(cell.y, cell.m, cell.d));
-    setOpen(false);
+    emit({ y: cell.y, m: cell.m, d: cell.d, hh: current.hh, mm: current.mm, ss: current.ss });
+    if (!withTime) setOpen(false);
+  }
+  function selectNow() {
+    const n = /* @__PURE__ */ new Date();
+    if (isDisabled(n.getFullYear(), n.getMonth(), n.getDate())) return;
+    emit({
+      y: n.getFullYear(),
+      m: n.getMonth(),
+      d: n.getDate(),
+      hh: n.getHours(),
+      mm: n.getMinutes(),
+      ss: n.getSeconds()
+    });
+    closePanel();
   }
   const isToday = (c) => c.d === today.getDate() && c.m === today.getMonth() && c.y === today.getFullYear();
   const isSelected = (c) => !!parsed && c.d === parsed.d && c.m === parsed.m && c.y === parsed.y;
-  const panel = /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_framer_motion.AnimatePresence, { children: open && /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
+  const calendar = /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { style: { width: CALENDAR_W }, className: "flex flex-col", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: "flex items-center justify-between px-4 pt-4 pb-3", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        "button",
+        {
+          type: "button",
+          onClick: prevMonth,
+          className: "w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors",
+          children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_lucide_react33.ChevronLeft, { className: "w-4 h-4" })
+        }
+      ),
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: "flex items-center gap-1", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: "relative", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
+            "button",
+            {
+              type: "button",
+              onClick: () => {
+                setMonthMenu((o) => !o);
+                setYearMenu(false);
+              },
+              className: "flex items-center gap-1 px-2 py-1 rounded-lg text-[14px] font-semibold text-foreground hover:bg-muted transition-colors",
+              children: [
+                MONTHS[viewMonth].slice(0, 3),
+                /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_lucide_react33.ChevronDown, { className: "w-3 h-3 text-muted-foreground" })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_framer_motion.AnimatePresence, { children: monthMenu && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+            import_framer_motion.motion.div,
+            {
+              initial: { opacity: 0, y: -4 },
+              animate: { opacity: 1, y: 0 },
+              exit: { opacity: 0, y: -4 },
+              transition: { duration: 0.12 },
+              className: "absolute top-full left-0 z-[10000] mt-1 max-h-[220px] min-w-[130px] overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-lg",
+              children: MONTHS.map((mn, mi) => /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => {
+                    setViewMonth(mi);
+                    setMonthMenu(false);
+                  },
+                  className: "w-full px-3 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-muted",
+                  style: { fontWeight: mi === viewMonth ? 600 : 400, color: mi === viewMonth ? PRIMARY : void 0 },
+                  children: mn
+                },
+                mn
+              ))
+            }
+          ) })
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: "relative", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
+            "button",
+            {
+              type: "button",
+              onClick: () => {
+                setYearMenu((o) => !o);
+                setMonthMenu(false);
+              },
+              className: "flex items-center gap-1 px-2 py-1 rounded-lg text-[14px] font-semibold text-foreground hover:bg-muted transition-colors",
+              children: [
+                viewYear,
+                /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_lucide_react33.ChevronDown, { className: "w-3 h-3 text-muted-foreground" })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_framer_motion.AnimatePresence, { children: yearMenu && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+            import_framer_motion.motion.div,
+            {
+              initial: { opacity: 0, y: -4 },
+              animate: { opacity: 1, y: 0 },
+              exit: { opacity: 0, y: -4 },
+              transition: { duration: 0.12 },
+              className: "absolute top-full left-0 z-[10000] mt-1 max-h-[200px] min-w-[90px] overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-lg",
+              children: years.map((yr) => /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+                "button",
+                {
+                  type: "button",
+                  onClick: () => {
+                    setViewYear(yr);
+                    setYearMenu(false);
+                  },
+                  className: "w-full px-3 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-muted",
+                  style: { fontWeight: yr === viewYear ? 600 : 400, color: yr === viewYear ? PRIMARY : void 0 },
+                  children: yr
+                },
+                yr
+              ))
+            }
+          ) })
+        ] })
+      ] }),
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        "button",
+        {
+          type: "button",
+          onClick: nextMonth,
+          className: "w-8 h-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition-colors",
+          children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_lucide_react33.ChevronRight, { className: "w-4 h-4" })
+        }
+      )
+    ] }),
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+      "div",
+      {
+        className: "px-3 pb-1",
+        style: { display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" },
+        children: DAYS.map((d) => /* @__PURE__ */ (0, import_jsx_runtime62.jsx)("div", { className: "py-1 text-center text-[11.5px] font-semibold text-muted-foreground", children: d }, d))
+      }
+    ),
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+      "div",
+      {
+        className: "gap-y-0.5 px-3 pb-4",
+        style: { display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" },
+        children: cells.map((cell, i) => {
+          const selected = isSelected(cell);
+          const tod = isToday(cell);
+          const disabled = cell.current && isDisabled(cell.y, cell.m, cell.d);
+          return /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+            "button",
+            {
+              type: "button",
+              onClick: () => selectDay(cell),
+              disabled,
+              className: cn(
+                "h-9 w-9 mx-auto rounded-full text-[13px] font-medium flex items-center justify-center transition-all",
+                selected && "text-white font-semibold",
+                !selected && tod && "font-semibold",
+                !selected && !tod && cell.current && !disabled && "text-gray-800 hover:bg-gray-100",
+                !selected && !cell.current && "text-gray-300 hover:bg-gray-50",
+                disabled && "opacity-30 cursor-not-allowed"
+              ),
+              style: selected ? { background: PRIMARY } : tod ? { background: `${PRIMARY}18`, color: PRIMARY } : {},
+              children: cell.d
+            },
+            i
+          );
+        })
+      }
+    )
+  ] });
+  const timeColumns = withTime && /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: "flex pt-3", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+      TimeColumn,
+      {
+        label: "Hr",
+        items: hourItems,
+        selected: selectedHour,
+        onSelect: selectHour,
+        render: (h) => pad(use12Hours && h === 0 ? 12 : h)
+      }
+    ),
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(TimeColumn, { label: "Min", items: minuteItems, selected: current.mm, onSelect: (m) => patchTime({ mm: m }), render: pad }),
+    showSecond && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(TimeColumn, { label: "Sec", items: secondItems, selected: current.ss, onSelect: (s) => patchTime({ ss: s }), render: pad }),
+    use12Hours && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(TimeColumn, { label: "AM/PM", items: ["AM", "PM"], selected: selectedMeridiem, onSelect: selectMeridiem })
+  ] });
+  const body = /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(import_jsx_runtime62.Fragment, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: "flex", children: [
+      calendar,
+      timeColumns
+    ] }),
+    withTime && /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: "flex items-center justify-between border-t border-border px-4 py-2.5", children: [
+      showNow ? /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        "button",
+        {
+          type: "button",
+          onClick: selectNow,
+          className: "rounded-md px-1 text-[13px] font-medium transition-colors hover:underline",
+          style: { color: PRIMARY },
+          children: "Now"
+        }
+      ) : /* @__PURE__ */ (0, import_jsx_runtime62.jsx)("span", {}),
+      /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+        "button",
+        {
+          type: "button",
+          onClick: closePanel,
+          className: "rounded-lg px-3 py-1.5 text-[13px] font-semibold text-white transition-opacity hover:opacity-90",
+          style: { background: PRIMARY },
+          children: "OK"
+        }
+      )
+    ] })
+  ] });
+  const panel = /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_framer_motion.AnimatePresence, { children: open && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
     import_framer_motion.motion.div,
     {
       ref: panelRef,
@@ -6077,149 +6417,21 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
         position: "fixed",
         top: panelPos.top,
         left: panelPos.left,
-        width: PANEL_W,
+        width: PANEL_W2,
         zIndex: 2e4,
+        // A modal Radix Dialog sets `pointer-events: none` on <body> while
+        // it is open, and this panel is portaled to <body> — so without
+        // this every click on a day landed on nothing and the calendar
+        // looked frozen inside a Dialog or Drawer. Hit-testing is
+        // per-element, so re-enabling it here is enough; the page behind
+        // the dialog stays inert. The click still reaches the dialog's
+        // DismissableLayer through React's portal event propagation, so it
+        // is treated as inside and does not dismiss the dialog.
+        pointerEvents: "auto",
         backgroundColor: "var(--popover)",
         boxShadow: "0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.07)"
       },
-      children: [
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: "flex items-center justify-between px-4 pt-4 pb-3", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
-            "button",
-            {
-              onClick: prevMonth,
-              className: "w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors",
-              children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_lucide_react33.ChevronLeft, { className: "w-4 h-4" })
-            }
-          ),
-          /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: "flex items-center gap-1", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: "relative", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
-                "button",
-                {
-                  onClick: () => {
-                    setMonthMenu((o) => !o);
-                    setYearMenu(false);
-                  },
-                  className: "flex items-center gap-1 px-2 py-1 rounded-lg text-[14px] font-semibold text-gray-900 hover:bg-gray-100 transition-colors",
-                  children: [
-                    MONTHS[viewMonth].slice(0, 3),
-                    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_lucide_react33.ChevronDown, { className: "w-3 h-3 text-gray-400" })
-                  ]
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_framer_motion.AnimatePresence, { children: monthMenu && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
-                import_framer_motion.motion.div,
-                {
-                  initial: { opacity: 0, y: -4 },
-                  animate: { opacity: 1, y: 0 },
-                  exit: { opacity: 0, y: -4 },
-                  transition: { duration: 0.12 },
-                  className: "absolute top-full left-0 z-[10000] mt-1 max-h-[220px] min-w-[130px] overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-lg",
-                  children: MONTHS.map((mn, mi) => /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
-                    "button",
-                    {
-                      onClick: () => {
-                        setViewMonth(mi);
-                        setMonthMenu(false);
-                      },
-                      className: "w-full px-3 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-muted",
-                      style: { fontWeight: mi === viewMonth ? 600 : 400, color: mi === viewMonth ? PRIMARY : void 0 },
-                      children: mn
-                    },
-                    mn
-                  ))
-                }
-              ) })
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: "relative", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(
-                "button",
-                {
-                  onClick: () => {
-                    setYearMenu((o) => !o);
-                    setMonthMenu(false);
-                  },
-                  className: "flex items-center gap-1 px-2 py-1 rounded-lg text-[14px] font-semibold text-gray-900 hover:bg-gray-100 transition-colors",
-                  children: [
-                    viewYear,
-                    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_lucide_react33.ChevronDown, { className: "w-3 h-3 text-gray-400" })
-                  ]
-                }
-              ),
-              /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_framer_motion.AnimatePresence, { children: yearMenu && /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
-                import_framer_motion.motion.div,
-                {
-                  initial: { opacity: 0, y: -4 },
-                  animate: { opacity: 1, y: 0 },
-                  exit: { opacity: 0, y: -4 },
-                  transition: { duration: 0.12 },
-                  className: "absolute top-full left-0 z-[10000] mt-1 max-h-[200px] min-w-[90px] overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-lg",
-                  children: years.map((yr) => /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
-                    "button",
-                    {
-                      onClick: () => {
-                        setViewYear(yr);
-                        setYearMenu(false);
-                      },
-                      className: "w-full px-3 py-2 text-left text-[13px] text-foreground transition-colors hover:bg-muted",
-                      style: { fontWeight: yr === viewYear ? 600 : 400, color: yr === viewYear ? PRIMARY : void 0 },
-                      children: yr
-                    },
-                    yr
-                  ))
-                }
-              ) })
-            ] })
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
-            "button",
-            {
-              onClick: nextMonth,
-              className: "w-8 h-8 rounded-full flex items-center justify-center text-gray-500 hover:bg-gray-100 transition-colors",
-              children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_lucide_react33.ChevronRight, { className: "w-4 h-4" })
-            }
-          )
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
-          "div",
-          {
-            className: "px-3 pb-1",
-            style: { display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" },
-            children: DAYS.map((d) => /* @__PURE__ */ (0, import_jsx_runtime62.jsx)("div", { className: "py-1 text-center text-[11.5px] font-semibold text-muted-foreground", children: d }, d))
-          }
-        ),
-        /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
-          "div",
-          {
-            className: "gap-y-0.5 px-3 pb-4",
-            style: { display: "grid", gridTemplateColumns: "repeat(7, minmax(0, 1fr))" },
-            children: cells.map((cell, i) => {
-              const selected = isSelected(cell);
-              const tod = isToday(cell);
-              const disabled = cell.current && isDisabled(cell.y, cell.m, cell.d);
-              return /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
-                "button",
-                {
-                  onClick: () => selectDay(cell),
-                  disabled,
-                  className: cn(
-                    "h-9 w-9 mx-auto rounded-full text-[13px] font-medium flex items-center justify-center transition-all",
-                    selected && "text-white font-semibold",
-                    !selected && tod && "font-semibold",
-                    !selected && !tod && cell.current && !disabled && "text-gray-800 hover:bg-gray-100",
-                    !selected && !cell.current && "text-gray-300 hover:bg-gray-50",
-                    disabled && "opacity-30 cursor-not-allowed"
-                  ),
-                  style: selected ? { background: PRIMARY } : tod ? { background: `${PRIMARY}18`, color: PRIMARY } : {},
-                  children: cell.d
-                },
-                i
-              );
-            })
-          }
-        )
-      ]
+      children: withTime ? /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_react_remove_scroll.RemoveScroll, { allowPinchZoom: true, children: body }) : body
     }
   ) });
   return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)("div", { className: cn("relative", className), children: [
@@ -6229,14 +6441,14 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
       {
         ref: triggerRef,
         type: "button",
-        onClick: () => open ? setOpen(false) : openPanel(),
+        onClick: () => open ? closePanel() : openPanel(),
         className: cn(
           "flex h-12 min-h-12 w-full items-center gap-3 rounded-xl border border-border bg-card px-5 text-left text-[15px] shadow-sm transition-colors",
           open ? "border-ring ring-2 ring-ring/20" : "hover:border-muted-foreground/45"
         ),
         children: [
           /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_lucide_react33.CalendarDays, { className: "size-[1.125rem] shrink-0 text-muted-foreground" }),
-          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)("span", { className: cn("flex-1", value ? "text-foreground" : "text-muted-foreground"), children: value ? displayDate(value) : placeholder }),
+          /* @__PURE__ */ (0, import_jsx_runtime62.jsx)("span", { className: cn("flex-1", value ? "text-foreground" : "text-muted-foreground"), children: value ? displayValue(value, withTime, showSecond) : placeholder }),
           /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(import_lucide_react33.ChevronDown, { className: cn("size-[1.125rem] shrink-0 text-muted-foreground transition-transform", open && "rotate-180") })
         ]
       }
@@ -7789,9 +8001,10 @@ IconButton.displayName = "IconButton";
 // src/time-picker.tsx
 var React48 = __toESM(require("react"), 1);
 var import_react_dom2 = require("react-dom");
+var import_react_remove_scroll2 = require("react-remove-scroll");
 var import_lucide_react40 = require("lucide-react");
 var import_jsx_runtime72 = require("react/jsx-runtime");
-function pad(n) {
+function pad2(n) {
   return String(n).padStart(2, "0");
 }
 function parseHHMM(v) {
@@ -7804,15 +8017,15 @@ function parseHHMM(v) {
   return { h, m };
 }
 function toHHMM(h, m) {
-  return `${pad(h)}:${pad(m)}`;
+  return `${pad2(h)}:${pad2(m)}`;
 }
-function displayTime(value, use24Hour) {
+function displayTime2(value, use24Hour) {
   const p = parseHHMM(value);
   if (!p) return "";
-  if (use24Hour) return `${pad(p.h)}:${pad(p.m)}`;
+  if (use24Hour) return `${pad2(p.h)}:${pad2(p.m)}`;
   const period = p.h < 12 ? "AM" : "PM";
   const displayH = p.h % 12 === 0 ? 12 : p.h % 12;
-  return `${pad(displayH)}:${pad(p.m)} ${period}`;
+  return `${pad2(displayH)}:${pad2(p.m)} ${period}`;
 }
 var ITEM_H = 36;
 var VISIBLE = 5;
@@ -7916,7 +8129,7 @@ function ScrollColumn({
     )
   ] });
 }
-var PANEL_W2 = 224;
+var PANEL_W = 224;
 var PANEL_H = 220;
 var TimePicker = React48.forwardRef(
   ({
@@ -7970,7 +8183,7 @@ var TimePicker = React48.forwardRef(
         const vw = window.innerWidth;
         const vh = window.innerHeight;
         let left = rect.left;
-        if (left + PANEL_W2 > vw - 8) left = vw - PANEL_W2 - 8;
+        if (left + PANEL_W > vw - 8) left = vw - PANEL_W - 8;
         let top = rect.bottom + 6;
         if (top + PANEL_H > vh - 8) top = rect.top - PANEL_H - 6;
         setPanelPos({ top, left });
@@ -8013,7 +8226,7 @@ var TimePicker = React48.forwardRef(
       e.stopPropagation();
       onValueChange("");
     }
-    const panel = open ? /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(
+    const panel = open ? /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(import_react_remove_scroll2.RemoveScroll, { allowPinchZoom: true, children: /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(
       "div",
       {
         ref: panelRef,
@@ -8025,13 +8238,17 @@ var TimePicker = React48.forwardRef(
           position: "fixed",
           top: panelPos.top,
           left: panelPos.left,
-          width: PANEL_W2,
-          zIndex: 2e4
+          width: PANEL_W,
+          zIndex: 2e4,
+          // See DatePicker: a modal Radix Dialog puts `pointer-events: none`
+          // on <body>, which this portaled panel would otherwise inherit —
+          // the columns rendered but no row could be clicked.
+          pointerEvents: "auto"
         },
         children: [
           /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)("div", { className: "flex items-center gap-1.5 border-b border-border px-4 py-2.5", children: [
             /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(import_lucide_react40.Clock, { className: "size-3.5 text-muted-foreground" }),
-            /* @__PURE__ */ (0, import_jsx_runtime72.jsx)("span", { className: "text-[13px] font-medium text-muted-foreground", children: value ? displayTime(value, use24Hour) : "\u2014" })
+            /* @__PURE__ */ (0, import_jsx_runtime72.jsx)("span", { className: "text-[13px] font-medium text-muted-foreground", children: value ? displayTime2(value, use24Hour) : "\u2014" })
           ] }),
           /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(
             "div",
@@ -8052,7 +8269,7 @@ var TimePicker = React48.forwardRef(
                 items: hours,
                 selected: hour,
                 onSelect: handleHourChange,
-                renderItem: (h) => pad(h),
+                renderItem: (h) => pad2(h),
                 getKey: (h) => h
               }
             ),
@@ -8063,7 +8280,7 @@ var TimePicker = React48.forwardRef(
                 items: minutes,
                 selected: minute,
                 onSelect: handleMinuteChange,
-                renderItem: (m) => pad(m),
+                renderItem: (m) => pad2(m),
                 getKey: (m) => m
               }
             ),
@@ -8083,7 +8300,7 @@ var TimePicker = React48.forwardRef(
           ] })
         ]
       }
-    ) : null;
+    ) }) : null;
     function mergeRef(el) {
       triggerRef.current = el;
       if (typeof ref === "function") ref(el);
@@ -8115,7 +8332,7 @@ var TimePicker = React48.forwardRef(
                   "flex-1 truncate",
                   value ? "text-foreground" : "text-muted-foreground"
                 ),
-                children: value ? displayTime(value, use24Hour) : placeholder
+                children: value ? displayTime2(value, use24Hour) : placeholder
               }
             ),
             value && !disabled ? /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(

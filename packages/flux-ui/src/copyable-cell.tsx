@@ -133,9 +133,9 @@ export function CopyableCell({
     valueClassName
   );
 
-  /** Names the full value when the screen only shows part of it. */
+  /** True when the screen is only showing part of the value. */
   const elided = display !== undefined && display !== value;
-  const copyHint = copied ? "Copied" : elided ? `Copy ${value}` : `Copy ${label}`;
+  const copyHint = copied ? "Copied" : `Copy ${label}`;
 
   if (variant === "cell") {
     // The whole box copies, so there is no separate button to reach for — in a
@@ -187,34 +187,73 @@ export function CopyableCell({
     );
   }
 
+  /**
+   * The value as drawn. An elided value carries the whole thing in the tooltip
+   * below; `title` is only for the other case — a value `display` did not
+   * shorten can still be cut by the column's own `truncate`, and there is no
+   * React-side way to know that it was.
+   */
+  const valueNode = onClick ? (
+    // A bare <button>, deliberately, where the rest of flux would reach for
+    // `Button variant="link"`. That variant hard-codes `text-[15px]`, and
+    // the obvious override — `text-[inherit]` — does not beat it: Tailwind
+    // and tailwind-merge read `text-[<non-length>]` as a COLOUR, so the
+    // size class survives and the cell renders 2px larger than every other
+    // cell in the row. Preflight already gives a bare button `font: inherit`,
+    // so this simply inherits the cell's size at whatever density the table
+    // is using, which is what a cell should do.
+    <button
+      type="button"
+      onClick={onClick}
+      title={elided ? undefined : value}
+      // The elided text is not the name of this control — the value is.
+      aria-label={elided ? value : undefined}
+      className={cn(
+        "cursor-pointer bg-transparent p-0 text-left underline-offset-4",
+        "hover:underline focus-visible:underline focus-visible:outline-none",
+        text
+      )}
+    >
+      {display ?? value}
+    </button>
+  ) : (
+    <span
+      className={text}
+      title={elided ? undefined : value}
+      // Hidden from assistive tech only when there is an sr-only twin below
+      // carrying the whole value — otherwise the elided form would be read out
+      // as well as it, twice for one id.
+      aria-hidden={elided || undefined}
+    >
+      {display ?? value}
+    </span>
+  );
+
   return (
     <div className={cn("group/copy flex min-w-0 items-center gap-1", className)}>
-      {onClick ? (
-        // A bare <button>, deliberately, where the rest of flux would reach for
-        // `Button variant="link"`. That variant hard-codes `text-[15px]`, and
-        // the obvious override — `text-[inherit]` — does not beat it: Tailwind
-        // and tailwind-merge read `text-[<non-length>]` as a COLOUR, so the
-        // size class survives and the cell renders 2px larger than every other
-        // cell in the row. Preflight already gives a bare button `font: inherit`,
-        // so this simply inherits the cell's size at whatever density the table
-        // is using, which is what a cell should do.
-        <button
-          type="button"
-          onClick={onClick}
-          title={value}
-          className={cn(
-            "cursor-pointer bg-transparent p-0 text-left underline-offset-4",
-            "hover:underline focus-visible:underline focus-visible:outline-none",
-            text
-          )}
-        >
-          {display ?? value}
-        </button>
+      {/* The full value hangs off the **text**, which is the part that was
+          shortened and so the part a reader reaches for. It used to hang off
+          the copy button instead, which meant the way to read an id was to
+          hover the control that copies it. Only mounted when something was
+          actually elided: a tooltip repeating text already fully on screen is
+          noise. */}
+      {elided ? (
+        <TooltipProvider delayDuration={200}>
+          <Tooltip>
+            <TooltipTrigger asChild>{valueNode}</TooltipTrigger>
+            <TooltipContent side="top" className="text-xs">
+              {value}
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       ) : (
-        <span className={text} title={value}>
-          {display ?? value}
-        </span>
+        valueNode
       )}
+
+      {/* Elided text reads as noise aloud, so the full value is what goes to a
+          screen reader. The interactive case names itself with `aria-label`
+          above and needs none of this. */}
+      {elided && !onClick && <span className="sr-only">{value}</span>}
 
       <TooltipProvider delayDuration={200}>
         <Tooltip>

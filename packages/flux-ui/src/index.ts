@@ -278,7 +278,7 @@ export type { AvatarTagProps, AvatarTagSize } from "./avatar-tag";
 export { Calendar, CalendarDayButton } from "./calendar";
 export type { CalendarProps } from "./calendar";
 export type { DateRange } from "react-day-picker";
-export { DatePicker } from "./date-picker";
+export { DatePicker, type DatePickerTimeOptions } from "./date-picker";
 
 // Charts
 export {

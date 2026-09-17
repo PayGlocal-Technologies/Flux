@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { createPortal } from "react-dom";
+import { RemoveScroll } from "react-remove-scroll";
 import { Clock, ChevronDown, X } from "lucide-react";
 import { cn } from "./utils";
 
@@ -309,78 +310,106 @@ export const TimePicker = React.forwardRef<HTMLButtonElement, TimePickerProps>(
     }
 
     /* ── Panel ── */
+    /**
+     * Wrapped in `RemoveScroll` so the columns can be scrolled inside a modal
+     * Dialog or Drawer.
+     *
+     * Radix's Dialog renders its overlay inside `RemoveScroll` with only
+     * `Dialog.Content` as a shard. This panel is portaled to `document.body`, so
+     * it is neither the lock container nor a shard, and react-remove-scroll's
+     * `shouldPrevent` calls `preventDefault()` on every wheel and touch event it
+     * receives — leaving only the rows already on screen reachable, and every
+     * other time selectable solely by clicking two rows at a time.
+     *
+     * Mounting our own lock pushes it to the top of react-remove-scroll's
+     * `lockStack`, and the sidecar bails out for any lock that is not the last
+     * one, so this panel's scrolling is honoured while the dialog's own lock
+     * still holds for the page behind it. It is the same thing Radix `Select`
+     * does with its content, and the reason a Select works inside a dialog where
+     * this panel did not.
+     *
+     * Enabled unconditionally rather than only inside a dialog: the panel's
+     * position is `fixed` and computed once on open, so locking the page also
+     * stops it drifting away from its trigger on a scrollable page.
+     */
     const panel = open ? (
-      <div
-        ref={panelRef}
-        className={cn(
-          "isolate rounded-xl border border-border bg-popover text-popover-foreground shadow-lg",
-          "flex flex-col gap-0"
-        )}
-        style={{
-          position: "fixed",
-          top: panelPos.top,
-          left: panelPos.left,
-          width: PANEL_W,
-          zIndex: 20000,
-        }}
-      >
-        {/* Header */}
-        <div className="flex items-center gap-1.5 border-b border-border px-4 py-2.5">
-          <Clock className="size-3.5 text-muted-foreground" />
-          <span className="text-[13px] font-medium text-muted-foreground">
-            {value ? displayTime(value, use24Hour) : "—"}
-          </span>
-        </div>
-
-        {/* Column labels */}
+      <RemoveScroll allowPinchZoom>
         <div
-          className="flex items-center justify-around px-2 pt-2 pb-0.5"
-          style={{ paddingLeft: 8, paddingRight: use24Hour ? 8 : 8 }}
+          ref={panelRef}
+          className={cn(
+            "isolate rounded-xl border border-border bg-popover text-popover-foreground shadow-lg",
+            "flex flex-col gap-0"
+          )}
+          style={{
+            position: "fixed",
+            top: panelPos.top,
+            left: panelPos.left,
+            width: PANEL_W,
+            zIndex: 20000,
+            // See DatePicker: a modal Radix Dialog puts `pointer-events: none`
+            // on <body>, which this portaled panel would otherwise inherit —
+            // the columns rendered but no row could be clicked.
+            pointerEvents: "auto",
+          }}
         >
-          <span className="w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-            Hr
-          </span>
-          <span className="w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-            Min
-          </span>
-          {!use24Hour && (
-            <span className="w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
-              AM/PM
+          {/* Header */}
+          <div className="flex items-center gap-1.5 border-b border-border px-4 py-2.5">
+            <Clock className="size-3.5 text-muted-foreground" />
+            <span className="text-[13px] font-medium text-muted-foreground">
+              {value ? displayTime(value, use24Hour) : "—"}
             </span>
-          )}
-        </div>
+          </div>
 
-        {/* Columns */}
-        <div className="flex items-center justify-around px-2 pb-3">
-          <ScrollColumn
-            items={hours}
-            selected={hour}
-            onSelect={handleHourChange}
-            renderItem={(h) => pad(h)}
-            getKey={(h) => h}
-          />
-          <div className="text-[18px] font-light text-muted-foreground/50 pb-0.5">:</div>
-          <ScrollColumn
-            items={minutes}
-            selected={minute}
-            onSelect={handleMinuteChange}
-            renderItem={(m) => pad(m)}
-            getKey={(m) => m}
-          />
-          {!use24Hour && (
-            <>
-              <div className="w-px self-stretch bg-border mx-1" />
-              <ScrollColumn
-                items={["AM", "PM"] as const}
-                selected={period}
-                onSelect={handlePeriodChange}
-                renderItem={(p) => p}
-                getKey={(p) => p}
-              />
-            </>
-          )}
+          {/* Column labels */}
+          <div
+            className="flex items-center justify-around px-2 pt-2 pb-0.5"
+            style={{ paddingLeft: 8, paddingRight: use24Hour ? 8 : 8 }}
+          >
+            <span className="w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              Hr
+            </span>
+            <span className="w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+              Min
+            </span>
+            {!use24Hour && (
+              <span className="w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                AM/PM
+              </span>
+            )}
+          </div>
+
+          {/* Columns */}
+          <div className="flex items-center justify-around px-2 pb-3">
+            <ScrollColumn
+              items={hours}
+              selected={hour}
+              onSelect={handleHourChange}
+              renderItem={(h) => pad(h)}
+              getKey={(h) => h}
+            />
+            <div className="text-[18px] font-light text-muted-foreground/50 pb-0.5">:</div>
+            <ScrollColumn
+              items={minutes}
+              selected={minute}
+              onSelect={handleMinuteChange}
+              renderItem={(m) => pad(m)}
+              getKey={(m) => m}
+            />
+            {!use24Hour && (
+              <>
+                <div className="w-px self-stretch bg-border mx-1" />
+                <ScrollColumn
+                  items={["AM", "PM"] as const}
+                  selected={period}
+                  onSelect={handlePeriodChange}
+                  renderItem={(p) => p}
+                  getKey={(p) => p}
+                />
+              </>
+            )}
+          </div>
         </div>
-      </div>
+      </RemoveScroll>
     ) : null;
 
     /* ── Merge refs ── */
