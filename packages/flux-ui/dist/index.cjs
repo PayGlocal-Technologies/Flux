@@ -590,6 +590,12 @@ var Button = (0, import_react.forwardRef)(
         disabled: disabled || isLoading,
         className: cn(
           "inline-flex items-center justify-center font-medium transition-colors duration-pg-fast ease-pg-standard",
+          // A button's label never wraps. Without this, a narrow button breaks
+          // the line between an icon and its text — and an icon passed as a
+          // child rather than through `leftIcon` sits inside the same span, so
+          // it wraps with the words. Pass `whitespace-normal` in `className`
+          // for the rare button that really should wrap.
+          "whitespace-nowrap",
           variant !== "link" && "disabled:cursor-not-allowed disabled:opacity-50",
           variant === "link" && "justify-center",
           variant !== "link" && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
