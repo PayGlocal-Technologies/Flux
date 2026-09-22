@@ -1452,6 +1452,27 @@ addFlag({ title: "Payment successful", appearance: "success" });`,
     toc: baseToc,
   },
   {
+    slug: "single-select",
+    title: "Single select",
+    description:
+      "One-of-many dropdown for forms, with optional search and a pluggable match.",
+    importSnippet: `import { SingleSelect } from "@payglocal_ui/flux-ui";`,
+    usageSnippet: `const [currency, setCurrency] = useState("");
+
+<SingleSelect
+  options={[
+    { label: "₹ - Indian Rupee (INR)", value: "INR" },
+    { label: "$ - US Dollar (USD)", value: "USD" },
+  ]}
+  value={currency}
+  onChange={setCurrency}
+  placeholder="Select ISO3 currency code"
+  showSearch
+  searchPlaceholder="Search currency"
+/>`,
+    toc: baseToc,
+  },
+  {
     slug: "country-select",
     title: "Country select",
     description: "Select with flag emoji, country name, and dial code.",

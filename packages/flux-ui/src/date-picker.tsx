@@ -6,6 +6,7 @@ import { RemoveScroll } from "react-remove-scroll";
 import { ChevronLeft, ChevronRight, ChevronDown, CalendarDays } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "./utils";
+import { ScrollLockTakeover } from "./scroll-lock";
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
 const MONTHS = ["January","February","March","April","May","June",
@@ -655,8 +656,11 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
         <ChevronDown className={cn("size-[1.125rem] shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
 
-      {/* Portal */}
-      {mounted && createPortal(panel, document.body)}
+      {/* Portal. Wrapped so the panel takes over the scroll lock when it opens
+          inside a Dialog or Drawer — without it the year/month lists and the
+          time columns cannot be scrolled with the wheel. See `scroll-lock.tsx`. */}
+      {mounted &&
+        createPortal(<ScrollLockTakeover>{panel}</ScrollLockTakeover>, document.body)}
     </div>
   );
 }

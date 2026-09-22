@@ -37,6 +37,7 @@ import {
   Badge,
   Blanket,
   CheckboxSelect,
+  SingleSelect,
   Hide,
   InlineDialog,
   InlineDialogContent,
@@ -1131,6 +1132,25 @@ export function MyPage() {
             onChange={() => {}}
             placeholder="Select frameworks"
             showSearch
+          />
+        </div>
+      );
+    case "single-select":
+      return (
+        <div className="mx-auto w-full max-w-xs">
+          <SingleSelect
+            options={[
+              { value: "INR", label: "₹ - Indian Rupee (INR)" },
+              { value: "USD", label: "$ - US Dollar (USD)" },
+              { value: "GBP", label: "£ - Pound Sterling (GBP)" },
+              { value: "SGD", label: "$ - Singapore Dollar (SGD)" },
+              { value: "AED", label: "د.إ - UAE Dirham (AED)" },
+            ]}
+            value="INR"
+            onChange={() => {}}
+            placeholder="Select ISO3 currency code"
+            showSearch
+            searchPlaceholder="Search currency"
           />
         </div>
       );

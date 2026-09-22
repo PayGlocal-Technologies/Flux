@@ -4,6 +4,7 @@ import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { cn } from "./utils";
+import { ScrollLockTakeover } from "./scroll-lock";
 
 export interface Country {
   code: string;
@@ -142,96 +143,100 @@ const CountrySelect = React.forwardRef<HTMLButtonElement, CountrySelectProps>(
         </PopoverPrimitive.Trigger>
 
         <PopoverPrimitive.Portal>
-          <PopoverPrimitive.Content
-            align="start"
-            sideOffset={6}
-            className={cn(
-              "z-[120] w-[var(--radix-popover-trigger-width)] min-w-[260px] rounded-xl border border-border bg-popover text-popover-foreground shadow-lg outline-none",
-              "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150"
-            )}
-            onOpenAutoFocus={(e) => e.preventDefault()}
-          >
-            {/* Search */}
-            <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
-              <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
-              <input
-                ref={searchRef}
-                type="text"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search countries…"
-                className={cn(
-                  "flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground",
-                  "focus-visible:outline-none"
-                )}
-                aria-label="Search countries"
-              />
-              {search && (
-                <button
-                  type="button"
-                  onClick={() => setSearch("")}
-                  className="shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-pg-fast ease-pg-standard"
-                  aria-label="Clear search"
-                >
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                    <path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </button>
+          {/* Takes over the scroll lock when this opens inside a Dialog or
+              Drawer, so the list can be scrolled. See `scroll-lock.tsx`. */}
+          <ScrollLockTakeover>
+            <PopoverPrimitive.Content
+              align="start"
+              sideOffset={6}
+              className={cn(
+                "z-[120] w-[var(--radix-popover-trigger-width)] min-w-[260px] rounded-xl border border-border bg-popover text-popover-foreground shadow-lg outline-none",
+                "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150"
               )}
-            </div>
-
-            {/* List */}
-            <div
-              role="listbox"
-              aria-label="Countries"
-              className="max-h-64 overflow-y-auto p-1"
+              onOpenAutoFocus={(e) => e.preventDefault()}
             >
-              {filtered.length === 0 ? (
-                <div className="py-6 text-center text-sm text-muted-foreground">
-                  No countries found
-                </div>
-              ) : (
-                filtered.map((country) => {
-                  const isSelected = country.code === value;
-                  return (
-                    <button
-                      key={country.code}
-                      role="option"
-                      aria-selected={isSelected}
-                      type="button"
-                      onClick={() => {
-                        onValueChange?.(country.code);
-                        setOpen(false);
-                      }}
-                      className={cn(
-                        "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm",
-                        "transition-colors duration-pg-fast ease-pg-standard",
-                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
-                        "hover:bg-muted",
-                        isSelected && "bg-muted/60"
-                      )}
-                    >
-                      <span className="text-base leading-none" aria-hidden="true">
-                        {country.flag}
-                      </span>
-                      <span className="flex-1 truncate text-foreground">
-                        {country.name}
-                      </span>
-                      <span className="shrink-0 text-xs text-muted-foreground">
-                        {country.dialCode}
-                      </span>
-                      {isSelected && (
-                        <Check
-                          className="h-3.5 w-3.5 shrink-0 text-primary"
-                          aria-hidden="true"
-                        />
-                      )}
-                    </button>
-                  );
-                })
-              )}
-            </div>
-          </PopoverPrimitive.Content>
+              {/* Search */}
+              <div className="flex items-center gap-2 border-b border-border px-3 py-2.5">
+                <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden="true" />
+                <input
+                  ref={searchRef}
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search countries…"
+                  className={cn(
+                    "flex-1 bg-transparent text-[14px] text-foreground placeholder:text-muted-foreground",
+                    "focus-visible:outline-none"
+                  )}
+                  aria-label="Search countries"
+                />
+                {search && (
+                  <button
+                    type="button"
+                    onClick={() => setSearch("")}
+                    className="shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-pg-fast ease-pg-standard"
+                    aria-label="Clear search"
+                  >
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                      <path d="M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* List */}
+              <div
+                role="listbox"
+                aria-label="Countries"
+                className="max-h-64 overflow-y-auto p-1"
+              >
+                {filtered.length === 0 ? (
+                  <div className="py-6 text-center text-sm text-muted-foreground">
+                    No countries found
+                  </div>
+                ) : (
+                  filtered.map((country) => {
+                    const isSelected = country.code === value;
+                    return (
+                      <button
+                        key={country.code}
+                        role="option"
+                        aria-selected={isSelected}
+                        type="button"
+                        onClick={() => {
+                          onValueChange?.(country.code);
+                          setOpen(false);
+                        }}
+                        className={cn(
+                          "flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm",
+                          "transition-colors duration-pg-fast ease-pg-standard",
+                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
+                          "hover:bg-muted",
+                          isSelected && "bg-muted/60"
+                        )}
+                      >
+                        <span className="text-base leading-none" aria-hidden="true">
+                          {country.flag}
+                        </span>
+                        <span className="flex-1 truncate text-foreground">
+                          {country.name}
+                        </span>
+                        <span className="shrink-0 text-xs text-muted-foreground">
+                          {country.dialCode}
+                        </span>
+                        {isSelected && (
+                          <Check
+                            className="h-3.5 w-3.5 shrink-0 text-primary"
+                            aria-hidden="true"
+                          />
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            </PopoverPrimitive.Content>
+          </ScrollLockTakeover>
         </PopoverPrimitive.Portal>
       </PopoverPrimitive.Root>
     );

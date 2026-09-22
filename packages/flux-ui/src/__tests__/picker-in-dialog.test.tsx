@@ -138,3 +138,40 @@ describe("pickers inside a modal drawer", () => {
     await waitFor(() => expect(onChange).toHaveBeenCalledWith("2026-09-10 14:45"));
   });
 });
+
+/**
+ * The other half of the same problem. Pointer events are what stopped clicks;
+ * the scroll lock is what stopped the wheel — the drawer's lock cancels
+ * wheel events for anything portalled outside it, which is every picker panel.
+ * A panel opened under a lock takes over with one of its own, and only the
+ * topmost lock acts, so its scrollable regions work again.
+ */
+describe("pickers take over the scroll lock inside a drawer", () => {
+  it("DatePicker's panel pushes its own lock", async () => {
+    render(<DateHarness onChange={() => {}} />);
+    expect(document.body.getAttribute("data-scroll-locked")).toBe("1");
+
+    fireEvent.click(screen.getByText("10 Sep 2026"));
+
+    const day = await screen.findByRole("button", { name: "17" });
+    expect(day.closest("[data-scroll-lock-takeover]")).not.toBeNull();
+  });
+
+  it("TimePicker's panel pushes its own lock", async () => {
+    render(<TimeHarness onChange={() => {}} />);
+    expect(document.body.getAttribute("data-scroll-locked")).toBe("1");
+
+    fireEvent.click(screen.getByText("09:30 AM"));
+
+    const hours = await screen.findByText("Hr");
+    expect(hours.closest("[data-scroll-lock-takeover]")).not.toBeNull();
+  });
+
+  it("does not wrap the panel when there is no lock to take over", async () => {
+    render(<DatePicker value="2026-09-10" onChange={() => {}} />);
+    fireEvent.click(screen.getByText("10 Sep 2026"));
+
+    const day = await screen.findByRole("button", { name: "17" });
+    expect(day.closest("[data-scroll-lock-takeover]")).toBeNull();
+  });
+});

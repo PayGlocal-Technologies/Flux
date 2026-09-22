@@ -4,6 +4,7 @@ import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { X } from "lucide-react";
 import { cn } from "./utils";
+import { ScrollLockTakeover } from "./scroll-lock";
 
 // ---------------------------------------------------------------------------
 // Types
@@ -103,44 +104,48 @@ const InlineDialogContent = React.forwardRef<
     ref
   ) => (
     <PopoverPrimitive.Portal>
-      <PopoverPrimitive.Content
-        ref={ref}
-        side={side}
-        sideOffset={sideOffset}
-        className={cn(
-          // Base card
-          "relative z-[120] max-w-xs overflow-visible",
-          "rounded-xl border border-border bg-card p-4 text-foreground shadow-lg",
-          // Animation
-          "data-[state=open]:opacity-100 data-[state=closed]:opacity-0",
-          "transition-opacity duration-pg-fast ease-pg-standard",
-          "outline-none",
-          className
-        )}
-        {...props}
-      >
-        {/* Arrow pointer */}
-        <span className={getArrowClasses(side)} aria-hidden="true" />
+      {/* Scrollable when opened from inside a Dialog or Drawer. See
+          `scroll-lock.tsx`. */}
+      <ScrollLockTakeover>
+        <PopoverPrimitive.Content
+          ref={ref}
+          side={side}
+          sideOffset={sideOffset}
+          className={cn(
+            // Base card
+            "relative z-[120] max-w-xs overflow-visible",
+            "rounded-xl border border-border bg-card p-4 text-foreground shadow-lg",
+            // Animation
+            "data-[state=open]:opacity-100 data-[state=closed]:opacity-0",
+            "transition-opacity duration-pg-fast ease-pg-standard",
+            "outline-none",
+            className
+          )}
+          {...props}
+        >
+          {/* Arrow pointer */}
+          <span className={getArrowClasses(side)} aria-hidden="true" />
 
-        {/* Close button */}
-        {!hideClose && (
-          <PopoverPrimitive.Close
-            className={cn(
-              "absolute right-2 top-2 z-10",
-              "inline-flex size-6 items-center justify-center rounded-md",
-              "text-muted-foreground hover:text-foreground",
-              "transition-colors duration-pg-fast ease-pg-standard",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
-              "disabled:cursor-not-allowed disabled:opacity-50"
-            )}
-            aria-label="Close"
-          >
-            <X className="size-3.5" />
-          </PopoverPrimitive.Close>
-        )}
+          {/* Close button */}
+          {!hideClose && (
+            <PopoverPrimitive.Close
+              className={cn(
+                "absolute right-2 top-2 z-10",
+                "inline-flex size-6 items-center justify-center rounded-md",
+                "text-muted-foreground hover:text-foreground",
+                "transition-colors duration-pg-fast ease-pg-standard",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
+                "disabled:cursor-not-allowed disabled:opacity-50"
+              )}
+              aria-label="Close"
+            >
+              <X className="size-3.5" />
+            </PopoverPrimitive.Close>
+          )}
 
-        {children}
-      </PopoverPrimitive.Content>
+          {children}
+        </PopoverPrimitive.Content>
+      </ScrollLockTakeover>
     </PopoverPrimitive.Portal>
   )
 );

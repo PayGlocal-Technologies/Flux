@@ -5,6 +5,8 @@ import * as PopoverPrimitive from "@radix-ui/react-popover";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { cn } from "./utils";
+import { filterOptions, type OptionFilter } from "./option-filter";
+import { ScrollLockTakeover } from "./scroll-lock";
 
 export interface CheckboxSelectOption {
   value: string;
@@ -18,6 +20,13 @@ export interface CheckboxSelectProps {
   onChange: (values: string[]) => void;
   placeholder?: string;
   showSearch?: boolean;
+  /** Placeholder inside the search box. Default "Search...". */
+  searchPlaceholder?: string;
+  /**
+   * Replaces the default match (label or value, case-insensitive) — for a list
+   * that has to be findable by something the row does not display.
+   */
+  filterOption?: OptionFilter<CheckboxSelectOption>;
   disabled?: boolean;
   maxDisplay?: number;
   className?: string;
@@ -48,6 +57,8 @@ const CheckboxSelect = React.forwardRef<HTMLButtonElement, CheckboxSelectProps>(
       onChange,
       placeholder = "Select options",
       showSearch = false,
+      searchPlaceholder = "Search...",
+      filterOption,
       disabled = false,
       maxDisplay = 2,
       className,
@@ -57,11 +68,12 @@ const CheckboxSelect = React.forwardRef<HTMLButtonElement, CheckboxSelectProps>(
     const [open, setOpen] = React.useState(false);
     const [search, setSearch] = React.useState("");
 
-    const filtered = React.useMemo(() => {
-      if (!search.trim()) return options;
-      const lower = search.toLowerCase();
-      return options.filter((o) => o.label.toLowerCase().includes(lower));
-    }, [options, search]);
+    // Shared with SingleSelect and SelectFilterChip: the value matches as well
+    // as the label, so a raw code finds its prettified row.
+    const filtered = React.useMemo(
+      () => filterOptions(options, search, filterOption),
+      [options, search, filterOption]
+    );
 
     const allFilteredValues = filtered.filter((o) => !o.disabled).map((o) => o.value);
     const allFilteredSelected =
@@ -121,113 +133,121 @@ const CheckboxSelect = React.forwardRef<HTMLButtonElement, CheckboxSelectProps>(
         </PopoverPrimitive.Trigger>
 
         <PopoverPrimitive.Portal>
-          <PopoverPrimitive.Content
-            align="start"
-            sideOffset={6}
-            className={cn(
-              "z-[120] min-w-[var(--radix-popover-trigger-width)] w-full rounded-xl border border-border bg-popover text-popover-foreground shadow-lg outline-none p-1",
-              "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150"
-            )}
-          >
-            {showSearch && (
-              <div className="relative mb-1 px-1 pt-1">
-                <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search..."
-                  className={cn(
-                    "flex h-9 w-full rounded-md border border-border bg-card pl-8 pr-3 text-sm shadow-sm placeholder:text-muted-foreground",
-                    "transition-colors duration-pg-fast ease-pg-standard",
-                    "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
-                  )}
-                />
-              </div>
-            )}
+          {/* Takes over the scroll lock when this opens inside a Dialog or
+              Drawer, so the list can be scrolled. See `scroll-lock.tsx`. */}
+          <ScrollLockTakeover>
+            <PopoverPrimitive.Content
+              align="start"
+              sideOffset={6}
+              collisionPadding={8}
+              className={cn(
+                "z-[120] min-w-[var(--radix-popover-trigger-width)] w-full rounded-xl border border-border bg-popover text-popover-foreground shadow-lg outline-none p-1",
+                "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150"
+              )}
+            >
+              {showSearch && (
+                <div className="relative mb-1 px-1 pt-1">
+                  <Search className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={search}
+                    onChange={(e) => setSearch(e.target.value)}
+                    placeholder={searchPlaceholder}
+                    aria-label={searchPlaceholder}
+                    className={cn(
+                      "flex h-9 w-full rounded-md border border-border bg-card pl-8 pr-3 text-sm shadow-sm placeholder:text-muted-foreground",
+                      "transition-colors duration-pg-fast ease-pg-standard",
+                      "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
+                    )}
+                  />
+                </div>
+              )}
 
-            <div className="flex items-center justify-between px-2 py-1.5">
-              <button
-                type="button"
-                onClick={handleSelectAll}
-                className={cn(
-                  "text-xs font-medium transition-colors duration-pg-fast ease-pg-standard",
-                  allFilteredSelected
-                    ? "text-primary hover:text-primary/80"
-                    : someFilteredSelected
-                    ? "text-primary hover:text-primary/80"
-                    : "text-muted-foreground hover:text-foreground"
-                )}
-              >
-                {allFilteredSelected ? "Deselect all" : "Select all"}
-              </button>
-              {value.length > 0 && (
+              <div className="flex items-center justify-between px-2 py-1.5">
                 <button
                   type="button"
-                  onClick={handleClearAll}
-                  className="text-xs font-medium text-muted-foreground transition-colors duration-pg-fast ease-pg-standard hover:text-foreground"
+                  onClick={handleSelectAll}
+                  className={cn(
+                    "text-xs font-medium transition-colors duration-pg-fast ease-pg-standard",
+                    allFilteredSelected
+                      ? "text-primary hover:text-primary/80"
+                      : someFilteredSelected
+                      ? "text-primary hover:text-primary/80"
+                      : "text-muted-foreground hover:text-foreground"
+                  )}
                 >
-                  Clear
+                  {allFilteredSelected ? "Deselect all" : "Select all"}
                 </button>
-              )}
-            </div>
+                {value.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleClearAll}
+                    className="text-xs font-medium text-muted-foreground transition-colors duration-pg-fast ease-pg-standard hover:text-foreground"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
 
-            <div className="my-0.5 h-px bg-border mx-1" />
+              <div className="my-0.5 h-px bg-border mx-1" />
 
-            <div className="max-h-60 overflow-y-auto py-0.5">
-              {filtered.length === 0 ? (
-                <div className="px-3 py-6 text-center text-sm text-muted-foreground">
-                  No options found.
-                </div>
-              ) : (
-                filtered.map((option) => {
-                  const checked = value.includes(option.value);
-                  return (
-                    <div
-                      key={option.value}
-                      role="option"
-                      aria-selected={checked}
-                      aria-disabled={option.disabled}
-                      onClick={() => !option.disabled && handleToggle(option.value)}
-                      className={cn(
-                        "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm select-none",
-                        "transition-colors duration-pg-fast ease-pg-standard",
-                        option.disabled
-                          ? "cursor-not-allowed opacity-50"
-                          : "cursor-pointer hover:bg-muted"
-                      )}
-                    >
-                      <CheckboxPrimitive.Root
-                        checked={checked}
-                        disabled={option.disabled}
-                        onCheckedChange={() => !option.disabled && handleToggle(option.value)}
-                        onClick={(e) => e.stopPropagation()}
+              {/* Capped by the room the popover has, so a long list near the
+                  bottom of a dialog scrolls rather than running off-screen. */}
+              <div className="overflow-y-auto overscroll-contain py-0.5 max-h-[min(15rem,var(--radix-popover-content-available-height,15rem))]">
+                {filtered.length === 0 ? (
+                  <div className="px-3 py-6 text-center text-sm text-muted-foreground">
+                    No options found.
+                  </div>
+                ) : (
+                  filtered.map((option) => {
+                    const checked = value.includes(option.value);
+                    return (
+                      <div
+                        key={option.value}
+                        role="option"
+                        aria-selected={checked}
+                        aria-disabled={option.disabled}
+                        onClick={() => !option.disabled && handleToggle(option.value)}
                         className={cn(
-                          "peer h-4 w-4 shrink-0 rounded-md border border-border bg-card shadow-sm",
+                          "flex items-center gap-2.5 px-3 py-2 rounded-md text-sm select-none",
                           "transition-colors duration-pg-fast ease-pg-standard",
-                          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
-                          "disabled:cursor-not-allowed disabled:opacity-50",
-                          "data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          option.disabled
+                            ? "cursor-not-allowed opacity-50"
+                            : "cursor-pointer hover:bg-muted"
                         )}
                       >
-                        <CheckboxPrimitive.Indicator className="flex items-center justify-center text-primary-foreground">
-                          <Check className="size-3" strokeWidth={3} />
-                        </CheckboxPrimitive.Indicator>
-                      </CheckboxPrimitive.Root>
-                      <span
-                        className={cn(
-                          "leading-none",
-                          checked ? "text-foreground" : "text-foreground"
-                        )}
-                      >
-                        {option.label}
-                      </span>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </PopoverPrimitive.Content>
+                        <CheckboxPrimitive.Root
+                          checked={checked}
+                          disabled={option.disabled}
+                          onCheckedChange={() => !option.disabled && handleToggle(option.value)}
+                          onClick={(e) => e.stopPropagation()}
+                          className={cn(
+                            "peer h-4 w-4 shrink-0 rounded-md border border-border bg-card shadow-sm",
+                            "transition-colors duration-pg-fast ease-pg-standard",
+                            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
+                            "disabled:cursor-not-allowed disabled:opacity-50",
+                            "data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          )}
+                        >
+                          <CheckboxPrimitive.Indicator className="flex items-center justify-center text-primary-foreground">
+                            <Check className="size-3" strokeWidth={3} />
+                          </CheckboxPrimitive.Indicator>
+                        </CheckboxPrimitive.Root>
+                        <span
+                          className={cn(
+                            "leading-none",
+                            checked ? "text-foreground" : "text-foreground"
+                          )}
+                        >
+                          {option.label}
+                        </span>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </PopoverPrimitive.Content>
+          </ScrollLockTakeover>
         </PopoverPrimitive.Portal>
       </PopoverPrimitive.Root>
     );

@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { RemoveScroll } from "react-remove-scroll";
 import { Clock, ChevronDown, X } from "lucide-react";
 import { cn } from "./utils";
+import { ScrollLockTakeover } from "./scroll-lock";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
 
@@ -463,7 +464,11 @@ export const TimePicker = React.forwardRef<HTMLButtonElement, TimePickerProps>(
           )}
         </button>
 
-        {mounted && panel && createPortal(panel, document.body)}
+        {/* Wrapped so the hour/minute columns can be scrolled when the picker
+            opens inside a Dialog or Drawer. See `scroll-lock.tsx`. */}
+        {mounted &&
+          panel &&
+          createPortal(<ScrollLockTakeover>{panel}</ScrollLockTakeover>, document.body)}
       </div>
     );
   }

@@ -55,6 +55,7 @@ export function getComponentNavGroups(): ComponentNavGroup[] {
         { title: "Button group", href: "/docs/components/button-group" },
         { title: "Checkbox", href: "/docs/components/checkbox" },
         { title: "Checkbox select", href: "/docs/components/checkbox-select" },
+        { title: "Single select", href: "/docs/components/single-select" },
         { title: "Country select", href: "/docs/components/country-select" },
         { title: "Currency amount input", href: "/docs/components/currency-amount-input" },
         { title: "Date picker", href: "/docs/components/date-picker" },

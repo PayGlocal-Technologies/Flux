@@ -41,6 +41,16 @@ export interface CodeBlockProps extends HTMLAttributes<HTMLDivElement> {
   language?: string;
   /** Hide the copy button. Defaults to false. */
   hideCopy?: boolean;
+  /**
+   * Wrap long lines instead of scrolling them sideways.
+   *
+   * Worth turning on wherever the code is something to read and copy rather
+   * than to study — a snippet in a dialog, say, where a horizontal scrollbar
+   * hides the end of the only line that matters and no one thinks to drag it.
+   * Leave it off for real source, where wrapping would break the indentation
+   * that carries the structure.
+   */
+  wrap?: boolean;
 }
 
 export const CodeBlock = forwardRef<HTMLDivElement, CodeBlockProps>(
@@ -50,6 +60,7 @@ export const CodeBlock = forwardRef<HTMLDivElement, CodeBlockProps>(
       filename,
       language,
       hideCopy = false,
+      wrap = false,
       className,
       ...props
     },
@@ -103,7 +114,16 @@ export const CodeBlock = forwardRef<HTMLDivElement, CodeBlockProps>(
 
         {/* Code area */}
         <div className="relative">
-          <pre className="overflow-x-auto p-4 font-mono text-[13px] leading-relaxed">
+          <pre
+            className={cn(
+              "p-4 font-mono text-[13px] leading-relaxed",
+              wrap ? "whitespace-pre-wrap break-words" : "overflow-x-auto",
+              // Room for the floating copy button, which a wrapped line would
+              // otherwise run underneath. Only when wrapping: a scrolling block
+              // is unchanged from before this prop existed.
+              wrap && !hasHeader && !hideCopy && "pr-12"
+            )}
+          >
             <code>{code}</code>
           </pre>
 
