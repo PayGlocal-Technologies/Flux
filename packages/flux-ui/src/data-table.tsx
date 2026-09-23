@@ -2,6 +2,7 @@
 
 import type { CSSProperties, ReactNode } from "react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 import { Shimmer } from "./skeleton";
 import { EmptyState } from "./empty-state";
 import {
@@ -1066,7 +1067,8 @@ export function DataTable<T>({
                             type="button"
                             onClick={() => rowCta?.onClick?.(row)}
                             className={cn(
-                              "inline-flex items-center font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap shadow-sm",
+                              "inline-flex items-center font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap",
+                              elevation.control,
                               compact
                                 ? "px-2.5 py-1 text-[11px]"
                                 : "px-3 py-1.5 text-[12px]"
@@ -1146,7 +1148,7 @@ const PAGE_BUTTON =
   "w-7 h-7 rounded-md flex items-center justify-center text-[12px] font-medium tabular-nums transition-colors";
 const PAGE_BUTTON_IDLE =
   "text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed";
-const PAGE_BUTTON_ACTIVE = "bg-primary text-primary-foreground shadow-sm";
+const PAGE_BUTTON_ACTIVE = `bg-primary text-primary-foreground ${elevation.control}`;
 
 /**
  * One footer for every pagination mode, so a cursor-paged grid and a

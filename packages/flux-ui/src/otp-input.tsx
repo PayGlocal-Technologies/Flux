@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 export interface OtpInputProps {
   /** Current OTP value (controlled). */
@@ -105,7 +106,8 @@ export function OtpInput({
           onKeyDown={(e) => handleKeyDown(i, e)}
           onPaste={handlePaste}
           className={cn(
-            "h-12 w-11 rounded-lg border bg-card text-center text-lg font-semibold text-foreground shadow-sm transition-colors",
+            "h-12 w-11 rounded-lg border bg-card text-center text-lg font-semibold text-foreground transition-colors",
+            elevation.field,
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:border-primary",
             "disabled:cursor-not-allowed disabled:opacity-50",
             invalid ? "border-destructive ring-destructive/20" : "border-input"

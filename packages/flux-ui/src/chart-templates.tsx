@@ -21,6 +21,7 @@ import {
   Minus,
 } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 import { Button } from "./button";
 import { Separator } from "./separator";
 
@@ -70,7 +71,8 @@ export function MetricSparklineCard({
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm",
+        "relative overflow-hidden rounded-xl border border-border bg-card p-5 text-card-foreground",
+        elevation.surface,
         className
       )}
     >
@@ -167,7 +169,7 @@ export function DashboardAreaChartTemplate({
   const areaGid = React.useId().replace(/:/g, "");
 
   return (
-    <div className={cn("rounded-xl border border-border bg-card text-card-foreground shadow-sm", className)}>
+    <div className={cn("rounded-xl border border-border bg-card text-card-foreground", elevation.surface, className)}>
       <div className="flex flex-col gap-4 border-b border-border px-5 pt-4 pb-3 sm:flex-row sm:items-start sm:justify-between">
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         <div className="flex flex-wrap gap-1 rounded-lg border border-border bg-muted/30 p-0.5">
@@ -285,7 +287,7 @@ export function GroupedBarChartTemplate({
   className,
 }: GroupedBarChartTemplateProps) {
   return (
-    <div className={cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground shadow-sm", className)}>
+    <div className={cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground", elevation.surface, className)}>
       <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-sm font-semibold text-foreground">{title}</h3>
@@ -362,7 +364,7 @@ export function RankedBarListTemplate({
   className,
 }: RankedBarListTemplateProps) {
   return (
-    <div className={cn("rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm", className)}>
+    <div className={cn("rounded-xl border border-border bg-card p-5 text-card-foreground", elevation.surface, className)}>
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="text-sm font-semibold text-foreground">{title}</h3>
@@ -422,7 +424,7 @@ export function CategoryBarChartTemplate({
   const chartData = data.map((d) => ({ name: d.category, v: d.value }));
 
   return (
-    <div className={cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground shadow-sm", className)}>
+    <div className={cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground", elevation.surface, className)}>
       <div className="mb-3">
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         {subtitle ? <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p> : null}
@@ -486,7 +488,7 @@ export function MiniSparklineChartCard({
   const hasCompare = data.some((d) => d.compare != null);
 
   return (
-    <div className={cn("rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm", className)}>
+    <div className={cn("rounded-xl border border-border bg-card p-5 text-card-foreground", elevation.surface, className)}>
       <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       <div className="mt-2 text-2xl font-semibold tabular-nums">{value}</div>
       <div className="mt-2" style={{ height }}>
@@ -554,7 +556,7 @@ const toneCls = {
 
 export function AttentionListTemplate({ title, items, className }: AttentionListTemplateProps) {
   return (
-    <div className={cn("rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm", className)}>
+    <div className={cn("rounded-xl border border-border bg-card p-5 text-card-foreground", elevation.surface, className)}>
       <h3 className="text-sm font-semibold text-foreground">{title}</h3>
       <ul className="mt-4 space-y-4">
         {items.map((item) => (

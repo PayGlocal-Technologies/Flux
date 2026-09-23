@@ -1,6 +1,7 @@
 import * as React from "react";
 import { Info, CheckCircle2, AlertTriangle, XCircle, Sparkles } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 export type SectionMessageVariant = "info" | "success" | "warning" | "error" | "discovery";
 
@@ -56,7 +57,8 @@ const SectionMessage = React.forwardRef<HTMLDivElement, SectionMessageProps>(
           ref={ref}
           role="region"
           className={cn(
-            "flex w-full gap-4 rounded-xl border border-l-4 border-border p-5 shadow-sm transition-colors duration-pg-fast ease-pg-standard",
+            "flex w-full gap-4 rounded-xl border border-l-4 border-border p-5 transition-colors duration-pg-fast ease-pg-standard",
+            elevation.surface,
             config.border,
             config.bg,
             className

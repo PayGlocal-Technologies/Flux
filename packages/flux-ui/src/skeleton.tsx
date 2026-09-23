@@ -1,4 +1,5 @@
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 interface ShimmerProps {
   className?: string;
@@ -12,7 +13,12 @@ export function Shimmer({ className, rounded = "md" }: ShimmerProps) {
 
 export function StatCardSkeleton() {
   return (
-    <div className="bg-card text-card-foreground rounded-xl p-5 flex flex-col gap-3 border border-border shadow-sm">
+    <div
+      className={cn(
+        "bg-card text-card-foreground rounded-xl p-5 flex flex-col gap-3 border border-border",
+        elevation.surface
+      )}
+    >
       <div className="flex items-center justify-between">
         <Shimmer className="h-3 w-28" />
         <Shimmer className="h-10 w-10" rounded="full" />

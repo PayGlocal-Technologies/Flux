@@ -3,6 +3,7 @@
 import * as React from "react";
 import { X, Info, CheckCircle2, AlertTriangle, XCircle } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 export type AlertVariant = "info" | "success" | "warning" | "error" | "neutral";
 
@@ -35,7 +36,7 @@ const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
       <div
         ref={ref}
         role="alert"
-        className={cn("relative flex gap-3 rounded-xl border p-4 shadow-sm", variantStyles[variant], className)}
+        className={cn("relative flex gap-3 rounded-xl border p-4", elevation.surface, variantStyles[variant], className)}
         {...props}
       >
         <Icon className="mt-0.5 size-4 shrink-0" aria-hidden />

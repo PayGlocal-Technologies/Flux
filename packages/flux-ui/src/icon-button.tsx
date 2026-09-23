@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 import { Loader2 } from "lucide-react";
 import { type ButtonHTMLAttributes, forwardRef } from "react";
 
@@ -14,15 +15,15 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 
 const variantClasses: Record<NonNullable<IconButtonProps["variant"]>, string> = {
   primary:
-    "bg-primary text-primary-foreground border border-primary shadow-sm hover:bg-[var(--primary-hover)]",
+    `bg-primary text-primary-foreground border border-primary ${elevation.control} hover:bg-[var(--primary-hover)]`,
   secondary:
-    "bg-muted text-foreground border border-border shadow-sm hover:bg-muted/85 dark:bg-muted/35 dark:text-foreground dark:border-border dark:hover:bg-muted/55",
+    `bg-muted text-foreground border border-border ${elevation.control} hover:bg-muted/85 dark:bg-muted/35 dark:text-foreground dark:border-border dark:hover:bg-muted/55`,
   ghost:
     "bg-transparent text-foreground border border-transparent hover:bg-muted focus-visible:bg-muted/80 active:bg-muted/90",
   outline:
-    "bg-card text-foreground border border-border shadow-sm hover:bg-muted",
+    `bg-card text-foreground border border-border ${elevation.control} hover:bg-muted`,
   danger:
-    "bg-red-600 text-white border border-red-600 shadow-sm hover:bg-red-700",
+    `bg-red-600 text-white border border-red-600 ${elevation.control} hover:bg-red-700`,
 };
 
 const sizeClasses: Record<NonNullable<IconButtonProps["size"]>, string> = {

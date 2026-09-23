@@ -4,6 +4,7 @@ import type { ComponentProps } from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 const Dialog = DialogPrimitive.Root;
 const DialogTrigger = DialogPrimitive.Trigger;
@@ -41,7 +42,8 @@ function DialogContent({
           "fixed left-1/2 top-1/2 z-[101] w-[calc(100%-1.5rem)] max-w-[min(100%,26rem)] -translate-x-1/2 -translate-y-1/2",
           // Default padding reserves space for the close button.
           // Pass p-0 in className to opt out (manage padding per section).
-          "rounded-2xl border border-border bg-card p-6 pt-10 text-card-foreground shadow-2xl outline-none",
+          "rounded-2xl border border-border bg-card p-6 pt-10 text-card-foreground outline-none",
+          elevation.modal,
           "max-h-[min(90vh,720px)] overflow-y-auto",
           "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:scale-100 data-[state=closed]:scale-[0.98]",
           "transition-[opacity,transform] duration-200 ease-out",

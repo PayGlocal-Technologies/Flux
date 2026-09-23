@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 import { Loader2 } from "lucide-react";
 import { type ButtonHTMLAttributes, forwardRef } from "react";
 
@@ -14,15 +15,15 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
   primary:
-    "bg-primary text-primary-foreground border border-primary shadow-sm hover:bg-[var(--primary-hover)]",
+    `bg-primary text-primary-foreground border border-primary ${elevation.control} hover:bg-[var(--primary-hover)]`,
   secondary:
-    "bg-muted text-foreground border border-border shadow-sm hover:bg-muted/85 dark:bg-muted/35 dark:text-foreground dark:border-border dark:hover:bg-muted/55",
+    `bg-muted text-foreground border border-border ${elevation.control} hover:bg-muted/85 dark:bg-muted/35 dark:text-foreground dark:border-border dark:hover:bg-muted/55`,
   ghost:
     "bg-transparent text-foreground border border-transparent hover:bg-muted focus-visible:bg-muted/80 active:bg-muted/90",
   danger:
-    "bg-red-600 text-white border border-red-600 shadow-sm hover:bg-red-700",
+    `bg-red-600 text-white border border-red-600 ${elevation.control} hover:bg-red-700`,
   outline:
-    "bg-card text-foreground border border-border shadow-sm hover:bg-muted",
+    `bg-card text-foreground border border-border ${elevation.control} hover:bg-muted`,
   link:
     "h-auto min-h-0 rounded-md border border-transparent bg-transparent px-2 py-2 text-[15px] font-medium text-primary shadow-none underline-offset-4 hover:bg-primary/5 hover:underline focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:no-underline",
 };

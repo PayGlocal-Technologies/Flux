@@ -3,6 +3,7 @@
 import { useTheme } from "next-themes";
 import { Toaster as Sonner, type ToasterProps } from "sonner";
 import { useEffect, useState } from "react";
+import { elevation } from "./elevation";
 
 /** Drop-in toast host; pair with `toast` from `sonner`. Resolves theme via next-themes when mounted. */
 export function Toaster({ theme, ...props }: ToasterProps) {
@@ -20,7 +21,7 @@ export function Toaster({ theme, ...props }: ToasterProps) {
       toastOptions={{
         classNames: {
           toast:
-            "bg-[var(--popover)] text-[var(--popover-foreground)] border-[var(--border)] shadow-lg rounded-[10px] text-[13px]",
+            `bg-[var(--popover)] text-[var(--popover-foreground)] border-[var(--border)] ${elevation.popover} rounded-[10px] text-[13px]`,
           description: "text-[var(--muted-foreground)]",
         },
       }}

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Check, Pencil, X } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 export interface InlineEditProps {
   value: string;
@@ -93,7 +94,8 @@ const InlineEdit = React.forwardRef<HTMLDivElement, InlineEditProps>(
     };
 
     const sharedInputClass = cn(
-      "w-full rounded-md border border-border bg-card px-2 py-1 text-[15px] leading-tight text-foreground shadow-sm",
+      "w-full rounded-md border border-border bg-card px-2 py-1 text-[15px] leading-tight text-foreground",
+      elevation.field,
       "placeholder:text-muted-foreground",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
       "transition-colors duration-pg-fast ease-pg-standard",

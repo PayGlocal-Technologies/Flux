@@ -4,6 +4,7 @@ import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 import { ScrollLockTakeover } from "./scroll-lock";
 
 export interface Country {
@@ -107,7 +108,8 @@ const CountrySelect = React.forwardRef<HTMLButtonElement, CountrySelectProps>(
             aria-expanded={open}
             aria-haspopup="listbox"
             className={cn(
-              "flex h-11 min-h-11 w-full items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-4 text-[15px] text-foreground shadow-sm",
+              "flex h-11 min-h-11 w-full items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-4 text-[15px] text-foreground",
+              elevation.field,
               "transition-colors duration-pg-fast ease-pg-standard",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
               "disabled:cursor-not-allowed disabled:opacity-50",
@@ -150,7 +152,8 @@ const CountrySelect = React.forwardRef<HTMLButtonElement, CountrySelectProps>(
               align="start"
               sideOffset={6}
               className={cn(
-                "z-[120] w-[var(--radix-popover-trigger-width)] min-w-[260px] rounded-xl border border-border bg-popover text-popover-foreground shadow-lg outline-none",
+                "z-[120] w-[var(--radix-popover-trigger-width)] min-w-[260px] rounded-xl border border-border bg-popover text-popover-foreground outline-none",
+                elevation.popover,
                 "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150"
               )}
               onOpenAutoFocus={(e) => e.preventDefault()}

@@ -4,6 +4,7 @@ import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { X } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 import { ScrollLockTakeover } from "./scroll-lock";
 
 // ---------------------------------------------------------------------------
@@ -114,7 +115,8 @@ const InlineDialogContent = React.forwardRef<
           className={cn(
             // Base card
             "relative z-[120] max-w-xs overflow-visible",
-            "rounded-xl border border-border bg-card p-4 text-foreground shadow-lg",
+            "rounded-xl border border-border bg-card p-4 text-foreground",
+            elevation.popover,
             // Animation
             "data-[state=open]:opacity-100 data-[state=closed]:opacity-0",
             "transition-opacity duration-pg-fast ease-pg-standard",

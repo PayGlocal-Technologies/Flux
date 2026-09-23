@@ -3,6 +3,7 @@
 import * as React from "react";
 import * as RadioGroupPrimitive from "@radix-ui/react-radio-group";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 const RadioGroup = React.forwardRef<
   React.ElementRef<typeof RadioGroupPrimitive.Root>,
@@ -27,7 +28,8 @@ const RadioGroupItem = React.forwardRef<
   <RadioGroupPrimitive.Item
     ref={ref}
     className={cn(
-      "size-4 shrink-0 rounded-full border border-border bg-card shadow-sm",
+      "size-4 shrink-0 rounded-full border border-border bg-card",
+      elevation.field,
       "transition-colors duration-pg-fast ease-pg-standard",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
       "data-[state=checked]:border-primary",

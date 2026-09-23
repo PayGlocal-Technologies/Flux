@@ -7,6 +7,42 @@ function cn(...inputs) {
   return twMerge(clsx(inputs));
 }
 
+// src/elevation.ts
+var elevation = {
+  /**
+   * Flat surfaces that sit ON the page and are delineated by their border:
+   * Card, chart surfaces, DataTableCard, Alert, SectionMessage, Skeleton.
+   * This is the shadow on the mca-home revenue card, and the reference the
+   * rest of the library was pulled onto.
+   */
+  surface: "shadow-sm",
+  /**
+   * Button-shaped things: Button, IconButton, ButtonGroup segments, the
+   * pagination page buttons, a table's row CTA. Just enough lift to read as
+   * pressable. Ghost and link variants stay flat and do not use this.
+   */
+  control: "shadow-sm",
+  /**
+   * Anything you type into or pick from: Input, Textarea, every select
+   * trigger, the date and time pickers, OTP boxes, Checkbox, Radio.
+   *
+   * Deliberately flat. A field is a well, not a raised object, and a form of
+   * ten shadowed controls reads as clutter. Emitted as an explicit
+   * `shadow-none` rather than by omitting the class so that a caller passing
+   * `shadow-sm` through `className` still wins under tailwind-merge.
+   */
+  field: "shadow-none",
+  /**
+   * Things that genuinely float above the page, where depth is the signal that
+   * says "this is detached and dismissible". Kept heavier than `surface` on
+   * purpose — flattening these is what makes a dropdown look painted on.
+   */
+  tooltip: "shadow-md",
+  popover: "shadow-lg",
+  drawer: "shadow-xl",
+  modal: "shadow-2xl"
+};
+
 // src/layout.tsx
 import { jsx } from "react/jsx-runtime";
 var gapClass = {
@@ -259,11 +295,11 @@ import { Loader2 } from "lucide-react";
 import { forwardRef as forwardRef2 } from "react";
 import { jsx as jsx3, jsxs } from "react/jsx-runtime";
 var variantClasses = {
-  primary: "bg-primary text-primary-foreground border border-primary shadow-sm hover:bg-[var(--primary-hover)]",
-  secondary: "bg-muted text-foreground border border-border shadow-sm hover:bg-muted/85 dark:bg-muted/35 dark:text-foreground dark:border-border dark:hover:bg-muted/55",
+  primary: `bg-primary text-primary-foreground border border-primary ${elevation.control} hover:bg-[var(--primary-hover)]`,
+  secondary: `bg-muted text-foreground border border-border ${elevation.control} hover:bg-muted/85 dark:bg-muted/35 dark:text-foreground dark:border-border dark:hover:bg-muted/55`,
   ghost: "bg-transparent text-foreground border border-transparent hover:bg-muted focus-visible:bg-muted/80 active:bg-muted/90",
-  danger: "bg-red-600 text-white border border-red-600 shadow-sm hover:bg-red-700",
-  outline: "bg-card text-foreground border border-border shadow-sm hover:bg-muted",
+  danger: `bg-red-600 text-white border border-red-600 ${elevation.control} hover:bg-red-700`,
+  outline: `bg-card text-foreground border border-border ${elevation.control} hover:bg-muted`,
   link: "h-auto min-h-0 rounded-md border border-transparent bg-transparent px-2 py-2 text-[15px] font-medium text-primary shadow-none underline-offset-4 hover:bg-primary/5 hover:underline focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:no-underline"
 };
 var sizes = {
@@ -429,11 +465,11 @@ var SplitButton = forwardRef3(
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
                 "disabled:cursor-not-allowed disabled:opacity-50",
                 // Match variant styling
-                variant === "primary" && "bg-primary text-primary-foreground border border-primary shadow-sm hover:bg-[var(--primary-hover)] border-l border-l-primary-foreground/20",
-                variant === "secondary" && "bg-muted text-foreground border border-border shadow-sm hover:bg-muted/85 dark:bg-muted/35 dark:hover:bg-muted/55 border-l-0",
-                variant === "outline" && "bg-card text-foreground border border-border shadow-sm hover:bg-muted border-l-0",
+                variant === "primary" && `bg-primary text-primary-foreground border border-primary ${elevation.control} hover:bg-[var(--primary-hover)] border-l border-l-primary-foreground/20`,
+                variant === "secondary" && `bg-muted text-foreground border border-border ${elevation.control} hover:bg-muted/85 dark:bg-muted/35 dark:hover:bg-muted/55 border-l-0`,
+                variant === "outline" && `bg-card text-foreground border border-border ${elevation.control} hover:bg-muted border-l-0`,
                 variant === "ghost" && "bg-transparent text-foreground border border-transparent hover:bg-muted border-l-0",
-                variant === "danger" && "bg-red-600 text-white border border-red-600 shadow-sm hover:bg-red-700 border-l border-l-white/20",
+                variant === "danger" && `bg-red-600 text-white border border-red-600 ${elevation.control} hover:bg-red-700 border-l border-l-white/20`,
                 // Size heights to match Button
                 size === "sm" && "h-9 min-h-9 rounded-lg",
                 size === "md" && "h-10 min-h-10 rounded-lg",
@@ -457,7 +493,8 @@ var SplitButton = forwardRef3(
               role: "menu",
               className: cn(
                 "absolute right-0 top-full mt-1 z-50",
-                "bg-card border border-border rounded-lg shadow-lg py-1 min-w-32"
+                "bg-card border border-border rounded-lg py-1 min-w-32",
+                elevation.popover
               ),
               children
             }
@@ -501,7 +538,8 @@ var Input = React2.forwardRef(
       {
         type,
         className: cn(
-          "flex h-11 min-h-11 w-full rounded-lg border border-border bg-card px-4 py-2 text-[15px] leading-tight shadow-sm transition-colors",
+          "flex h-11 min-h-11 w-full rounded-lg border border-border bg-card px-4 py-2 text-[15px] leading-tight transition-colors",
+          elevation.field,
           "file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
           "placeholder:text-muted-foreground",
           "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
@@ -635,7 +673,8 @@ function OtpInput({
       onKeyDown: (e) => handleKeyDown(i, e),
       onPaste: handlePaste,
       className: cn(
-        "h-12 w-11 rounded-lg border bg-card text-center text-lg font-semibold text-foreground shadow-sm transition-colors",
+        "h-12 w-11 rounded-lg border bg-card text-center text-lg font-semibold text-foreground transition-colors",
+        elevation.field,
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 focus-visible:border-primary",
         "disabled:cursor-not-allowed disabled:opacity-50",
         invalid ? "border-destructive ring-destructive/20" : "border-input"
@@ -739,7 +778,8 @@ var CheckboxSelect = React6.forwardRef(
           "aria-expanded": open,
           "aria-haspopup": "listbox",
           className: cn(
-            "flex h-11 w-full items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-4 py-2 text-[15px] shadow-sm outline-none",
+            "flex h-11 w-full items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-4 py-2 text-[15px] outline-none",
+            elevation.field,
             "transition-colors duration-pg-fast ease-pg-standard",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
             "disabled:cursor-not-allowed disabled:opacity-50",
@@ -767,7 +807,8 @@ var CheckboxSelect = React6.forwardRef(
           sideOffset: 6,
           collisionPadding: 8,
           className: cn(
-            "z-[120] min-w-[var(--radix-popover-trigger-width)] w-full rounded-xl border border-border bg-popover text-popover-foreground shadow-lg outline-none p-1",
+            "z-[120] min-w-[var(--radix-popover-trigger-width)] w-full rounded-xl border border-border bg-popover text-popover-foreground outline-none p-1",
+            elevation.popover,
             "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150"
           ),
           children: [
@@ -782,7 +823,8 @@ var CheckboxSelect = React6.forwardRef(
                   placeholder: searchPlaceholder,
                   "aria-label": searchPlaceholder,
                   className: cn(
-                    "flex h-9 w-full rounded-md border border-border bg-card pl-8 pr-3 text-sm shadow-sm placeholder:text-muted-foreground",
+                    "flex h-9 w-full rounded-md border border-border bg-card pl-8 pr-3 text-sm placeholder:text-muted-foreground",
+                    elevation.field,
                     "transition-colors duration-pg-fast ease-pg-standard",
                     "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                   )
@@ -836,7 +878,8 @@ var CheckboxSelect = React6.forwardRef(
                         onCheckedChange: () => !option.disabled && handleToggle(option.value),
                         onClick: (e) => e.stopPropagation(),
                         className: cn(
-                          "peer h-4 w-4 shrink-0 rounded-md border border-border bg-card shadow-sm",
+                          "peer h-4 w-4 shrink-0 rounded-md border border-border bg-card",
+                          elevation.field,
                           "transition-colors duration-pg-fast ease-pg-standard",
                           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
                           "disabled:cursor-not-allowed disabled:opacity-50",
@@ -924,7 +967,8 @@ var SingleSelect = React7.forwardRef(
               "aria-haspopup": "listbox",
               "aria-invalid": invalid || void 0,
               className: cn(
-                "flex h-11 w-full items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-4 py-2 text-[15px] shadow-sm outline-none",
+                "flex h-11 w-full items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-4 py-2 text-[15px] outline-none",
+                elevation.field,
                 "transition-colors duration-pg-fast ease-pg-standard",
                 "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
                 "aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/25 dark:aria-invalid:ring-destructive/40",
@@ -956,7 +1000,8 @@ var SingleSelect = React7.forwardRef(
               sideOffset: 6,
               collisionPadding: 8,
               className: cn(
-                "z-[120] min-w-[var(--radix-popover-trigger-width)] w-full rounded-xl border border-border bg-popover text-popover-foreground shadow-lg outline-none p-1",
+                "z-[120] min-w-[var(--radix-popover-trigger-width)] w-full rounded-xl border border-border bg-popover text-popover-foreground outline-none p-1",
+                elevation.popover,
                 "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150"
               ),
               children: [
@@ -971,7 +1016,8 @@ var SingleSelect = React7.forwardRef(
                       placeholder: searchPlaceholder,
                       "aria-label": searchPlaceholder,
                       className: cn(
-                        "flex h-9 w-full rounded-md border border-border bg-card pl-8 pr-3 text-sm shadow-sm placeholder:text-muted-foreground",
+                        "flex h-9 w-full rounded-md border border-border bg-card pl-8 pr-3 text-sm placeholder:text-muted-foreground",
+                        elevation.field,
                         "transition-colors duration-pg-fast ease-pg-standard",
                         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                       )
@@ -1040,7 +1086,8 @@ var Textarea = React8.forwardRef(
       "textarea",
       {
         className: cn(
-          "flex min-h-[5.5rem] w-full rounded-lg border border-border bg-card px-4 py-3 text-[15px] leading-relaxed shadow-sm transition-colors",
+          "flex min-h-[5.5rem] w-full rounded-lg border border-border bg-card px-4 py-3 text-[15px] leading-relaxed transition-colors",
+          elevation.field,
           "placeholder:text-muted-foreground",
           "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
           "disabled:cursor-not-allowed disabled:opacity-50",
@@ -1086,7 +1133,8 @@ var Checkbox = React10.forwardRef(({ className, size = "md", ...props }, ref) =>
   {
     ref,
     className: cn(
-      "peer shrink-0 border border-border bg-card shadow-sm transition-colors duration-pg-fast ease-pg-standard",
+      "peer shrink-0 border border-border bg-card transition-colors duration-pg-fast ease-pg-standard",
+      elevation.field,
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
       "disabled:cursor-not-allowed disabled:opacity-50",
       "data-[state=checked]:bg-primary data-[state=checked]:border-primary",
@@ -1118,7 +1166,8 @@ var RadioGroupItem = React11.forwardRef(({ className, ...props }, ref) => /* @__
   {
     ref,
     className: cn(
-      "size-4 shrink-0 rounded-full border border-border bg-card shadow-sm",
+      "size-4 shrink-0 rounded-full border border-border bg-card",
+      elevation.field,
       "transition-colors duration-pg-fast ease-pg-standard",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
       "data-[state=checked]:border-primary",
@@ -1160,7 +1209,8 @@ var switchRootVariants = cva2(
 );
 var switchThumbVariants = cva2(
   [
-    "pointer-events-none block rounded-full bg-white shadow-sm",
+    "pointer-events-none block rounded-full bg-white",
+    elevation.control,
     "transition-transform duration-pg-fast ease-pg-standard",
     "ring-0"
   ],
@@ -1201,7 +1251,10 @@ var Slider = React13.forwardRef(
       ...props,
       children: [
         /* @__PURE__ */ jsx16(SliderPrimitive.Track, { className: "relative h-1.5 w-full grow overflow-hidden rounded-full bg-muted", children: /* @__PURE__ */ jsx16(SliderPrimitive.Range, { className: "absolute h-full bg-primary" }) }),
-        /* @__PURE__ */ jsx16(SliderPrimitive.Thumb, { className: "block h-[18px] w-[18px] rounded-full border-2 border-primary bg-card shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50" })
+        /* @__PURE__ */ jsx16(SliderPrimitive.Thumb, { className: cn(
+          "block h-[18px] w-[18px] rounded-full border-2 border-primary bg-card transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50",
+          elevation.control
+        ) })
       ]
     }
   )
@@ -1539,7 +1592,8 @@ function InputGroup({ className, ...props }) {
       "data-slot": "input-group",
       role: "group",
       className: cn(
-        "group/input-group relative flex w-full items-stretch rounded-xl border border-border bg-card shadow-sm outline-none transition-[color,box-shadow] dark:bg-card/50",
+        "group/input-group relative flex w-full items-stretch rounded-xl border border-border bg-card outline-none transition-[color,box-shadow] dark:bg-card/50",
+        elevation.field,
         "min-h-11 h-11 has-[>textarea]:h-auto",
         "has-[>[data-align=inline-start]]:[&>input]:pl-2",
         "has-[>[data-align=inline-end]]:[&>input]:pr-2",
@@ -1723,17 +1777,20 @@ function CurrencyAmountInput({
 // src/card.tsx
 import { cva as cva5 } from "class-variance-authority";
 import { jsx as jsx22 } from "react/jsx-runtime";
-var cardVariants = cva5("flex flex-col rounded-xl border border-border bg-card text-card-foreground shadow-sm", {
-  variants: {
-    size: {
-      default: "gap-10 px-10 py-10",
-      sm: "gap-6 px-7 py-7"
+var cardVariants = cva5(
+  cn("flex flex-col rounded-xl border border-border bg-card text-card-foreground", elevation.surface),
+  {
+    variants: {
+      size: {
+        default: "gap-10 px-10 py-10",
+        sm: "gap-6 px-7 py-7"
+      }
+    },
+    defaultVariants: {
+      size: "default"
     }
-  },
-  defaultVariants: {
-    size: "default"
   }
-});
+);
 function Card({
   className,
   size,
@@ -2126,7 +2183,7 @@ var PaginationLink = forwardRef19(
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
         "cursor-pointer select-none",
         // active
-        isActive ? "bg-primary text-primary-foreground border-primary shadow-sm" : "text-muted-foreground border-border hover:bg-muted hover:text-foreground",
+        isActive ? `bg-primary text-primary-foreground border-primary ${elevation.control}` : "text-muted-foreground border-border hover:bg-muted hover:text-foreground",
         className
       ),
       ...props
@@ -2678,7 +2735,7 @@ import { Fragment as Fragment5, jsx as jsx33, jsxs as jsxs17 } from "react/jsx-r
 var SpotlightCard = React25.forwardRef(
   ({ title, body, image, currentStep, totalSteps, onNext, onBack, onDismiss, nextLabel, className }, ref) => {
     const isLast = currentStep !== void 0 && totalSteps !== void 0 && currentStep >= totalSteps - 1;
-    return /* @__PURE__ */ jsxs17("div", { ref, className: cn("bg-card border border-border rounded-xl shadow-xl p-5 w-72", className), children: [
+    return /* @__PURE__ */ jsxs17("div", { ref, className: cn("bg-card border border-border rounded-xl p-5 w-72", elevation.surface, className), children: [
       onDismiss && /* @__PURE__ */ jsx33(
         "button",
         {
@@ -2808,7 +2865,8 @@ function DialogContent({
           "fixed left-1/2 top-1/2 z-[101] w-[calc(100%-1.5rem)] max-w-[min(100%,26rem)] -translate-x-1/2 -translate-y-1/2",
           // Default padding reserves space for the close button.
           // Pass p-0 in className to opt out (manage padding per section).
-          "rounded-2xl border border-border bg-card p-6 pt-10 text-card-foreground shadow-2xl outline-none",
+          "rounded-2xl border border-border bg-card p-6 pt-10 text-card-foreground outline-none",
+          elevation.modal,
           "max-h-[min(90vh,720px)] overflow-y-auto",
           "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 data-[state=open]:scale-100 data-[state=closed]:scale-[0.98]",
           "transition-[opacity,transform] duration-200 ease-out",
@@ -2876,7 +2934,7 @@ var DrawerContent = React26.forwardRef(({ className, children, ...props }, ref) 
       DialogPrimitive2.Content,
       {
         ref,
-        className: cn("fixed z-50 flex flex-col bg-card border-border shadow-xl transition-all duration-pg-normal ease-pg-standard data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-200", sideClasses[side], className),
+        className: cn(elevation.drawer, "fixed z-50 flex flex-col bg-card border-border transition-all duration-pg-normal ease-pg-standard data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-200", sideClasses[side], className),
         ...props,
         children: [
           children,
@@ -2918,7 +2976,8 @@ var PopoverContent = React27.forwardRef(({ className, align = "center", sideOffs
     sideOffset,
     collisionPadding,
     className: cn(
-      "z-[120] w-72 rounded-xl border border-border bg-popover p-4 text-popover-foreground shadow-lg outline-none",
+      "z-[120] w-72 rounded-xl border border-border bg-popover p-4 text-popover-foreground outline-none",
+      elevation.popover,
       "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150",
       className
     ),
@@ -2940,7 +2999,8 @@ var TooltipContent = React28.forwardRef(({ className, sideOffset = 6, ...props }
     ref,
     sideOffset,
     className: cn(
-      "z-[130] max-w-xs overflow-hidden rounded-lg border border-border bg-popover px-3 py-2 text-sm leading-snug text-popover-foreground shadow-md",
+      "z-[130] max-w-xs overflow-hidden rounded-lg border border-border bg-popover px-3 py-2 text-sm leading-snug text-popover-foreground",
+      elevation.tooltip,
       className
     ),
     ...props
@@ -3071,7 +3131,8 @@ var DropdownMenuSubContent = React29.forwardRef(({ className, ...props }, ref) =
   {
     ref,
     className: cn(
-      "z-[130] min-w-[8rem] overflow-hidden rounded-xl border border-border bg-popover p-1.5 text-popover-foreground shadow-lg",
+      "z-[130] min-w-[8rem] overflow-hidden rounded-xl border border-border bg-popover p-1.5 text-popover-foreground",
+      elevation.popover,
       "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150",
       className
     ),
@@ -3085,7 +3146,8 @@ var DropdownMenuContent = React29.forwardRef(({ className, sideOffset = 8, ...pr
     ref,
     sideOffset,
     className: cn(
-      "z-[130] min-w-[11rem] overflow-hidden rounded-xl border border-border bg-popover p-1.5 text-popover-foreground shadow-lg",
+      "z-[130] min-w-[11rem] overflow-hidden rounded-xl border border-border bg-popover p-1.5 text-popover-foreground",
+      elevation.popover,
       "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150",
       className
     ),
@@ -3181,7 +3243,8 @@ var SelectTrigger = React30.forwardRef(({ className, children, size = "md", ...p
   {
     ref,
     className: cn(
-      "flex w-full items-center justify-between rounded-lg border border-border bg-card text-foreground shadow-sm outline-none",
+      "flex w-full items-center justify-between rounded-lg border border-border bg-card text-foreground outline-none",
+      elevation.field,
       selectTriggerSizes[size],
       "ring-ring/50 focus-visible:ring-2 disabled:cursor-not-allowed disabled:opacity-50",
       "[&>span]:line-clamp-1",
@@ -3220,7 +3283,8 @@ var SelectContent = React30.forwardRef(({ className, children, position = "poppe
   {
     ref,
     className: cn(
-      "relative z-[120] max-h-[min(24rem,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-lg",
+      "relative z-[120] max-h-[min(24rem,var(--radix-select-content-available-height))] min-w-[var(--radix-select-trigger-width)] overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground",
+      elevation.popover,
       "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150",
       position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
       className
@@ -3270,7 +3334,7 @@ SelectSeparator.displayName = SelectPrimitive.Separator.displayName;
 import * as React31 from "react";
 import { Search as Search3 } from "lucide-react";
 import { jsx as jsx41, jsxs as jsxs23 } from "react/jsx-runtime";
-var Command = React31.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx41("div", { ref, className: cn("bg-card rounded-xl border border-border shadow-lg overflow-hidden", className), ...props }));
+var Command = React31.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsx41("div", { ref, className: cn("bg-card rounded-xl border border-border overflow-hidden", elevation.popover, className), ...props }));
 Command.displayName = "Command";
 var CommandInput = React31.forwardRef(({ className, ...props }, ref) => /* @__PURE__ */ jsxs23("div", { className: "flex items-center gap-2 border-b border-border px-3 h-11", children: [
   /* @__PURE__ */ jsx41(Search3, { className: "size-4 shrink-0 text-muted-foreground", "aria-hidden": true }),
@@ -3527,7 +3591,7 @@ var Alert = React34.forwardRef(
       {
         ref,
         role: "alert",
-        className: cn("relative flex gap-3 rounded-xl border p-4 shadow-sm", variantStyles[variant], className),
+        className: cn("relative flex gap-3 rounded-xl border p-4", elevation.surface, variantStyles[variant], className),
         ...props,
         children: [
           /* @__PURE__ */ jsx45(Icon2, { className: "mt-0.5 size-4 shrink-0", "aria-hidden": true }),
@@ -3673,7 +3737,8 @@ var SectionMessage = React36.forwardRef(
         ref,
         role: "region",
         className: cn(
-          "flex w-full gap-4 rounded-xl border border-l-4 border-border p-5 shadow-sm transition-colors duration-pg-fast ease-pg-standard",
+          "flex w-full gap-4 rounded-xl border border-l-4 border-border p-5 transition-colors duration-pg-fast ease-pg-standard",
+          elevation.surface,
           config.border,
           config.bg,
           className
@@ -3835,14 +3900,23 @@ function Shimmer({ className, rounded = "md" }) {
   return /* @__PURE__ */ jsx50("div", { className: cn("shimmer", r, className) });
 }
 function StatCardSkeleton() {
-  return /* @__PURE__ */ jsxs30("div", { className: "bg-card text-card-foreground rounded-xl p-5 flex flex-col gap-3 border border-border shadow-sm", children: [
-    /* @__PURE__ */ jsxs30("div", { className: "flex items-center justify-between", children: [
-      /* @__PURE__ */ jsx50(Shimmer, { className: "h-3 w-28" }),
-      /* @__PURE__ */ jsx50(Shimmer, { className: "h-10 w-10", rounded: "full" })
-    ] }),
-    /* @__PURE__ */ jsx50(Shimmer, { className: "h-9 w-44 mt-1" }),
-    /* @__PURE__ */ jsx50(Shimmer, { className: "h-3 w-32" })
-  ] });
+  return /* @__PURE__ */ jsxs30(
+    "div",
+    {
+      className: cn(
+        "bg-card text-card-foreground rounded-xl p-5 flex flex-col gap-3 border border-border",
+        elevation.surface
+      ),
+      children: [
+        /* @__PURE__ */ jsxs30("div", { className: "flex items-center justify-between", children: [
+          /* @__PURE__ */ jsx50(Shimmer, { className: "h-3 w-28" }),
+          /* @__PURE__ */ jsx50(Shimmer, { className: "h-10 w-10", rounded: "full" })
+        ] }),
+        /* @__PURE__ */ jsx50(Shimmer, { className: "h-9 w-44 mt-1" }),
+        /* @__PURE__ */ jsx50(Shimmer, { className: "h-3 w-32" })
+      ]
+    }
+  );
 }
 function TableRowSkeleton({
   cols = 6,
@@ -4383,7 +4457,8 @@ function DataTable({
                                     type: "button",
                                     onClick: () => rowCta?.onClick?.(row),
                                     className: cn(
-                                      "inline-flex items-center font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap shadow-sm",
+                                      "inline-flex items-center font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap",
+                                      elevation.control,
                                       compact ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5 text-[12px]"
                                     ),
                                     children: rowCta?.label
@@ -4458,7 +4533,7 @@ function DataTable({
 }
 var PAGE_BUTTON = "w-7 h-7 rounded-md flex items-center justify-center text-[12px] font-medium tabular-nums transition-colors";
 var PAGE_BUTTON_IDLE = "text-muted-foreground hover:text-foreground hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed";
-var PAGE_BUTTON_ACTIVE = "bg-primary text-primary-foreground shadow-sm";
+var PAGE_BUTTON_ACTIVE = `bg-primary text-primary-foreground ${elevation.control}`;
 function DataTableFooter({
   pad: pad3,
   summary,
@@ -5711,7 +5786,8 @@ function navButtonClasses(variant) {
     case "outline":
       return cn(
         base,
-        "border-border bg-card text-foreground shadow-sm hover:bg-muted"
+        elevation.control,
+        "border-border bg-card text-foreground hover:bg-muted"
       );
     case "ghost":
     default:
@@ -5783,7 +5859,8 @@ function Calendar({
           defaultClassNames.dropdowns
         ),
         dropdown_root: cn(
-          "relative rounded-md border border-border bg-card shadow-sm focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/35",
+          "relative rounded-md border border-border bg-card focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/35",
+          elevation.field,
           defaultClassNames.dropdown_root
         ),
         dropdown: cn("absolute inset-0 cursor-pointer opacity-0", defaultClassNames.dropdown),
@@ -6210,7 +6287,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
               animate: { opacity: 1, y: 0 },
               exit: { opacity: 0, y: -4 },
               transition: { duration: 0.12 },
-              className: "absolute top-full left-0 z-[10000] mt-1 max-h-[220px] min-w-[130px] overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-lg",
+              className: `absolute top-full left-0 z-[10000] mt-1 max-h-[220px] min-w-[130px] overflow-y-auto rounded-xl border border-border bg-popover py-1 ${elevation.popover}`,
               children: MONTHS.map((mn, mi) => /* @__PURE__ */ jsx64(
                 "button",
                 {
@@ -6251,7 +6328,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
               animate: { opacity: 1, y: 0 },
               exit: { opacity: 0, y: -4 },
               transition: { duration: 0.12 },
-              className: "absolute top-full left-0 z-[10000] mt-1 max-h-[200px] min-w-[90px] overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-lg",
+              className: `absolute top-full left-0 z-[10000] mt-1 max-h-[200px] min-w-[90px] overflow-y-auto rounded-xl border border-border bg-popover py-1 ${elevation.popover}`,
               children: years.map((yr) => /* @__PURE__ */ jsx64(
                 "button",
                 {
@@ -6371,7 +6448,10 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
       animate: { opacity: 1, scale: 1, y: 0 },
       exit: { opacity: 0, scale: 0.97, y: -6 },
       transition: { duration: 0.16, ease: [0.16, 1, 0.3, 1] },
-      className: "isolate rounded-2xl border border-border bg-popover text-popover-foreground shadow-lg select-none dark:shadow-black/40",
+      className: cn(
+        "isolate rounded-2xl border border-border bg-popover text-popover-foreground select-none dark:shadow-black/40",
+        elevation.popover
+      ),
       style: {
         position: "fixed",
         top: panelPos.top,
@@ -6402,7 +6482,8 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
         type: "button",
         onClick: () => open ? closePanel() : openPanel(),
         className: cn(
-          "flex h-12 min-h-12 w-full items-center gap-3 rounded-xl border border-border bg-card px-5 text-left text-[15px] shadow-sm transition-colors",
+          "flex h-12 min-h-12 w-full items-center gap-3 rounded-xl border border-border bg-card px-5 text-left text-[15px] transition-colors",
+          elevation.field,
           open ? "border-ring ring-2 ring-ring/20" : "hover:border-muted-foreground/45"
         ),
         children: [
@@ -6701,7 +6782,8 @@ function MetricSparklineCard({
     "div",
     {
       className: cn(
-        "relative overflow-hidden rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm",
+        "relative overflow-hidden rounded-xl border border-border bg-card p-5 text-card-foreground",
+        elevation.surface,
         className
       ),
       children: [
@@ -6764,7 +6846,7 @@ function DashboardAreaChartTemplate({
   className
 }) {
   const areaGid = React44.useId().replace(/:/g, "");
-  return /* @__PURE__ */ jsxs44("div", { className: cn("rounded-xl border border-border bg-card text-card-foreground shadow-sm", className), children: [
+  return /* @__PURE__ */ jsxs44("div", { className: cn("rounded-xl border border-border bg-card text-card-foreground", elevation.surface, className), children: [
     /* @__PURE__ */ jsxs44("div", { className: "flex flex-col gap-4 border-b border-border px-5 pt-4 pb-3 sm:flex-row sm:items-start sm:justify-between", children: [
       /* @__PURE__ */ jsx66("h3", { className: "text-sm font-semibold text-foreground", children: title }),
       /* @__PURE__ */ jsx66("div", { className: "flex flex-wrap gap-1 rounded-lg border border-border bg-muted/30 p-0.5", children: tabs.map((t) => /* @__PURE__ */ jsx66(
@@ -6861,7 +6943,7 @@ function GroupedBarChartTemplate({
   formatYAxis = (v) => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(0)}K` : `${v}`,
   className
 }) {
-  return /* @__PURE__ */ jsxs44("div", { className: cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground shadow-sm", className), children: [
+  return /* @__PURE__ */ jsxs44("div", { className: cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground", elevation.surface, className), children: [
     /* @__PURE__ */ jsxs44("div", { className: "mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between", children: [
       /* @__PURE__ */ jsxs44("div", { children: [
         /* @__PURE__ */ jsx66("h3", { className: "text-sm font-semibold text-foreground", children: title }),
@@ -6909,7 +6991,7 @@ function RankedBarListTemplate({
   barTo = "var(--chart-3)",
   className
 }) {
-  return /* @__PURE__ */ jsxs44("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm", className), children: [
+  return /* @__PURE__ */ jsxs44("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground", elevation.surface, className), children: [
     /* @__PURE__ */ jsxs44("div", { className: "mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between", children: [
       /* @__PURE__ */ jsxs44("div", { children: [
         /* @__PURE__ */ jsx66("h3", { className: "text-sm font-semibold text-foreground", children: title }),
@@ -6946,7 +7028,7 @@ function CategoryBarChartTemplate({
   className
 }) {
   const chartData = data.map((d) => ({ name: d.category, v: d.value }));
-  return /* @__PURE__ */ jsxs44("div", { className: cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground shadow-sm", className), children: [
+  return /* @__PURE__ */ jsxs44("div", { className: cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground", elevation.surface, className), children: [
     /* @__PURE__ */ jsxs44("div", { className: "mb-3", children: [
       /* @__PURE__ */ jsx66("h3", { className: "text-sm font-semibold text-foreground", children: title }),
       subtitle ? /* @__PURE__ */ jsx66("p", { className: "mt-0.5 text-xs text-muted-foreground", children: subtitle }) : null
@@ -6992,7 +7074,7 @@ function MiniSparklineChartCard({
 }) {
   const gid = React44.useId().replace(/:/g, "");
   const hasCompare = data.some((d) => d.compare != null);
-  return /* @__PURE__ */ jsxs44("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm", className), children: [
+  return /* @__PURE__ */ jsxs44("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground", elevation.surface, className), children: [
     /* @__PURE__ */ jsx66("h3", { className: "text-sm font-semibold text-foreground", children: title }),
     /* @__PURE__ */ jsx66("div", { className: "mt-2 text-2xl font-semibold tabular-nums", children: value }),
     /* @__PURE__ */ jsx66("div", { className: "mt-2", style: { height }, children: /* @__PURE__ */ jsx66(ResponsiveContainer2, { width: "100%", height: "100%", children: /* @__PURE__ */ jsxs44(AreaChart, { data, margin: { top: 4, right: 8, left: 0, bottom: 0 }, children: [
@@ -7029,7 +7111,7 @@ var toneCls = {
   danger: "text-red-600 dark:text-red-400"
 };
 function AttentionListTemplate({ title, items, className }) {
-  return /* @__PURE__ */ jsxs44("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground shadow-sm", className), children: [
+  return /* @__PURE__ */ jsxs44("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground", elevation.surface, className), children: [
     /* @__PURE__ */ jsx66("h3", { className: "text-sm font-semibold text-foreground", children: title }),
     /* @__PURE__ */ jsx66("ul", { className: "mt-4 space-y-4", children: items.map((item) => /* @__PURE__ */ jsxs44(
       "li",
@@ -7080,7 +7162,7 @@ function Toaster({ theme, ...props }) {
       position: "bottom-right",
       toastOptions: {
         classNames: {
-          toast: "bg-[var(--popover)] text-[var(--popover-foreground)] border-[var(--border)] shadow-lg rounded-[10px] text-[13px]",
+          toast: `bg-[var(--popover)] text-[var(--popover-foreground)] border-[var(--border)] ${elevation.popover} rounded-[10px] text-[13px]`,
           description: "text-[var(--muted-foreground)]"
         }
       },
@@ -7159,7 +7241,8 @@ var InlineEdit = React45.forwardRef(
       setEditing(true);
     };
     const sharedInputClass = cn(
-      "w-full rounded-md border border-border bg-card px-2 py-1 text-[15px] leading-tight text-foreground shadow-sm",
+      "w-full rounded-md border border-border bg-card px-2 py-1 text-[15px] leading-tight text-foreground",
+      elevation.field,
       "placeholder:text-muted-foreground",
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
       "transition-colors duration-pg-fast ease-pg-standard",
@@ -7326,7 +7409,8 @@ var InlineDialogContent = React46.forwardRef(
       className: cn(
         // Base card
         "relative z-[120] max-w-xs overflow-visible",
-        "rounded-xl border border-border bg-card p-4 text-foreground shadow-lg",
+        "rounded-xl border border-border bg-card p-4 text-foreground",
+        elevation.popover,
         // Animation
         "data-[state=open]:opacity-100 data-[state=closed]:opacity-0",
         "transition-opacity duration-pg-fast ease-pg-standard",
@@ -7449,7 +7533,8 @@ var Flag = React47.forwardRef(
         onMouseEnter: handleMouseEnter,
         onMouseLeave: handleMouseLeave,
         className: cn(
-          "relative w-80 overflow-hidden rounded-xl border border-border bg-card shadow-lg",
+          "relative w-80 overflow-hidden rounded-xl border border-border bg-card",
+          elevation.popover,
           "border-l-4",
           variantBorder[variant],
           className
@@ -7790,7 +7875,8 @@ var CountrySelect = React49.forwardRef(
           "aria-expanded": open,
           "aria-haspopup": "listbox",
           className: cn(
-            "flex h-11 min-h-11 w-full items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-4 text-[15px] text-foreground shadow-sm",
+            "flex h-11 min-h-11 w-full items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-4 text-[15px] text-foreground",
+            elevation.field,
             "transition-colors duration-pg-fast ease-pg-standard",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
             "disabled:cursor-not-allowed disabled:opacity-50",
@@ -7822,7 +7908,8 @@ var CountrySelect = React49.forwardRef(
           align: "start",
           sideOffset: 6,
           className: cn(
-            "z-[120] w-[var(--radix-popover-trigger-width)] min-w-[260px] rounded-xl border border-border bg-popover text-popover-foreground shadow-lg outline-none",
+            "z-[120] w-[var(--radix-popover-trigger-width)] min-w-[260px] rounded-xl border border-border bg-popover text-popover-foreground outline-none",
+            elevation.popover,
             "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150"
           ),
           onOpenAutoFocus: (e) => e.preventDefault(),
@@ -7911,11 +7998,11 @@ import { Loader2 as Loader23 } from "lucide-react";
 import { forwardRef as forwardRef51 } from "react";
 import { jsx as jsx73 } from "react/jsx-runtime";
 var variantClasses4 = {
-  primary: "bg-primary text-primary-foreground border border-primary shadow-sm hover:bg-[var(--primary-hover)]",
-  secondary: "bg-muted text-foreground border border-border shadow-sm hover:bg-muted/85 dark:bg-muted/35 dark:text-foreground dark:border-border dark:hover:bg-muted/55",
+  primary: `bg-primary text-primary-foreground border border-primary ${elevation.control} hover:bg-[var(--primary-hover)]`,
+  secondary: `bg-muted text-foreground border border-border ${elevation.control} hover:bg-muted/85 dark:bg-muted/35 dark:text-foreground dark:border-border dark:hover:bg-muted/55`,
   ghost: "bg-transparent text-foreground border border-transparent hover:bg-muted focus-visible:bg-muted/80 active:bg-muted/90",
-  outline: "bg-card text-foreground border border-border shadow-sm hover:bg-muted",
-  danger: "bg-red-600 text-white border border-red-600 shadow-sm hover:bg-red-700"
+  outline: `bg-card text-foreground border border-border ${elevation.control} hover:bg-muted`,
+  danger: `bg-red-600 text-white border border-red-600 ${elevation.control} hover:bg-red-700`
 };
 var sizeClasses5 = {
   xs: "size-7 min-w-7",
@@ -8207,7 +8294,8 @@ var TimePicker = React50.forwardRef(
       {
         ref: panelRef,
         className: cn(
-          "isolate rounded-xl border border-border bg-popover text-popover-foreground shadow-lg",
+          "isolate rounded-xl border border-border bg-popover text-popover-foreground",
+          elevation.popover,
           "flex flex-col gap-0"
         ),
         style: {
@@ -8292,7 +8380,8 @@ var TimePicker = React50.forwardRef(
           disabled,
           onClick: () => open ? setOpen(false) : openPanel(),
           className: cn(
-            "flex h-11 min-h-11 w-full items-center gap-3 rounded-lg border border-border bg-card px-4 text-left text-[15px] shadow-sm",
+            "flex h-11 min-h-11 w-full items-center gap-3 rounded-lg border border-border bg-card px-4 text-left text-[15px]",
+            elevation.field,
             "transition-colors duration-150",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
             open && "border-ring ring-2 ring-ring/35",
@@ -10178,6 +10267,7 @@ export {
   applyColumnPreferences,
   cn,
   defaultOptionFilter,
+  elevation,
   formatDateOnly,
   formatDateStamp,
   formatDateTime,

@@ -6,6 +6,7 @@ import { RemoveScroll } from "react-remove-scroll";
 import { ChevronLeft, ChevronRight, ChevronDown, CalendarDays } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 import { ScrollLockTakeover } from "./scroll-lock";
 
 /* ─── Constants ─────────────────────────────────────────────────────────── */
@@ -453,7 +454,7 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
                 <motion.div
                   initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.12 }}
-                  className="absolute top-full left-0 z-[10000] mt-1 max-h-[220px] min-w-[130px] overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-lg"
+                  className={`absolute top-full left-0 z-[10000] mt-1 max-h-[220px] min-w-[130px] overflow-y-auto rounded-xl border border-border bg-popover py-1 ${elevation.popover}`}
                 >
                   {MONTHS.map((mn, mi) => (
                     <button type="button" key={mn} onClick={() => { setViewMonth(mi); setMonthMenu(false); }}
@@ -480,7 +481,7 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
                 <motion.div
                   initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.12 }}
-                  className="absolute top-full left-0 z-[10000] mt-1 max-h-[200px] min-w-[90px] overflow-y-auto rounded-xl border border-border bg-popover py-1 shadow-lg"
+                  className={`absolute top-full left-0 z-[10000] mt-1 max-h-[200px] min-w-[90px] overflow-y-auto rounded-xl border border-border bg-popover py-1 ${elevation.popover}`}
                 >
                   {years.map(yr => (
                     <button type="button" key={yr} onClick={() => { setViewYear(yr); setYearMenu(false); }}
@@ -601,7 +602,10 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.97, y: -6 }}
           transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
-          className="isolate rounded-2xl border border-border bg-popover text-popover-foreground shadow-lg select-none dark:shadow-black/40"
+          className={cn(
+            "isolate rounded-2xl border border-border bg-popover text-popover-foreground select-none dark:shadow-black/40",
+            elevation.popover
+          )}
           style={{
             position:        "fixed",
             top:             panelPos.top,
@@ -645,7 +649,8 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
         type="button"
         onClick={() => open ? closePanel() : openPanel()}
         className={cn(
-          "flex h-12 min-h-12 w-full items-center gap-3 rounded-xl border border-border bg-card px-5 text-left text-[15px] shadow-sm transition-colors",
+          "flex h-12 min-h-12 w-full items-center gap-3 rounded-xl border border-border bg-card px-5 text-left text-[15px] transition-colors",
+          elevation.field,
           open ? "border-ring ring-2 ring-ring/20" : "hover:border-muted-foreground/45",
         )}
       >

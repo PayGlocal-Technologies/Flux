@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Info, CheckCircle2, AlertTriangle, XCircle, X } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -150,7 +151,8 @@ const Flag = React.forwardRef<HTMLDivElement, FlagProps>(
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          "relative w-80 overflow-hidden rounded-xl border border-border bg-card shadow-lg",
+          "relative w-80 overflow-hidden rounded-xl border border-border bg-card",
+          elevation.popover,
           "border-l-4",
           variantBorder[variant],
           className

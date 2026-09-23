@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 import { ChevronDown } from "lucide-react";
 import {
   forwardRef,
@@ -144,15 +145,15 @@ export const SplitButton = forwardRef<HTMLDivElement, SplitButtonProps>(
             "disabled:cursor-not-allowed disabled:opacity-50",
             // Match variant styling
             variant === "primary" &&
-              "bg-primary text-primary-foreground border border-primary shadow-sm hover:bg-[var(--primary-hover)] border-l border-l-primary-foreground/20",
+              `bg-primary text-primary-foreground border border-primary ${elevation.control} hover:bg-[var(--primary-hover)] border-l border-l-primary-foreground/20`,
             variant === "secondary" &&
-              "bg-muted text-foreground border border-border shadow-sm hover:bg-muted/85 dark:bg-muted/35 dark:hover:bg-muted/55 border-l-0",
+              `bg-muted text-foreground border border-border ${elevation.control} hover:bg-muted/85 dark:bg-muted/35 dark:hover:bg-muted/55 border-l-0`,
             variant === "outline" &&
-              "bg-card text-foreground border border-border shadow-sm hover:bg-muted border-l-0",
+              `bg-card text-foreground border border-border ${elevation.control} hover:bg-muted border-l-0`,
             variant === "ghost" &&
               "bg-transparent text-foreground border border-transparent hover:bg-muted border-l-0",
             variant === "danger" &&
-              "bg-red-600 text-white border border-red-600 shadow-sm hover:bg-red-700 border-l border-l-white/20",
+              `bg-red-600 text-white border border-red-600 ${elevation.control} hover:bg-red-700 border-l border-l-white/20`,
             // Size heights to match Button
             size === "sm" && "h-9 min-h-9 rounded-lg",
             size === "md" && "h-10 min-h-10 rounded-lg",
@@ -174,7 +175,8 @@ export const SplitButton = forwardRef<HTMLDivElement, SplitButtonProps>(
             role="menu"
             className={cn(
               "absolute right-0 top-full mt-1 z-50",
-              "bg-card border border-border rounded-lg shadow-lg py-1 min-w-32"
+              "bg-card border border-border rounded-lg py-1 min-w-32",
+              elevation.popover
             )}
           >
             {children}

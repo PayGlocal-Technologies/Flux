@@ -5,6 +5,7 @@ import * as SwitchPrimitive from "@radix-ui/react-switch";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 const switchRootVariants = cva(
   [
@@ -31,7 +32,8 @@ const switchRootVariants = cva(
 
 const switchThumbVariants = cva(
   [
-    "pointer-events-none block rounded-full bg-white shadow-sm",
+    "pointer-events-none block rounded-full bg-white",
+    elevation.control,
     "transition-transform duration-pg-fast ease-pg-standard",
     "ring-0",
   ],

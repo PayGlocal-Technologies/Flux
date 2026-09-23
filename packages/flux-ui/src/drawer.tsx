@@ -4,6 +4,7 @@ import * as React from "react";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { X } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 type DrawerSide = "right" | "left" | "top" | "bottom";
 const DrawerContext = React.createContext<{ side: DrawerSide }>({ side: "right" });
@@ -49,7 +50,7 @@ const DrawerContent = React.forwardRef<
       <DrawerOverlay />
       <DialogPrimitive.Content
         ref={ref}
-        className={cn("fixed z-50 flex flex-col bg-card border-border shadow-xl transition-all duration-pg-normal ease-pg-standard data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-200", sideClasses[side], className)}
+        className={cn(elevation.drawer, "fixed z-50 flex flex-col bg-card border-border transition-all duration-pg-normal ease-pg-standard data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-200", sideClasses[side], className)}
         {...props}
       >
         {children}

@@ -3,6 +3,7 @@
 import { forwardRef } from "react";
 import { ChevronLeft, ChevronRight, MoreHorizontal } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 // ---------------------------------------------------------------------------
 // Pagination (nav wrapper)
@@ -78,7 +79,7 @@ export const PaginationLink = forwardRef<HTMLAnchorElement, PaginationLinkProps>
         "cursor-pointer select-none",
         // active
         isActive
-          ? "bg-primary text-primary-foreground border-primary shadow-sm"
+          ? `bg-primary text-primary-foreground border-primary ${elevation.control}`
           : "text-muted-foreground border-border hover:bg-muted hover:text-foreground",
         className
       )}

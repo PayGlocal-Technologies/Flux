@@ -12,6 +12,7 @@ import {
 import { Button } from "./button";
 import type { ButtonProps } from "./button";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 const cellSize = "[--cell-size:2rem]";
 
@@ -22,7 +23,8 @@ function navButtonClasses(variant: NonNullable<ButtonProps["variant"]>): string 
     case "outline":
       return cn(
         base,
-        "border-border bg-card text-foreground shadow-sm hover:bg-muted"
+        elevation.control,
+        "border-border bg-card text-foreground hover:bg-muted"
       );
     case "ghost":
     default:
@@ -100,7 +102,8 @@ function Calendar({
           defaultClassNames.dropdowns
         ),
         dropdown_root: cn(
-          "relative rounded-md border border-border bg-card shadow-sm focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/35",
+          "relative rounded-md border border-border bg-card focus-within:border-ring focus-within:ring-[3px] focus-within:ring-ring/35",
+          elevation.field,
           defaultClassNames.dropdown_root
         ),
         dropdown: cn("absolute inset-0 cursor-pointer opacity-0", defaultClassNames.dropdown),

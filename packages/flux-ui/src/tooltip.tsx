@@ -3,6 +3,7 @@
 import * as React from "react";
 import * as TooltipPrimitive from "@radix-ui/react-tooltip";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 const TooltipProvider = TooltipPrimitive.Provider;
 const Tooltip = TooltipPrimitive.Root;
@@ -17,7 +18,8 @@ const TooltipContent = React.forwardRef<
       ref={ref}
       sideOffset={sideOffset}
       className={cn(
-        "z-[130] max-w-xs overflow-hidden rounded-lg border border-border bg-popover px-3 py-2 text-sm leading-snug text-popover-foreground shadow-md",
+        "z-[130] max-w-xs overflow-hidden rounded-lg border border-border bg-popover px-3 py-2 text-sm leading-snug text-popover-foreground",
+        elevation.tooltip,
         className
       )}
       {...props}

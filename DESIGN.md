@@ -252,13 +252,27 @@ The `Box`, `Stack`, and `Inline` components accept a `gap` / `p` prop using thes
 
 ## 7. Shadows
 
-| Class | Use |
-|---|---|
-| `shadow-sm` | Cards, inputs, buttons — default elevation |
-| `shadow-md` | Hover state elevation for interactive cards |
-| `shadow-lg` | Popovers, dropdowns |
-| `shadow-xl` | Modals, drawers |
-| `shadow-2xl` | Spotlight, highest elevation overlays |
+Every shadow flux paints comes from one module, `src/elevation.ts`. Import the
+token, do not retype the class — that is how the scale drifted before.
+
+```tsx
+import { elevation } from "@payglocal_ui/flux-ui";
+```
+
+| Token | Class today | Use |
+|---|---|---|
+| `elevation.field` | `shadow-none` | Anything you type into or pick from: inputs, textareas, select triggers, date/time pickers, checkboxes, radios. **Fields are flat.** |
+| `elevation.surface` | `shadow-sm` | Flat surfaces sitting on the page: Card, chart surfaces, DataTableCard, Alert, SectionMessage, Spotlight |
+| `elevation.control` | `shadow-sm` | Button-shaped things: Button, IconButton, ButtonGroup, pagination pages, slider/switch knobs |
+| `elevation.tooltip` | `shadow-md` | Tooltips |
+| `elevation.popover` | `shadow-lg` | Popovers, dropdowns, menus, command palette, toasts |
+| `elevation.drawer` | `shadow-xl` | Drawers |
+| `elevation.modal` | `shadow-2xl` | Dialogs |
+
+A field is a well, not a raised object — a form of ten shadowed controls reads
+as clutter, which is why `elevation.field` is `shadow-none`. Overlays stay
+heavier than `surface` on purpose: depth is the signal that says "this is
+detached and dismissible", and flattening a dropdown makes it look painted on.
 
 ---
 
@@ -782,7 +796,7 @@ MyComponent.displayName = "MyComponent";
 | `<select>` | `<Select>` with sub-parts |
 | `transition-all duration-300` | `transition-colors duration-pg-fast ease-pg-standard` |
 | Hardcoded `#0061e3`, `#111827`, `#e5e7eb` | `bg-primary`, `text-foreground`, `border-border` |
-| `shadow-[0_2px_8px_rgba(0,0,0,0.1)]` | `shadow-sm` |
+| `shadow-[0_2px_8px_rgba(0,0,0,0.1)]` | `elevation.surface` |
 | `rounded-[6px]` | `rounded-md` |
 | Installing shadcn/ui, MUI, Chakra, Ant | Components already exist in `@payglocal_ui/flux-ui` |
 | `outline: none` without focus-visible | Always include focus-visible ring |
@@ -837,7 +851,9 @@ COLORS:     bg-background  bg-card  bg-muted  bg-primary  bg-destructive
 RADIUS:     rounded-md (pills)  rounded-lg (inputs/buttons)
             rounded-xl (cards)  rounded-2xl (modals)  rounded-full (avatars)
 
-SHADOW:     shadow-sm (cards)  shadow-md (hover)  shadow-lg (popover)  shadow-xl (modal)
+SHADOW:     elevation.field (none — inputs)   elevation.surface (cards)
+            elevation.control (buttons)      elevation.tooltip / .popover
+            elevation.drawer                 elevation.modal
 
 MOTION:     duration-pg-fast ease-pg-standard  (hover/focus)
             duration-pg-normal ease-pg-standard  (panels/modals)

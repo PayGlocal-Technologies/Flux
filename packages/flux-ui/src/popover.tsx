@@ -3,6 +3,7 @@
 import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 import { ScrollLockTakeover } from "./scroll-lock";
 
 const Popover = PopoverPrimitive.Root;
@@ -31,7 +32,8 @@ const PopoverContent = React.forwardRef<
         // below) stops short of the fold rather than sitting flush against it.
         collisionPadding={collisionPadding}
         className={cn(
-          "z-[120] w-72 rounded-xl border border-border bg-popover p-4 text-popover-foreground shadow-lg outline-none",
+          "z-[120] w-72 rounded-xl border border-border bg-popover p-4 text-popover-foreground outline-none",
+          elevation.popover,
           "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150",
           className
         )}

@@ -4,6 +4,7 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 import { Input } from "./input";
 import { Textarea } from "./textarea";
 
@@ -13,7 +14,8 @@ function InputGroup({ className, ...props }: React.ComponentProps<"div">) {
       data-slot="input-group"
       role="group"
       className={cn(
-        "group/input-group relative flex w-full items-stretch rounded-xl border border-border bg-card shadow-sm outline-none transition-[color,box-shadow] dark:bg-card/50",
+        "group/input-group relative flex w-full items-stretch rounded-xl border border-border bg-card outline-none transition-[color,box-shadow] dark:bg-card/50",
+        elevation.field,
         "min-h-11 h-11 has-[>textarea]:h-auto",
         "has-[>[data-align=inline-start]]:[&>input]:pl-2",
         "has-[>[data-align=inline-end]]:[&>input]:pr-2",

@@ -3,6 +3,7 @@
 import * as React from "react";
 import { Search } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 export interface CommandProps extends React.HTMLAttributes<HTMLDivElement> {}
 export interface CommandInputProps extends React.InputHTMLAttributes<HTMLInputElement> {}
@@ -14,7 +15,7 @@ export interface CommandSeparatorProps extends React.HTMLAttributes<HTMLDivEleme
 export interface CommandShortcutProps extends React.HTMLAttributes<HTMLSpanElement> {}
 
 const Command = React.forwardRef<HTMLDivElement, CommandProps>(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("bg-card rounded-xl border border-border shadow-lg overflow-hidden", className)} {...props} />
+  <div ref={ref} className={cn("bg-card rounded-xl border border-border overflow-hidden", elevation.popover, className)} {...props} />
 ));
 Command.displayName = "Command";
 

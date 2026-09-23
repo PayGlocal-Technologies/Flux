@@ -5,6 +5,7 @@ import { createPortal } from "react-dom";
 import { RemoveScroll } from "react-remove-scroll";
 import { Clock, ChevronDown, X } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 import { ScrollLockTakeover } from "./scroll-lock";
 
 /* ─── Types ──────────────────────────────────────────────────────────────── */
@@ -338,7 +339,8 @@ export const TimePicker = React.forwardRef<HTMLButtonElement, TimePickerProps>(
         <div
           ref={panelRef}
           className={cn(
-            "isolate rounded-xl border border-border bg-popover text-popover-foreground shadow-lg",
+            "isolate rounded-xl border border-border bg-popover text-popover-foreground",
+            elevation.popover,
             "flex flex-col gap-0"
           )}
           style={{
@@ -432,7 +434,8 @@ export const TimePicker = React.forwardRef<HTMLButtonElement, TimePickerProps>(
           disabled={disabled}
           onClick={() => (open ? setOpen(false) : openPanel())}
           className={cn(
-            "flex h-11 min-h-11 w-full items-center gap-3 rounded-lg border border-border bg-card px-4 text-left text-[15px] shadow-sm",
+            "flex h-11 min-h-11 w-full items-center gap-3 rounded-lg border border-border bg-card px-4 text-left text-[15px]",
+            elevation.field,
             "transition-colors duration-150",
             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
             open && "border-ring ring-2 ring-ring/35",

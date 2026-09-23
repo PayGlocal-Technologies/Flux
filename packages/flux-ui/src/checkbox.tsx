@@ -4,6 +4,7 @@ import * as React from "react";
 import * as CheckboxPrimitive from "@radix-ui/react-checkbox";
 import { Check, Minus } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 export type CheckboxSize = "sm" | "md" | "lg";
 
@@ -30,7 +31,8 @@ const Checkbox = React.forwardRef<
   <CheckboxPrimitive.Root
     ref={ref}
     className={cn(
-      "peer shrink-0 border border-border bg-card shadow-sm transition-colors duration-pg-fast ease-pg-standard",
+      "peer shrink-0 border border-border bg-card transition-colors duration-pg-fast ease-pg-standard",
+      elevation.field,
       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
       "disabled:cursor-not-allowed disabled:opacity-50",
       "data-[state=checked]:bg-primary data-[state=checked]:border-primary",

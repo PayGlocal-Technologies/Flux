@@ -2,8 +2,11 @@ import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
-const cardVariants = cva("flex flex-col rounded-xl border border-border bg-card text-card-foreground shadow-sm", {
+const cardVariants = cva(
+  cn("flex flex-col rounded-xl border border-border bg-card text-card-foreground", elevation.surface),
+  {
   variants: {
     size: {
       default: "gap-10 px-10 py-10",

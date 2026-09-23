@@ -4,6 +4,7 @@ import * as React from "react";
 import * as PopoverPrimitive from "@radix-ui/react-popover";
 import { Check, ChevronDown, Search } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 import { filterOptions, type OptionFilter } from "./option-filter";
 import { ScrollLockTakeover } from "./scroll-lock";
 
@@ -121,7 +122,8 @@ const SingleSelect = React.forwardRef<HTMLButtonElement, SingleSelectProps>(
             aria-haspopup="listbox"
             aria-invalid={invalid || undefined}
             className={cn(
-              "flex h-11 w-full items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-4 py-2 text-[15px] shadow-sm outline-none",
+              "flex h-11 w-full items-center justify-between gap-2.5 rounded-lg border border-border bg-card px-4 py-2 text-[15px] outline-none",
+              elevation.field,
               "transition-colors duration-pg-fast ease-pg-standard",
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
               "aria-invalid:border-destructive aria-invalid:ring-2 aria-invalid:ring-destructive/25 dark:aria-invalid:ring-destructive/40",
@@ -152,7 +154,8 @@ const SingleSelect = React.forwardRef<HTMLButtonElement, SingleSelectProps>(
               sideOffset={6}
               collisionPadding={8}
               className={cn(
-                "z-[120] min-w-[var(--radix-popover-trigger-width)] w-full rounded-xl border border-border bg-popover text-popover-foreground shadow-lg outline-none p-1",
+                "z-[120] min-w-[var(--radix-popover-trigger-width)] w-full rounded-xl border border-border bg-popover text-popover-foreground outline-none p-1",
+                elevation.popover,
                 "data-[state=open]:opacity-100 data-[state=closed]:opacity-0 transition-opacity duration-150"
               )}
             >
@@ -166,7 +169,8 @@ const SingleSelect = React.forwardRef<HTMLButtonElement, SingleSelectProps>(
                     placeholder={searchPlaceholder}
                     aria-label={searchPlaceholder}
                     className={cn(
-                      "flex h-9 w-full rounded-md border border-border bg-card pl-8 pr-3 text-sm shadow-sm placeholder:text-muted-foreground",
+                      "flex h-9 w-full rounded-md border border-border bg-card pl-8 pr-3 text-sm placeholder:text-muted-foreground",
+                      elevation.field,
                       "transition-colors duration-pg-fast ease-pg-standard",
                       "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
                     )}

@@ -1,4 +1,5 @@
 export { cn } from "./utils";
+export { elevation } from "./elevation";
 
 // Layout
 export { Box, Stack, Inline } from "./layout";

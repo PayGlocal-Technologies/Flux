@@ -3,6 +3,7 @@
 import * as React from "react";
 import { X, ChevronLeft, ChevronRight, Check } from "lucide-react";
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 export interface SpotlightStep {
   title: string;
@@ -27,7 +28,7 @@ const SpotlightCard = React.forwardRef<HTMLDivElement, SpotlightCardProps>(
   ({ title, body, image, currentStep, totalSteps, onNext, onBack, onDismiss, nextLabel, className }, ref) => {
     const isLast = currentStep !== undefined && totalSteps !== undefined && currentStep >= totalSteps - 1;
     return (
-      <div ref={ref} className={cn("bg-card border border-border rounded-xl shadow-xl p-5 w-72", className)}>
+      <div ref={ref} className={cn("bg-card border border-border rounded-xl p-5 w-72", elevation.surface, className)}>
         {onDismiss && (
           <button
             onClick={onDismiss}
