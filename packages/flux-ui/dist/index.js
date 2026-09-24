@@ -6470,7 +6470,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
         backgroundColor: "var(--popover)",
         boxShadow: "0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.07)"
       },
-      children: withTime ? /* @__PURE__ */ jsx64(RemoveScroll2, { allowPinchZoom: true, children: body }) : body
+      children: /* @__PURE__ */ jsx64(ScrollLockTakeover, { children: withTime ? /* @__PURE__ */ jsx64(RemoveScroll2, { allowPinchZoom: true, children: body }) : body })
     }
   ) });
   return /* @__PURE__ */ jsxs42("div", { className: cn("relative", className), children: [
@@ -6493,7 +6493,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
         ]
       }
     ),
-    mounted && createPortal(/* @__PURE__ */ jsx64(ScrollLockTakeover, { children: panel }), document.body)
+    mounted && createPortal(panel, document.body)
   ] });
 }
 

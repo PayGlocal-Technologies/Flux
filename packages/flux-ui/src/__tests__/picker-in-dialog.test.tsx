@@ -167,6 +167,14 @@ describe("pickers take over the scroll lock inside a drawer", () => {
     expect(hours.closest("[data-scroll-lock-takeover]")).not.toBeNull();
   });
 
+  // A takeover held while the panel is closed sits on top of the drawer's own
+  // lock over an empty subtree, and cancels every wheel event over the drawer
+  // body — the drawer stops scrolling just because it contains a DatePicker.
+  it("DatePicker holds no lock while its panel is closed", () => {
+    render(<DateHarness onChange={() => {}} />);
+    expect(document.querySelector("[data-scroll-lock-takeover]")).toBeNull();
+  });
+
   it("does not wrap the panel when there is no lock to take over", async () => {
     render(<DatePicker value="2026-09-10" onChange={() => {}} />);
     fireEvent.click(screen.getByText("10 Sep 2026"));

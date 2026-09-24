@@ -633,7 +633,16 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
               hands scrolling back, the same way TimePicker and Radix `Select`
               do. Mounted only with a time panel: the date-only panel has
               nothing to scroll and should not lock the page. */}
-          {withTime ? <RemoveScroll allowPinchZoom>{body}</RemoveScroll> : body}
+          {/* The takeover sits inside the `open &&` branch, not around the
+              portal: `AnimatePresence` is always mounted, so wrapping it held a
+              lock over an empty subtree for as long as the trigger existed, and
+              every wheel event over the Dialog or Drawer body was cancelled —
+              the whole drawer stopped scrolling the moment it contained a
+              DatePicker. Mounted here it reads the lock state at open, which is
+              what `ScrollLockTakeover` assumes. */}
+          <ScrollLockTakeover>
+            {withTime ? <RemoveScroll allowPinchZoom>{body}</RemoveScroll> : body}
+          </ScrollLockTakeover>
         </motion.div>
       )}
     </AnimatePresence>
@@ -661,11 +670,11 @@ export function DatePicker({ value, onChange, placeholder = "Select date", class
         <ChevronDown className={cn("size-[1.125rem] shrink-0 text-muted-foreground transition-transform", open && "rotate-180")} />
       </button>
 
-      {/* Portal. Wrapped so the panel takes over the scroll lock when it opens
-          inside a Dialog or Drawer — without it the year/month lists and the
-          time columns cannot be scrolled with the wheel. See `scroll-lock.tsx`. */}
-      {mounted &&
-        createPortal(<ScrollLockTakeover>{panel}</ScrollLockTakeover>, document.body)}
+      {/* Portal. The panel takes over the scroll lock when it opens inside a
+          Dialog or Drawer — without it the year/month lists and the time
+          columns cannot be scrolled with the wheel. See `scroll-lock.tsx`, and
+          the note on the takeover inside `panel` for why it is not here. */}
+      {mounted && createPortal(panel, document.body)}
     </div>
   );
 }

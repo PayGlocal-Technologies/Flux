@@ -6743,7 +6743,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
         backgroundColor: "var(--popover)",
         boxShadow: "0 16px 40px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.07)"
       },
-      children: withTime ? /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(import_react_remove_scroll2.RemoveScroll, { allowPinchZoom: true, children: body }) : body
+      children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(ScrollLockTakeover, { children: withTime ? /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(import_react_remove_scroll2.RemoveScroll, { allowPinchZoom: true, children: body }) : body })
     }
   ) });
   return /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)("div", { className: cn("relative", className), children: [
@@ -6766,7 +6766,7 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
         ]
       }
     ),
-    mounted && (0, import_react_dom.createPortal)(/* @__PURE__ */ (0, import_jsx_runtime64.jsx)(ScrollLockTakeover, { children: panel }), document.body)
+    mounted && (0, import_react_dom.createPortal)(panel, document.body)
   ] });
 }
 
