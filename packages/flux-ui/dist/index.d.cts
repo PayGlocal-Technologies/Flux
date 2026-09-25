@@ -2301,6 +2301,10 @@ interface FilterChipControl {
  * muted border colour. Active it flips to a solid primary ring with a tinted
  * fill, so an applied filter is unmistakable at a glance rather than a subtle
  * recolour of the same dashed outline.
+ *
+ * Flat either way (`elevation.field`): a chip is something you pick from, the
+ * same kind of control as a select trigger, so it takes the fields' elevation
+ * rather than a raised button's.
  */
 declare function FilterChipShell({ active, children, className, }: {
     active: boolean;

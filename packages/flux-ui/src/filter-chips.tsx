@@ -56,6 +56,7 @@ const POPOVER_FIT = "flex max-h-[var(--radix-popover-content-available-height)] 
 const FILTER_SCROLL_AREA = "min-h-0 flex-1 overflow-y-auto";
 
 import { cn } from "./utils";
+import { elevation } from "./elevation";
 
 export interface FilterChipOption {
   value: string;
@@ -277,6 +278,10 @@ export interface FilterChipControl {
  * muted border colour. Active it flips to a solid primary ring with a tinted
  * fill, so an applied filter is unmistakable at a glance rather than a subtle
  * recolour of the same dashed outline.
+ *
+ * Flat either way (`elevation.field`): a chip is something you pick from, the
+ * same kind of control as a select trigger, so it takes the fields' elevation
+ * rather than a raised button's.
  */
 export function FilterChipShell({
   active,
@@ -290,8 +295,9 @@ export function FilterChipShell({
   return (
     <div
       className={cn(
-        "inline-flex h-auto shrink-0 items-center rounded-full border border-dashed border-border bg-card shadow-sm",
-        active && "border-solid border-primary bg-primary/10 shadow-none ring-1 ring-primary/30",
+        "inline-flex h-auto shrink-0 items-center rounded-full border border-dashed border-border bg-card",
+        elevation.field,
+        active && "border-solid border-primary bg-primary/10 ring-1 ring-primary/30",
         className
       )}
     >

@@ -8857,8 +8857,9 @@ function FilterChipShell({
     "div",
     {
       className: cn(
-        "inline-flex h-auto shrink-0 items-center rounded-full border border-dashed border-border bg-card shadow-sm",
-        active && "border-solid border-primary bg-primary/10 shadow-none ring-1 ring-primary/30",
+        "inline-flex h-auto shrink-0 items-center rounded-full border border-dashed border-border bg-card",
+        elevation.field,
+        active && "border-solid border-primary bg-primary/10 ring-1 ring-primary/30",
         className
       ),
       children
