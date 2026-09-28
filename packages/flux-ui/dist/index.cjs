@@ -9148,23 +9148,33 @@ function FilterChipActions({
   onClear,
   onApply,
   clearDisabled,
-  applyDisabled
+  applyDisabled,
+  hideClear
 }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)("div", { className: "flex shrink-0 items-center justify-between gap-2 border-t border-border px-3 py-2", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
-      Button,
-      {
-        type: "button",
-        variant: "ghost",
-        size: "sm",
-        onClick: onClear,
-        disabled: clearDisabled,
-        className: "text-muted-foreground hover:text-foreground",
-        children: "Clear"
-      }
-    ),
-    /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Button, { type: "button", variant: "primary", size: "sm", onClick: onApply, disabled: applyDisabled, children: "Apply" })
-  ] });
+  return /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(
+    "div",
+    {
+      className: cn(
+        "flex shrink-0 items-center gap-2 border-t border-border px-3 py-2",
+        hideClear ? "justify-end" : "justify-between"
+      ),
+      children: [
+        hideClear ? null : /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
+          Button,
+          {
+            type: "button",
+            variant: "ghost",
+            size: "sm",
+            onClick: onClear,
+            disabled: clearDisabled,
+            className: "text-muted-foreground hover:text-foreground",
+            children: "Clear"
+          }
+        ),
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Button, { type: "button", variant: "primary", size: "sm", onClick: onApply, disabled: applyDisabled, children: "Apply" })
+      ]
+    }
+  );
 }
 function FilterChip({
   chipKey,
@@ -9365,6 +9375,7 @@ function SingleSelectFilterChip({
   onChange,
   align = "start",
   showValueInLabel = false,
+  clearable = true,
   open,
   onOpenChange
 }) {
@@ -9381,7 +9392,7 @@ function SingleSelectFilterChip({
       align,
       open: chip.open,
       onOpenChange: chip.onOpenChange,
-      onClear: () => onChange(""),
+      onClear: clearable ? () => onChange("") : void 0,
       children: /* @__PURE__ */ (0, import_jsx_runtime78.jsx)("div", { className: cn("max-h-64 w-52 p-1.5", FILTER_SCROLL_AREA), children: options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(
         Button,
         {
@@ -10118,13 +10129,26 @@ function CalendarDateFilterChip({
   value,
   onChange,
   presets,
-  allowSingle = true,
+  allowSingle: allowSingleProp = true,
+  allowRange = true,
+  min,
+  max,
+  clearable = true,
+  formatLabel,
   numberOfMonths = 2,
   align = "start",
   open,
   onOpenChange
 }) {
   const key = chipKey ?? label;
+  const allowSingle = allowSingleProp || !allowRange;
+  const showModeToggle = allowSingle && allowRange;
+  const minDate = min ? fromKey(min) : void 0;
+  const maxDate = max ? fromKey(max) : void 0;
+  const disabledDays = [
+    ...minDate ? [{ before: minDate }] : [],
+    ...maxDate ? [{ after: maxDate }] : []
+  ];
   const chip = useFilterChipState(key, { open, onOpenChange });
   const [mode, setMode] = (0, import_react18.useState)("single");
   const [singleDate, setSingleDate] = (0, import_react18.useState)(void 0);
@@ -10132,12 +10156,12 @@ function CalendarDateFilterChip({
   const [presetDraft, setPresetDraft] = (0, import_react18.useState)("");
   const activePreset = presets?.find((p) => p.value === value?.preset);
   const isActive = !!value?.from;
-  const chipLabel = !isActive ? label : activePreset ? `${label}: ${activePreset.label}` : value.to && value.to !== value.from ? `${label}: ${formatDateOnly(fromKey(value.from))} \u2013 ${formatDateOnly(fromKey(value.to))}` : `${label}: ${formatDateOnly(fromKey(value.from))}`;
+  const chipLabel = !isActive ? label : formatLabel ? formatLabel(value) : activePreset ? `${label}: ${activePreset.label}` : value.to && value.to !== value.from ? `${label}: ${formatDateOnly(fromKey(value.from))} \u2013 ${formatDateOnly(fromKey(value.to))}` : `${label}: ${formatDateOnly(fromKey(value.from))}`;
   const reseed = () => {
     setPresetDraft(value?.preset ?? "");
     const from = value?.from ? fromKey(value.from) : void 0;
     const to = value?.to ? fromKey(value.to) : void 0;
-    const isSpan = !!value?.to && value.to !== value.from;
+    const isSpan = allowRange && !!value?.to && value.to !== value.from;
     setMode(isSpan || !allowSingle ? "range" : "single");
     setSingleDate(isSpan ? void 0 : from);
     setRange(isSpan ? { from, to } : void 0);
@@ -10178,7 +10202,7 @@ function CalendarDateFilterChip({
       open: chip.open,
       onOpenChange: chip.onOpenChange,
       onOpen: reseed,
-      onClear: clear,
+      onClear: clearable ? clear : void 0,
       children: [
         /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("div", { className: "w-auto p-3", children: [
           presets?.length ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("div", { className: "mb-3 flex flex-wrap gap-1.5", children: presets.map((p) => /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
@@ -10203,7 +10227,7 @@ function CalendarDateFilterChip({
             },
             p.value
           )) }) : null,
-          allowSingle ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("div", { className: "mb-3 flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1", children: PICK_MODES.map((m) => /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
+          showModeToggle ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("div", { className: "mb-3 flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1", children: PICK_MODES.map((m) => /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
             Button,
             {
               type: "button",
@@ -10223,6 +10247,8 @@ function CalendarDateFilterChip({
             {
               mode: "single",
               selected: singleDate,
+              defaultMonth: singleDate ?? maxDate,
+              disabled: disabledDays,
               onSelect: (d) => {
                 setSingleDate(d);
                 setPresetDraft("");
@@ -10234,6 +10260,8 @@ function CalendarDateFilterChip({
             {
               mode: "range",
               selected: range,
+              defaultMonth: range?.from ?? maxDate,
+              disabled: disabledDays,
               onSelect: (r) => {
                 setRange(r);
                 setPresetDraft("");
@@ -10250,6 +10278,7 @@ function CalendarDateFilterChip({
               clear();
               chip.onOpenChange(false);
             },
+            hideClear: !clearable,
             clearDisabled: !hasDraft && !isActive,
             applyDisabled: !hasDraft,
             onApply: apply

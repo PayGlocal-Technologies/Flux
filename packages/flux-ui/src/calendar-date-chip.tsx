@@ -50,6 +50,27 @@ export interface CalendarDateFilterChipProps extends FilterChipControl {
   presets?: readonly CalendarDatePreset[];
   /** Offer "Single date" alongside "Date range". Default true. */
   allowSingle?: boolean;
+  /**
+   * Offer "Date range" at all. Default true. `false` makes this a one-day
+   * picker: no mode toggle, and `to` always equals `from`. Takes precedence
+   * over `allowSingle`.
+   */
+  allowRange?: boolean;
+  /** Earliest / latest selectable day, `YYYY-MM-DD`. Days outside are disabled. */
+  min?: string;
+  max?: string;
+  /**
+   * Whether the filter can be emptied. Default true. `false` is for a report
+   * that always needs a date: the chip's × and the panel's Clear are hidden, so
+   * the applied value can only be replaced, never removed.
+   */
+  clearable?: boolean;
+  /**
+   * The chip text once a value is applied, replacing the built-in
+   * `Label: 12 Sep 2026` form. For a chip whose day stands for something
+   * coarser, such as a month.
+   */
+  formatLabel?: (value: CalendarDateValue) => string;
   /** Months shown side by side in range mode. Default 2. */
   numberOfMonths?: number;
   align?: "start" | "center" | "end";
@@ -86,13 +107,28 @@ export function CalendarDateFilterChip({
   value,
   onChange,
   presets,
-  allowSingle = true,
+  allowSingle: allowSingleProp = true,
+  allowRange = true,
+  min,
+  max,
+  clearable = true,
+  formatLabel,
   numberOfMonths = 2,
   align = "start",
   open,
   onOpenChange,
 }: CalendarDateFilterChipProps) {
   const key = chipKey ?? label;
+  // A chip with no range mode is a single-date chip, whatever `allowSingle` says.
+  const allowSingle = allowSingleProp || !allowRange;
+  const showModeToggle = allowSingle && allowRange;
+
+  const minDate = min ? fromKey(min) : undefined;
+  const maxDate = max ? fromKey(max) : undefined;
+  const disabledDays = [
+    ...(minDate ? [{ before: minDate }] : []),
+    ...(maxDate ? [{ after: maxDate }] : []),
+  ];
   const chip = useFilterChipState(key, { open, onOpenChange });
 
   const [mode, setMode] = useState<DatePickMode>("single");
@@ -107,18 +143,20 @@ export function CalendarDateFilterChip({
 
   const chipLabel = !isActive
     ? label
-    : activePreset
-      ? `${label}: ${activePreset.label}`
-      : value!.to && value!.to !== value!.from
-        ? `${label}: ${formatDateOnly(fromKey(value!.from)!)} – ${formatDateOnly(fromKey(value!.to)!)}`
-        : `${label}: ${formatDateOnly(fromKey(value!.from)!)}`;
+    : formatLabel
+      ? formatLabel(value!)
+      : activePreset
+        ? `${label}: ${activePreset.label}`
+        : value!.to && value!.to !== value!.from
+          ? `${label}: ${formatDateOnly(fromKey(value!.from)!)} – ${formatDateOnly(fromKey(value!.to)!)}`
+          : `${label}: ${formatDateOnly(fromKey(value!.from)!)}`;
 
   /** Reseeds the working selection from what is applied, on every open. */
   const reseed = () => {
     setPresetDraft(value?.preset ?? "");
     const from = value?.from ? fromKey(value.from) : undefined;
     const to = value?.to ? fromKey(value.to) : undefined;
-    const isSpan = !!value?.to && value.to !== value.from;
+    const isSpan = allowRange && !!value?.to && value.to !== value.from;
     setMode(isSpan || !allowSingle ? "range" : "single");
     setSingleDate(isSpan ? undefined : from);
     setRange(isSpan ? { from, to } : undefined);
@@ -162,7 +200,7 @@ export function CalendarDateFilterChip({
       open={chip.open}
       onOpenChange={chip.onOpenChange}
       onOpen={reseed}
-      onClear={clear}
+      onClear={clearable ? clear : undefined}
     >
       <div className="w-auto p-3">
         {presets?.length ? (
@@ -196,7 +234,7 @@ export function CalendarDateFilterChip({
           </div>
         ) : null}
 
-        {allowSingle ? (
+        {showModeToggle ? (
           <div className="mb-3 flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1">
             {PICK_MODES.map((m) => (
               <Button
@@ -228,6 +266,8 @@ export function CalendarDateFilterChip({
           <Calendar
             mode="single"
             selected={singleDate}
+            defaultMonth={singleDate ?? maxDate}
+            disabled={disabledDays}
             onSelect={(d) => {
               setSingleDate(d);
               setPresetDraft("");
@@ -238,6 +278,8 @@ export function CalendarDateFilterChip({
           <Calendar
             mode="range"
             selected={range}
+            defaultMonth={range?.from ?? maxDate}
+            disabled={disabledDays}
             onSelect={(r) => {
               setRange(r);
               setPresetDraft("");
@@ -253,6 +295,7 @@ export function CalendarDateFilterChip({
           clear();
           chip.onOpenChange(false);
         }}
+        hideClear={!clearable}
         clearDisabled={!hasDraft && !isActive}
         applyDisabled={!hasDraft}
         onApply={apply}

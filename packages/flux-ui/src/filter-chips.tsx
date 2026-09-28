@@ -414,24 +414,34 @@ export function FilterChipActions({
   onApply,
   clearDisabled,
   applyDisabled,
+  hideClear,
 }: {
   onClear: () => void;
   onApply: () => void;
   clearDisabled?: boolean;
   applyDisabled?: boolean;
+  /** For a filter that cannot be emptied; Apply then sits alone, right-aligned. */
+  hideClear?: boolean;
 }) {
   return (
-    <div className="flex shrink-0 items-center justify-between gap-2 border-t border-border px-3 py-2">
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        onClick={onClear}
-        disabled={clearDisabled}
-        className="text-muted-foreground hover:text-foreground"
-      >
-        Clear
-      </Button>
+    <div
+      className={cn(
+        "flex shrink-0 items-center gap-2 border-t border-border px-3 py-2",
+        hideClear ? "justify-end" : "justify-between"
+      )}
+    >
+      {hideClear ? null : (
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          onClick={onClear}
+          disabled={clearDisabled}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          Clear
+        </Button>
+      )}
       <Button type="button" variant="primary" size="sm" onClick={onApply} disabled={applyDisabled}>
         Apply
       </Button>
@@ -734,6 +744,8 @@ export interface SingleSelectFilterChipProps extends FilterChipControl {
   align?: "start" | "center" | "end";
   /** Show the chosen option's label on the chip instead of the field name. */
   showValueInLabel?: boolean;
+  /** Whether the chip's × can empty it. Default true; `false` for a filter that always has a value. */
+  clearable?: boolean;
 }
 
 /**
@@ -749,6 +761,7 @@ export function SingleSelectFilterChip({
   onChange,
   align = "start",
   showValueInLabel = false,
+  clearable = true,
   open,
   onOpenChange,
 }: SingleSelectFilterChipProps) {
@@ -766,7 +779,7 @@ export function SingleSelectFilterChip({
       align={align}
       open={chip.open}
       onOpenChange={chip.onOpenChange}
-      onClear={() => onChange("")}
+      onClear={clearable ? () => onChange("") : undefined}
     >
       <div className={cn("max-h-64 w-52 p-1.5", FILTER_SCROLL_AREA)}>
         {options.map((option) => (

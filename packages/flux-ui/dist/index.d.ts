@@ -2353,11 +2353,13 @@ declare const FilterChipLabelTrigger: React$1.ForwardRefExoticComponent<{
  * Clear is the same act as the chip's own little x, reached from inside the
  * panel: it drops the filter and gets out of the way.
  */
-declare function FilterChipActions({ onClear, onApply, clearDisabled, applyDisabled, }: {
+declare function FilterChipActions({ onClear, onApply, clearDisabled, applyDisabled, hideClear, }: {
     onClear: () => void;
     onApply: () => void;
     clearDisabled?: boolean;
     applyDisabled?: boolean;
+    /** For a filter that cannot be emptied; Apply then sits alone, right-aligned. */
+    hideClear?: boolean;
 }): React$1.JSX.Element;
 /**
  * The full chip — shell, clear button, trigger and popover — with the editor
@@ -2422,13 +2424,15 @@ interface SingleSelectFilterChipProps extends FilterChipControl {
     align?: "start" | "center" | "end";
     /** Show the chosen option's label on the chip instead of the field name. */
     showValueInLabel?: boolean;
+    /** Whether the chip's × can empty it. Default true; `false` for a filter that always has a value. */
+    clearable?: boolean;
 }
 /**
  * One-of-many. Picking applies immediately — there is nothing to stage when a
  * choice replaces rather than accumulates, and an Apply button for a single
  * click is a step that only costs the user time.
  */
-declare function SingleSelectFilterChip({ chipKey, label, options, value, onChange, align, showValueInLabel, open, onOpenChange, }: SingleSelectFilterChipProps): React$1.JSX.Element;
+declare function SingleSelectFilterChip({ chipKey, label, options, value, onChange, align, showValueInLabel, clearable, open, onOpenChange, }: SingleSelectFilterChipProps): React$1.JSX.Element;
 interface DateRangeValue {
     /** `yyyy-mm-dd`, or "" for unset. */
     from: string;
@@ -2699,6 +2703,27 @@ interface CalendarDateFilterChipProps extends FilterChipControl {
     presets?: readonly CalendarDatePreset[];
     /** Offer "Single date" alongside "Date range". Default true. */
     allowSingle?: boolean;
+    /**
+     * Offer "Date range" at all. Default true. `false` makes this a one-day
+     * picker: no mode toggle, and `to` always equals `from`. Takes precedence
+     * over `allowSingle`.
+     */
+    allowRange?: boolean;
+    /** Earliest / latest selectable day, `YYYY-MM-DD`. Days outside are disabled. */
+    min?: string;
+    max?: string;
+    /**
+     * Whether the filter can be emptied. Default true. `false` is for a report
+     * that always needs a date: the chip's × and the panel's Clear are hidden, so
+     * the applied value can only be replaced, never removed.
+     */
+    clearable?: boolean;
+    /**
+     * The chip text once a value is applied, replacing the built-in
+     * `Label: 12 Sep 2026` form. For a chip whose day stands for something
+     * coarser, such as a month.
+     */
+    formatLabel?: (value: CalendarDateValue) => string;
     /** Months shown side by side in range mode. Default 2. */
     numberOfMonths?: number;
     align?: "start" | "center" | "end";
@@ -2715,7 +2740,7 @@ interface CalendarDateFilterChipProps extends FilterChipControl {
  * Five features in pg-dashboard-v2 had built this chip separately, each with
  * its own preset list and its own value shape. They are the same control.
  */
-declare function CalendarDateFilterChip({ chipKey, label, value, onChange, presets, allowSingle, numberOfMonths, align, open, onOpenChange, }: CalendarDateFilterChipProps): React$1.JSX.Element;
+declare function CalendarDateFilterChip({ chipKey, label, value, onChange, presets, allowSingle: allowSingleProp, allowRange, min, max, clearable, formatLabel, numberOfMonths, align, open, onOpenChange, }: CalendarDateFilterChipProps): React$1.JSX.Element;
 
 /**
  * The app-wide date and time format.
