@@ -6094,6 +6094,7 @@ function Calendar({
   formatters,
   components,
   showWeekNumber,
+  fullWidth = false,
   ...props
 }) {
   const defaultClassNames = (0, import_react_day_picker.getDefaultClassNames)();
@@ -6117,7 +6118,7 @@ function Calendar({
         ...formatters
       },
       classNames: {
-        root: cn("w-fit", defaultClassNames.root),
+        root: cn(fullWidth ? "w-full" : "w-fit", defaultClassNames.root),
         months: cn(
           "relative flex flex-col gap-4 md:flex-row",
           defaultClassNames.months
@@ -6172,7 +6173,8 @@ function Calendar({
           defaultClassNames.week_number
         ),
         day: cn(
-          "group/day relative aspect-square h-full w-full p-0 text-center select-none",
+          "group/day relative h-full w-full p-0 text-center select-none",
+          fullWidth ? "h-[var(--cell-size)]" : "aspect-square",
           "[&:last-child[data-selected=true]_button]:rounded-r-md",
           showWeekNumber ? "[&:nth-child(2)[data-selected=true]_button]:rounded-l-md" : "[&:first-child[data-selected=true]_button]:rounded-l-md",
           defaultClassNames.day
@@ -6200,6 +6202,7 @@ function Calendar({
           "div",
           {
             "data-slot": "calendar",
+            "data-full-width": fullWidth || void 0,
             ref: rootRef,
             className: cn(rootClass),
             ...rootProps
@@ -6248,6 +6251,9 @@ function CalendarDayButton({
       "data-range-middle": modifiers.range_middle,
       className: cn(
         "flex aspect-square h-auto min-h-[var(--cell-size)] w-full min-w-[var(--cell-size)] flex-col gap-1 rounded-md p-0 font-normal leading-none data-[range-end=true]:rounded-md data-[range-end=true]:rounded-r-md data-[range-end=true]:bg-primary data-[range-end=true]:text-primary-foreground data-[range-middle=true]:rounded-none data-[range-middle=true]:bg-accent data-[range-middle=true]:text-accent-foreground data-[range-start=true]:rounded-md data-[range-start=true]:rounded-l-md data-[range-start=true]:bg-primary data-[range-start=true]:text-primary-foreground data-[selected-single=true]:bg-primary data-[selected-single=true]:text-primary-foreground hover:bg-muted/80 dark:hover:bg-muted/50 [&>span]:text-xs [&>span]:opacity-70",
+        // Full-width mode: wide cells keep the default height rather than
+        // squaring up to their new width.
+        "group-data-[full-width=true]/calendar:aspect-auto group-data-[full-width=true]/calendar:h-[var(--cell-size)]",
         "group-data-[focused=true]/day:relative group-data-[focused=true]/day:z-10 group-data-[focused=true]/day:border group-data-[focused=true]/day:border-ring group-data-[focused=true]/day:ring-[3px] group-data-[focused=true]/day:ring-ring/35",
         defaultClassNames.day,
         className

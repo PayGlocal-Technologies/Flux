@@ -96,6 +96,20 @@ export function CalendarPlayground() {
         </div>
       </Section>
 
+      <Section title="Full width (fullWidth)">
+        {/* Fills its container; cells widen but keep the default height. */}
+        <div className="w-full max-w-md rounded-xl border border-border bg-card p-3 shadow-sm">
+          <Calendar
+            mode="range"
+            fullWidth
+            defaultMonth={range?.from}
+            selected={range}
+            onSelect={setRange}
+            className="bg-transparent p-0"
+          />
+        </div>
+      </Section>
+
       <Section title="Week numbers">
         <Calendar
           mode="single"

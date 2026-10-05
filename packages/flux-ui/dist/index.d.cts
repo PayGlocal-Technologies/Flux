@@ -1806,8 +1806,16 @@ declare const AvatarTag: React$1.ForwardRefExoticComponent<AvatarTagProps & Reac
 
 type CalendarProps = DayPickerProps & {
     buttonVariant?: ButtonProps["variant"];
+    /**
+     * Stretch the calendar to its container's width. Day cells widen to share
+     * the row but keep the default height (`--cell-size`) instead of staying
+     * square, so the calendar fills a wide panel (a drawer, a card) without
+     * growing taller. Off by default: the calendar sizes to its content, which
+     * is what every popover-hosted calendar wants.
+     */
+    fullWidth?: boolean;
 };
-declare function Calendar({ className, classNames, showOutsideDays, captionLayout, buttonVariant, locale, formatters, components, showWeekNumber, ...props }: CalendarProps): React$1.JSX.Element;
+declare function Calendar({ className, classNames, showOutsideDays, captionLayout, buttonVariant, locale, formatters, components, showWeekNumber, fullWidth, ...props }: CalendarProps): React$1.JSX.Element;
 declare function CalendarDayButton({ className, day, modifiers, ...props }: DayButtonProps): React$1.JSX.Element;
 
 /**
