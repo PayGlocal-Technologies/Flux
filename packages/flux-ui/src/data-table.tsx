@@ -749,7 +749,17 @@ export function DataTable<T>({
         data-scrolled-start={edge.start ? "true" : "false"}
         data-scrolled-end={edge.end ? "true" : "false"}
         className={cn(
-          "group/table-scroll overflow-x-auto",
+          /*
+            `relative` makes this the containing block for every absolutely
+            positioned descendant. Without it, an `sr-only` span in a cell (the
+            full value behind an elided id, a hidden label) is positioned
+            against an ancestor *outside* this scroll box, so it is not clipped
+            by it. When DataTableCard caps the body height and the rows run
+            past the cap, those spans sit far below the visible rows and
+            stretch the page's own scroll area, leaving blank space under the
+            card. Sticky cells already contained theirs; ordinary cells did not.
+          */
+          "group/table-scroll relative overflow-x-auto",
           "[&::-webkit-scrollbar]:h-[4px] [&::-webkit-scrollbar-track]:bg-transparent",
           "[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-transparent",
           "hover:[&::-webkit-scrollbar-thumb]:bg-border dark:hover:[&::-webkit-scrollbar-thumb]:bg-muted-foreground/35"

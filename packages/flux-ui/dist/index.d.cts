@@ -49,11 +49,15 @@ declare function cn(...inputs: ClassValue[]): string;
 declare const elevation: {
     /**
      * Flat surfaces that sit ON the page and are delineated by their border:
-     * Card, chart surfaces, DataTableCard, Alert, SectionMessage, Skeleton.
-     * This is the shadow on the mca-home revenue card, and the reference the
-     * rest of the library was pulled onto.
+     * Card, chart surfaces, Alert, SectionMessage, Spotlight, Skeleton.
+     *
+     * `shadow-xs` (one 2px blur at 5% black): the lightest lift that still reads
+     * as a surface on the page, half the weight of `shadow-sm`. Chosen over
+     * `shadow-none` deliberately, so cards keep a hint of depth beyond their
+     * border. A call site that needs fully flat or a stronger lift passes
+     * `shadow-none` / `shadow-sm` through `className`; tailwind-merge lets it win.
      */
-    readonly surface: "shadow-sm";
+    readonly surface: "shadow-xs";
     /**
      * Button-shaped things: Button, IconButton, ButtonGroup segments, the
      * pagination page buttons, a table's row CTA. Just enough lift to read as
