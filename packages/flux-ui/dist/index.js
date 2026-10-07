@@ -6502,7 +6502,10 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
         type: "button",
         onClick: () => open ? closePanel() : openPanel(),
         className: cn(
-          "flex h-12 min-h-12 w-full items-center gap-3 rounded-xl border border-border bg-card px-5 text-left text-[15px] transition-colors",
+          // Same box as Input and Select (h-11, rounded-lg, px-4), so a date
+          // field sitting beside a text field lines up with it. It was h-12 /
+          // rounded-xl / px-5, which read as a different, larger control.
+          "flex h-11 min-h-11 w-full items-center gap-2.5 rounded-lg border border-border bg-card px-4 text-left text-[15px] transition-colors",
           elevation.field,
           open ? "border-ring ring-2 ring-ring/20" : "hover:border-muted-foreground/45"
         ),
