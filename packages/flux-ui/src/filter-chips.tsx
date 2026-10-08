@@ -1884,7 +1884,9 @@ export function ToolbarButton({ className, ...props }: ComponentPropsWithoutRef<
       variant="outline"
       size="sm"
       className={cn(
-        "h-auto min-h-0 shrink-0 py-1 text-muted-foreground hover:text-foreground",
+        // Dark text and a visible lift: elevation.control's shadow-sm barely
+        // reads at this compact size. Matches ColumnManager's trigger.
+        "h-auto min-h-0 shrink-0 py-1 text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.08),0_2px_8px_rgba(15,23,42,0.12)]",
         className
       )}
       {...props}
