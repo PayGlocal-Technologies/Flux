@@ -4163,6 +4163,8 @@ function DataTable({
   const compactCellPad = compact ? snug ? "pl-1.5 pr-2.5 py-2.5" : "px-3 py-2.5" : "px-4 py-3.5";
   const cellPad = comfortable ? "px-5 py-4" : compactCellPad;
   const headPad = comfortable ? "px-5 py-4" : compactCellPad;
+  const leadCellPad = comfortable ? "pl-[1.6rem] pr-5 py-4" : compact ? snug ? "pl-[1.6rem] pr-2.5 py-2.5" : "pl-[1.6rem] pr-3 py-2.5" : "pl-[1.6rem] pr-4 py-3.5";
+  const padFor = (pad3, index) => index === 0 && !hasExpand ? leadCellPad : pad3;
   const footerPad = comfortable ? "px-5 py-4" : compact ? "px-4 py-2.5" : "px-4 py-3.5";
   const headText = comfortable ? "text-[12px] font-medium text-muted-foreground tracking-normal" : compact ? "text-[11px] font-semibold text-muted-foreground" : "text-[11px] font-semibold text-foreground/75 dark:text-foreground/85";
   const cellPadLeft = comfortable ? 20 : compact ? snug ? 6 : 12 : 16;
@@ -4263,7 +4265,7 @@ function DataTable({
                           ),
                           children: [
                             hasExpand ? /* @__PURE__ */ jsx52("th", { className: cn(headPad, "w-10 p-0"), "aria-hidden": true }) : null,
-                            columns.map((col) => {
+                            columns.map((col, colIndex) => {
                               const sortable = col.sorter != null && col.sorter !== false;
                               const activeOrder = sortState?.columnKey === col.key ? sortState.order : null;
                               const align = col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left";
@@ -4273,7 +4275,7 @@ function DataTable({
                                   style: col.cellStyle,
                                   "aria-sort": !sortable ? void 0 : activeOrder === "ascend" ? "ascending" : activeOrder === "descend" ? "descending" : "none",
                                   className: cn(
-                                    headPad,
+                                    padFor(headPad, colIndex),
                                     headText,
                                     "whitespace-nowrap align-middle",
                                     align,
@@ -4356,7 +4358,7 @@ function DataTable({
                             {
                               style: col.cellStyle,
                               className: cn(
-                                cellPad,
+                                padFor(cellPad, c),
                                 "align-middle overflow-hidden",
                                 col.align === "right" ? "text-right" : col.align === "center" ? "text-center" : "text-left",
                                 col.cellClassName
@@ -4431,12 +4433,12 @@ function DataTable({
                               )
                             }
                           ) : null }) : null,
-                          columns.map((col) => /* @__PURE__ */ jsx52(
+                          columns.map((col, colIndex) => /* @__PURE__ */ jsx52(
                             "td",
                             {
                               style: col.cellStyle,
                               className: cn(
-                                cellPad,
+                                padFor(cellPad, colIndex),
                                 "align-middle",
                                 comfortable ? cn(
                                   "text-[13px] leading-snug",
@@ -5315,7 +5317,9 @@ function ColumnManager({
         className: cn(
           // Compact by default so it sits level with filter chips rather than
           // towering over them at Button's own `sm` height.
-          "h-auto min-h-0 shrink-0 py-1 text-muted-foreground hover:text-foreground",
+          // Dark text and a visible lift: elevation.control's shadow-sm barely
+          // reads at this compact size. Matches ToolbarButton beside it.
+          "h-auto min-h-0 shrink-0 py-1 text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.08),0_2px_8px_rgba(15,23,42,0.12)]",
           className
         ),
         children: iconOnly ? null : label
@@ -9887,7 +9891,9 @@ function ToolbarButton({ className, ...props }) {
       variant: "outline",
       size: "sm",
       className: cn(
-        "h-auto min-h-0 shrink-0 py-1 text-muted-foreground hover:text-foreground",
+        // Dark text and a visible lift: elevation.control's shadow-sm barely
+        // reads at this compact size. Matches ColumnManager's trigger.
+        "h-auto min-h-0 shrink-0 py-1 text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.08),0_2px_8px_rgba(15,23,42,0.12)]",
         className
       ),
       ...props

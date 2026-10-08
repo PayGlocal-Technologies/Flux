@@ -355,7 +355,9 @@ export function ColumnManager({
           className={cn(
             // Compact by default so it sits level with filter chips rather than
             // towering over them at Button's own `sm` height.
-            "h-auto min-h-0 shrink-0 py-1 text-muted-foreground hover:text-foreground",
+            // Dark text and a visible lift: elevation.control's shadow-sm barely
+            // reads at this compact size. Matches ToolbarButton beside it.
+            "h-auto min-h-0 shrink-0 py-1 text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.08),0_2px_8px_rgba(15,23,42,0.12)]",
             className
           )}
         >

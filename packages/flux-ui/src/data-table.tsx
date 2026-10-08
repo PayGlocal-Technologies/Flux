@@ -633,6 +633,21 @@ export function DataTable<T>({
     : "px-4 py-3.5";
   const cellPad = comfortable ? "px-5 py-4" : compactCellPad;
   const headPad = comfortable ? "px-5 py-4" : compactCellPad;
+  /**
+   * The first data column gets a wider left gutter (header, body and skeleton
+   * alike), so the data doesn't hug the card's edge: its own cell padding with
+   * the left side swapped for a 1.6rem gutter. Spelled out per density, since
+   * Tailwind only generates classes it finds written in full. Not applied when
+   * an expand column leads the row: that column is the edge.
+   */
+  const leadCellPad = comfortable
+    ? "pl-[1.6rem] pr-5 py-4"
+    : compact
+      ? snug
+        ? "pl-[1.6rem] pr-2.5 py-2.5"
+        : "pl-[1.6rem] pr-3 py-2.5"
+      : "pl-[1.6rem] pr-4 py-3.5";
+  const padFor = (pad: string, index: number) => (index === 0 && !hasExpand ? leadCellPad : pad);
   /** Footer is outside the grid; do not reuse snug cell `pl-0`-style gutters here. */
   const footerPad = comfortable
     ? "px-5 py-4"
@@ -802,7 +817,7 @@ export function DataTable<T>({
               )}
             >
               {hasExpand ? <th className={cn(headPad, "w-10 p-0")} aria-hidden /> : null}
-              {columns.map((col) => {
+              {columns.map((col, colIndex) => {
                 const sortable = col.sorter != null && col.sorter !== false;
                 const activeOrder =
                   sortState?.columnKey === col.key ? sortState.order : null;
@@ -828,7 +843,7 @@ export function DataTable<T>({
                             : "none"
                     }
                     className={cn(
-                      headPad,
+                      padFor(headPad, colIndex),
                       headText,
                       "whitespace-nowrap align-middle",
                       align,
@@ -914,7 +929,7 @@ export function DataTable<T>({
                       key={col.key}
                       style={col.cellStyle}
                       className={cn(
-                        cellPad,
+                        padFor(cellPad, c),
                         "align-middle overflow-hidden",
                         col.align === "right"
                           ? "text-right"
@@ -1018,12 +1033,12 @@ export function DataTable<T>({
                       ) : null}
                     </td>
                   ) : null}
-                  {columns.map((col) => (
+                  {columns.map((col, colIndex) => (
                     <td
                       key={col.key}
                       style={col.cellStyle}
                       className={cn(
-                        cellPad,
+                        padFor(cellPad, colIndex),
                         "align-middle",
                         comfortable
                           ? cn(
