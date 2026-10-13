@@ -257,7 +257,7 @@ export { DataCardList } from "./data-card-list";
 export type { DataCardListProps } from "./data-card-list";
 export { CopyableCell } from "./copyable-cell";
 export type { CopyableCellProps } from "./copyable-cell";
-export { CopyButton } from "./copy-button";
+export { CopyButton, COPY_BUTTON_COPIED_CLASSES } from "./copy-button";
 export type { CopyButtonProps } from "./copy-button";
 export { RotatingSearchInput } from "./rotating-search-input";
 export type { RotatingSearchInputProps } from "./rotating-search-input";

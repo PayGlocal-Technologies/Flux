@@ -5050,7 +5050,7 @@ import { forwardRef as forwardRef42, useEffect as useEffect5, useRef as useRef7,
 import { Check as Check10, Copy as Copy2 } from "lucide-react";
 import { toast as toast2 } from "sonner";
 import { jsx as jsx56 } from "react/jsx-runtime";
-var COPIED_CLASSES = "text-emerald-600 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-400";
+var COPY_BUTTON_COPIED_CLASSES = "text-emerald-600 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-400";
 var CopyButton = forwardRef42(
   ({
     value,
@@ -5058,6 +5058,7 @@ var CopyButton = forwardRef42(
     copiedLabel = "Copied",
     label,
     toastMessage,
+    errorMessage,
     variant = "primary",
     copiedVariant,
     copiedFor = 2e3,
@@ -5081,6 +5082,7 @@ var CopyButton = forwardRef42(
       try {
         await navigator.clipboard.writeText(value);
       } catch {
+        if (errorMessage) toast2.error(errorMessage);
         return;
       }
       setCopied(true);
@@ -5104,7 +5106,7 @@ var CopyButton = forwardRef42(
         className: cn(
           iconOnly && "h-6 w-6 min-h-0 min-w-0 rounded-md p-0",
           className,
-          copied && COPIED_CLASSES
+          copied && COPY_BUTTON_COPIED_CLASSES
         ),
         ...props,
         children: iconOnly ? copied ? tick : /* @__PURE__ */ jsx56(Copy2, { className: icon, "aria-hidden": true }) : copied ? copiedLabel : children
@@ -10176,6 +10178,7 @@ export {
   BreadcrumbSeparator,
   Button,
   ButtonGroup,
+  COPY_BUTTON_COPIED_CLASSES,
   COUNTRIES,
   Calendar,
   CalendarDateFilterChip,
