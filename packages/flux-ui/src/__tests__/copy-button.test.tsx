@@ -1,5 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
+import { toast } from "sonner";
 import { CopyButton } from "../copy-button";
 
 /**
@@ -57,6 +58,19 @@ describe("CopyButton", () => {
     await click("Copy");
     expect(onCopied).not.toHaveBeenCalled();
     expect(screen.getByRole("button", { name: "Copy" })).toBeTruthy();
+  });
+
+  it("shows errorMessage as a toast when the clipboard refuses", async () => {
+    writeText.mockRejectedValue(new Error("denied"));
+    const error = vi.spyOn(toast, "error").mockImplementation(() => "");
+    render(
+      <CopyButton value="x" errorMessage="Couldn't copy to clipboard">
+        Copy
+      </CopyButton>
+    );
+    await click("Copy");
+    expect(error).toHaveBeenCalledWith("Couldn't copy to clipboard");
+    error.mockRestore();
   });
 
   it("names an icon-only button by its label", async () => {

@@ -24,6 +24,12 @@ export interface CopyButtonProps extends Omit<ButtonProps, "value" | "onClick" |
   /** A toast on a successful copy, e.g. "Payment link copied". None when left out. */
   toastMessage?: string;
   /**
+   * An error toast when the clipboard refuses the write (an insecure context,
+   * or permission denied), e.g. "Couldn't copy to clipboard". None when left
+   * out, and the button stays as it was either way.
+   */
+  errorMessage?: string;
+  /**
    * The variant while copied. Defaults to `outline` for a `primary` button, so
    * the green "Copied" never sits on the filled blue, and to `variant` otherwise.
    */
@@ -36,8 +42,12 @@ export interface CopyButtonProps extends Omit<ButtonProps, "value" | "onClick" |
   iconClassName?: string;
 }
 
-/** The "just copied" look: the label and its tick in green, nothing else. */
-const COPIED_CLASSES = "text-emerald-600 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-400";
+/**
+ * The "just copied" look: the label and its tick in green, nothing else.
+ * Exported for a button that can't be a CopyButton (one that fetches what it
+ * copies first), so the two never show different greens side by side.
+ */
+export const COPY_BUTTON_COPIED_CLASSES = "text-emerald-600 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-400";
 
 /**
  * A button that copies `value` and says so: for `copiedFor` ms it reads
@@ -46,8 +56,9 @@ const COPIED_CLASSES = "text-emerald-600 hover:text-emerald-600 dark:text-emeral
  *
  * Only a write that worked says "Copied". A blocked clipboard (an insecure
  * context, or permission denied) leaves the button as it was, as CopyableCell
- * does. A second copy within the window restarts it. The click stops
- * propagating, so copying inside a clickable row never also opens it.
+ * does, with an error toast when `errorMessage` is given. A second copy
+ * within the window restarts it. The click stops propagating, so copying
+ * inside a clickable row never also opens it.
  */
 export const CopyButton = forwardRef<HTMLButtonElement, CopyButtonProps>(
   (
@@ -57,6 +68,7 @@ export const CopyButton = forwardRef<HTMLButtonElement, CopyButtonProps>(
       copiedLabel = "Copied",
       label,
       toastMessage,
+      errorMessage,
       variant = "primary",
       copiedVariant,
       copiedFor = 2000,
@@ -85,6 +97,7 @@ export const CopyButton = forwardRef<HTMLButtonElement, CopyButtonProps>(
       try {
         await navigator.clipboard.writeText(value);
       } catch {
+        if (errorMessage) toast.error(errorMessage);
         return;
       }
       setCopied(true);
@@ -109,7 +122,7 @@ export const CopyButton = forwardRef<HTMLButtonElement, CopyButtonProps>(
         className={cn(
           iconOnly && "h-6 w-6 min-h-0 min-w-0 rounded-md p-0",
           className,
-          copied && COPIED_CLASSES
+          copied && COPY_BUTTON_COPIED_CLASSES
         )}
         {...props}
       >

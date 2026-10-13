@@ -58,6 +58,7 @@ __export(index_exports, {
   BreadcrumbSeparator: () => BreadcrumbSeparator,
   Button: () => Button,
   ButtonGroup: () => ButtonGroup,
+  COPY_BUTTON_COPIED_CLASSES: () => COPY_BUTTON_COPIED_CLASSES,
   COUNTRIES: () => COUNTRIES,
   Calendar: () => Calendar,
   CalendarDateFilterChip: () => CalendarDateFilterChip,
@@ -5340,7 +5341,7 @@ var import_react11 = require("react");
 var import_lucide_react29 = require("lucide-react");
 var import_sonner2 = require("sonner");
 var import_jsx_runtime56 = require("react/jsx-runtime");
-var COPIED_CLASSES = "text-emerald-600 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-400";
+var COPY_BUTTON_COPIED_CLASSES = "text-emerald-600 hover:text-emerald-600 dark:text-emerald-400 dark:hover:text-emerald-400";
 var CopyButton = (0, import_react11.forwardRef)(
   ({
     value,
@@ -5348,6 +5349,7 @@ var CopyButton = (0, import_react11.forwardRef)(
     copiedLabel = "Copied",
     label,
     toastMessage,
+    errorMessage,
     variant = "primary",
     copiedVariant,
     copiedFor = 2e3,
@@ -5371,6 +5373,7 @@ var CopyButton = (0, import_react11.forwardRef)(
       try {
         await navigator.clipboard.writeText(value);
       } catch {
+        if (errorMessage) import_sonner2.toast.error(errorMessage);
         return;
       }
       setCopied(true);
@@ -5394,7 +5397,7 @@ var CopyButton = (0, import_react11.forwardRef)(
         className: cn(
           iconOnly && "h-6 w-6 min-h-0 min-w-0 rounded-md p-0",
           className,
-          copied && COPIED_CLASSES
+          copied && COPY_BUTTON_COPIED_CLASSES
         ),
         ...props,
         children: iconOnly ? copied ? tick : /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(import_lucide_react29.Copy, { className: icon, "aria-hidden": true }) : copied ? copiedLabel : children
@@ -10416,6 +10419,7 @@ function CalendarDateFilterChip({
   BreadcrumbSeparator,
   Button,
   ButtonGroup,
+  COPY_BUTTON_COPIED_CLASSES,
   COUNTRIES,
   Calendar,
   CalendarDateFilterChip,
