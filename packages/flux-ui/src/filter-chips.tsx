@@ -23,8 +23,8 @@ import {
   X,
 } from "lucide-react";
 import { Button } from "./button";
+import { Calendar } from "./calendar";
 import { Checkbox } from "./checkbox";
-import { DatePicker } from "./date-picker";
 import { Input } from "./input";
 import { Tabs, TabsList, TabsTrigger } from "./tabs";
 import { IconButton } from "./icon-button";
@@ -46,7 +46,8 @@ import { formatMonthLabel, MONTHS_SHORT } from "./format-datetime";
  * The content becomes a flex column so the footer stays pinned to the bottom
  * while only the list scrolls. Panels pair this with `FILTER_SCROLL_AREA`.
  */
-const POPOVER_FIT = "flex max-h-[var(--radix-popover-content-available-height)] flex-col overflow-hidden";
+const POPOVER_FIT =
+  "flex max-h-[var(--radix-popover-content-available-height)] flex-col overflow-hidden";
 
 /**
  * The scrolling half of a fitted popover: it takes whatever height is left over
@@ -79,7 +80,8 @@ type FilterChipGroupContextValue = {
   consumeHandoff: (key: string) => boolean;
 };
 
-const FilterChipGroupContext = createContext<FilterChipGroupContextValue | null>(null);
+const FilterChipGroupContext =
+  createContext<FilterChipGroupContextValue | null>(null);
 
 /**
  * Wraps a row of filter chips so only one popover is open at a time — and,
@@ -163,7 +165,7 @@ export function FilterChipGroup({
 
       apply(key);
     },
-    [apply]
+    [apply],
   );
 
   // A handoff in flight when the toolbar unmounts must not fire into nothing.
@@ -171,7 +173,7 @@ export function FilterChipGroup({
     () => () => {
       if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
     },
-    []
+    [],
   );
 
   const consumeHandoff = useCallback((key: string) => {
@@ -182,12 +184,14 @@ export function FilterChipGroup({
 
   const value = useMemo(
     () => ({ openKey, setOpen, consumeHandoff }),
-    [openKey, setOpen, consumeHandoff]
+    [openKey, setOpen, consumeHandoff],
   );
 
   return (
     <FilterChipGroupContext.Provider value={value}>
-      <div className={cn("flex flex-wrap items-center gap-2", className)}>{children}</div>
+      <div className={cn("flex flex-wrap items-center gap-2", className)}>
+        {children}
+      </div>
     </FilterChipGroupContext.Provider>
   );
 }
@@ -205,7 +209,7 @@ export function FilterChipGroup({
  */
 export function useFilterChipState(
   key: string,
-  controlled?: { open?: boolean; onOpenChange?: (open: boolean) => void }
+  controlled?: { open?: boolean; onOpenChange?: (open: boolean) => void },
 ): {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -224,10 +228,14 @@ export function useFilterChipState(
       if (group) group.setOpen(key, next);
       else setLocalOpen(next);
     },
-    [controlled, isControlled, group, key]
+    [controlled, isControlled, group, key],
   );
 
-  const open = isControlled ? controlled!.open! : group ? group.openKey === key : localOpen;
+  const open = isControlled
+    ? controlled!.open!
+    : group
+      ? group.openKey === key
+      : localOpen;
 
   /**
    * Stops a chip closed by a **handoff** from pulling focus back to its own
@@ -248,7 +256,7 @@ export function useFilterChipState(
         event.preventDefault();
       }
     },
-    [group, key]
+    [group, key],
   );
 
   return { open, onOpenChange, onCloseAutoFocus };
@@ -297,8 +305,9 @@ export function FilterChipShell({
       className={cn(
         "inline-flex h-auto shrink-0 items-center rounded-full border border-dashed border-border bg-card",
         elevation.field,
-        active && "border-solid border-primary bg-primary/10 ring-1 ring-primary/30",
-        className
+        active &&
+          "border-solid border-primary bg-primary/10 ring-1 ring-primary/30",
+        className,
       )}
     >
       {children}
@@ -389,7 +398,7 @@ export const FilterChipLabelTrigger = forwardRef<
       active
         ? "pl-1.5 pr-2.5 font-semibold text-primary hover:text-primary"
         : "pl-2.5 pr-2.5 text-muted-foreground hover:text-foreground",
-      className
+      className,
     )}
     {...props}
   >
@@ -427,7 +436,7 @@ export function FilterChipActions({
     <div
       className={cn(
         "flex shrink-0 items-center gap-2 border-t border-border px-3 py-2",
-        hideClear ? "justify-end" : "justify-between"
+        hideClear ? "justify-end" : "justify-between",
       )}
     >
       {hideClear ? null : (
@@ -442,7 +451,13 @@ export function FilterChipActions({
           Clear
         </Button>
       )}
-      <Button type="button" variant="primary" size="sm" onClick={onApply} disabled={applyDisabled}>
+      <Button
+        type="button"
+        variant="primary"
+        size="sm"
+        onClick={onApply}
+        disabled={applyDisabled}
+      >
         Apply
       </Button>
     </div>
@@ -591,13 +606,14 @@ export function SelectFilterChip({
     const q = query.trim().toLowerCase();
     if (!q) return options;
     return options.filter(
-      (o) => o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q)
+      (o) =>
+        o.label.toLowerCase().includes(q) || o.value.toLowerCase().includes(q),
     );
   }, [options, query]);
 
   const toggle = (value: string) =>
     setDraft((prev) =>
-      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
+      prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value],
     );
 
   return (
@@ -606,7 +622,9 @@ export function SelectFilterChip({
       // An inverted chip says so on the pill: "Status Code" and "Status Code
       // (excluded)" filter to opposite halves of the same data, and a shared
       // count would otherwise be the only difference between them.
-      label={supportsInvert && invert && isActive ? `${label} (excluded)` : label}
+      label={
+        supportsInvert && invert && isActive ? `${label} (excluded)` : label
+      }
       active={isActive}
       count={showCount ? selected.length : undefined}
       align={align}
@@ -648,7 +666,9 @@ export function SelectFilterChip({
         }}
         // Disabled only when there is genuinely nothing to drop: an applied
         // value with an emptied draft is still something to clear.
-        clearDisabled={draft.length === 0 && selected.length === 0 && !draftInvert && !invert}
+        clearDisabled={
+          draft.length === 0 && selected.length === 0 && !draftInvert && !invert
+        }
         onApply={() => {
           onChange(draft);
           onInvertChange?.(draftInvert);
@@ -725,7 +745,10 @@ function FilterChipPanel({
 
       {invert !== undefined ? (
         <label className="flex shrink-0 cursor-pointer items-center gap-2 border-t border-border px-3 py-2 text-[12.5px] text-foreground">
-          <Checkbox checked={invert} onCheckedChange={(c) => onInvertChange(c === true)} />
+          <Checkbox
+            checked={invert}
+            onCheckedChange={(c) => onInvertChange(c === true)}
+          />
           {invertLabel}
         </label>
       ) : null}
@@ -794,7 +817,8 @@ export function SingleSelectFilterChip({
             }}
             className={cn(
               "w-full justify-start rounded-md px-2 py-1.5 text-[12.5px] font-normal",
-              option.value === value && "bg-primary/10 font-medium text-primary"
+              option.value === value &&
+                "bg-primary/10 font-medium text-primary",
             )}
           >
             {option.icon}
@@ -813,16 +837,6 @@ export interface DateRangeValue {
   from: string;
   to: string;
 }
-
-/**
- * `DatePicker` renders `<div className={cn("relative", className)}>` with its
- * trigger `<button>` as the direct child, and hard-codes a tall trigger
- * (`h-12 rounded-xl px-5 text-[15px]`) sized for a form field. Inside a chip
- * popover that towers over everything around it, so `[&>button]` reaches the
- * trigger and brings it back to the size of the console's other dropdowns.
- */
-const DATE_CHIP_TRIGGER =
-  "[&>button]:!h-10 [&>button]:!min-h-0 [&>button]:!gap-2 [&>button]:!rounded-lg [&>button]:!px-3.5 [&>button]:!text-sm [&>button]:!font-normal [&>button]:!shadow-none [&>button>svg]:!size-4";
 
 /**
  * "Last N weeks / days / hours / minutes", counted back from now.
@@ -869,7 +883,9 @@ function relativeRangeSeconds(value: RelativeRangeValue): number {
 }
 
 /** Whether a relative range names any span at all. */
-export function hasRelativeRange(value: RelativeRangeValue | undefined): boolean {
+export function hasRelativeRange(
+  value: RelativeRangeValue | undefined,
+): boolean {
   return !!value && relativeRangeSeconds(value) > 0;
 }
 
@@ -881,7 +897,7 @@ export function hasRelativeRange(value: RelativeRangeValue | undefined): boolean
  * the request.
  */
 export function relativeRangeToMillis(
-  value: RelativeRangeValue
+  value: RelativeRangeValue,
 ): { startTime: number; endTime: number } | null {
   const seconds = relativeRangeSeconds(value);
   if (seconds <= 0) return null;
@@ -921,10 +937,30 @@ export interface DateRangeFilterChipProps extends FilterChipControl {
   align?: "start" | "center" | "end";
 }
 
+/** A local date as `YYYY-MM-DD`, the format the chip's value carries. */
+const toRangeKey = (d: Date): string =>
+  `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+/** `YYYY-MM-DD` → a local date (not `new Date(key)`, which reads it as UTC). */
+const fromRangeKey = (key: string): Date | undefined => {
+  const m = key.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : undefined;
+};
+
+/** `YYYY-MM-DD` → "12 Oct 2026", for the line under the calendar. */
+const rangeDayLabel = (key: string): string =>
+  fromRangeKey(key)?.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+  }) ?? key;
+
 /**
- * From / To, staged behind Apply. A half-filled range cannot be applied: an
- * open-ended date filter reads as a bug far more often than it is what someone
- * meant, and the disabled Apply says so without an error message.
+ * A date range on one calendar, staged behind Apply: the first click picks one
+ * end, the second the other (react-day-picker's range selection), the same way
+ * the report drawer's calendar works. Apply stays off until both ends are
+ * picked: an empty or open-ended date filter reads as a bug far more often
+ * than it is what someone meant, and the disabled Apply says so.
  */
 export function DateRangeFilterChip({
   chipKey = "date",
@@ -943,14 +979,14 @@ export function DateRangeFilterChip({
   const chip = useFilterChipState(chipKey, { open, onOpenChange });
   const [draft, setDraft] = useState<DateRangeValue>(value);
   const [relativeDraft, setRelativeDraft] = useState<RelativeRangeValue>(
-    relativeValue ?? EMPTY_RELATIVE_RANGE
+    relativeValue ?? EMPTY_RELATIVE_RANGE,
   );
 
   // The tab the panel opens on follows what is applied, so reopening a chip set
   // to "last 2 days" does not land on an empty date range.
   const supportsRelative = !!onRelativeChange;
   const [mode, setMode] = useState<"absolute" | "relative">(
-    hasRelativeRange(relativeValue) ? "relative" : "absolute"
+    hasRelativeRange(relativeValue) ? "relative" : "absolute",
   );
 
   const relativeLabel = hasRelativeRange(relativeValue)
@@ -958,8 +994,15 @@ export function DateRangeFilterChip({
     : "";
   const isActive = !!(value.from && value.to) || !!relativeLabel;
   const isPartial = !!draft.from !== !!draft.to;
+  const isComplete = !!draft.from && !!draft.to;
+  // The month on screen: where the staged range ends, else today (or the
+  // latest allowed day). Reset from the applied value on every open.
+  const [month, setMonth] = useState<Date | undefined>(undefined);
+  const minDate = min ? fromRangeKey(min) : undefined;
+  const maxDate = max ? fromRangeKey(max) : undefined;
 
-  const outside = (d: string) => !!d && ((!!min && d < min) || (!!max && d > max));
+  const outside = (d: string) =>
+    !!d && ((!!min && d < min) || (!!max && d > max));
   const outOfRange = outside(draft.from) || outside(draft.to);
 
   const emptyRange: DateRangeValue = { from: "", to: "" };
@@ -993,6 +1036,7 @@ export function DateRangeFilterChip({
       onOpenChange={chip.onOpenChange}
       onOpen={() => {
         setDraft(value);
+        setMonth(fromRangeKey(value.to) ?? fromRangeKey(value.from) ?? maxDate);
         setRelativeDraft(relativeValue ?? EMPTY_RELATIVE_RANGE);
         setMode(hasRelativeRange(relativeValue) ? "relative" : "absolute");
       }}
@@ -1003,9 +1047,12 @@ export function DateRangeFilterChip({
         setRelativeDraft(EMPTY_RELATIVE_RANGE);
       }}
     >
-      <div className="w-72 space-y-3 p-3">
+      <div className="w-80 space-y-3 p-3">
         {supportsRelative ? (
-          <Tabs value={mode} onValueChange={(v) => setMode(v as "absolute" | "relative")}>
+          <Tabs
+            value={mode}
+            onValueChange={(v) => setMode(v as "absolute" | "relative")}
+          >
             <TabsList className="w-full">
               <TabsTrigger value="absolute" className="flex-1">
                 Date range
@@ -1021,7 +1068,9 @@ export function DateRangeFilterChip({
           <div className="grid grid-cols-2 gap-2">
             {RELATIVE_UNITS.map((unit) => (
               <label key={unit.key} className="space-y-1.5">
-                <span className="text-[11px] font-medium text-muted-foreground">{unit.label}</span>
+                <span className="text-[11px] font-medium text-muted-foreground">
+                  {unit.label}
+                </span>
                 <Input
                   type="number"
                   min={0}
@@ -1029,7 +1078,10 @@ export function DateRangeFilterChip({
                   placeholder="0"
                   value={relativeDraft[unit.key]}
                   onChange={(e) =>
-                    setRelativeDraft((prev) => ({ ...prev, [unit.key]: e.target.value }))
+                    setRelativeDraft((prev) => ({
+                      ...prev,
+                      [unit.key]: e.target.value,
+                    }))
                   }
                   className="h-8 text-[12.5px]"
                 />
@@ -1038,31 +1090,40 @@ export function DateRangeFilterChip({
           </div>
         ) : (
           <>
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground">From</p>
-              <DatePicker
-                value={draft.from}
-                onChange={(v) => setDraft((d) => ({ ...d, from: v }))}
-                min={min}
-                max={max}
-                placeholder="Select start date"
-                className={DATE_CHIP_TRIGGER}
-              />
-            </div>
-            <div className="space-y-1">
-              <p className="text-[11px] font-medium text-muted-foreground">To</p>
-              <DatePicker
-                value={draft.to}
-                onChange={(v) => setDraft((d) => ({ ...d, to: v }))}
-                min={draft.from || min}
-                max={max}
-                placeholder="Select end date"
-                className={DATE_CHIP_TRIGGER}
-              />
-            </div>
-            {isPartial ? (
-              <p className="text-[11px] text-muted-foreground">Pick both ends of the range.</p>
-            ) : null}
+            <Calendar
+              mode="range"
+              fullWidth
+              className="bg-transparent p-0"
+              month={month}
+              onMonthChange={setMonth}
+              startMonth={minDate}
+              endMonth={maxDate}
+              disabled={[
+                ...(minDate ? [{ before: minDate }] : []),
+                ...(maxDate ? [{ after: maxDate }] : []),
+              ]}
+              selected={{
+                from: fromRangeKey(draft.from),
+                to: fromRangeKey(draft.to),
+              }}
+              // react-day-picker decides what each click does to the range;
+              // the chip only mirrors the result as YYYY-MM-DD.
+              onSelect={(range) =>
+                setDraft({
+                  from: range?.from ? toRangeKey(range.from) : "",
+                  to: range?.to ? toRangeKey(range.to) : "",
+                })
+              }
+            />
+            <p className="text-[11px] text-muted-foreground">
+              {isComplete
+                ? draft.from === draft.to
+                  ? rangeDayLabel(draft.from)
+                  : `${rangeDayLabel(draft.from)} – ${rangeDayLabel(draft.to)}`
+                : isPartial
+                  ? "Pick the other end of the range."
+                  : "Pick a start and an end date."}
+            </p>
             {outOfRange && outOfRangeHint ? (
               <p className="text-[11px] text-destructive">{outOfRangeHint}</p>
             ) : null}
@@ -1082,7 +1143,9 @@ export function DateRangeFilterChip({
         // A duration needs no dates; a date range needs both ends and must sit
         // inside the allowed window.
         applyDisabled={
-          isRelative ? !hasRelativeRange(relativeDraft) : isPartial || outOfRange
+          isRelative
+            ? !hasRelativeRange(relativeDraft)
+            : !isComplete || outOfRange
         }
         onApply={() =>
           isRelative
@@ -1166,7 +1229,8 @@ export function MonthRangeFilterChip({
   const [year, setYear] = useState(() => yearOf(value.end) || maxYear);
 
   // Always active: there is always a window in force.
-  const isDefault = value.start === defaultRange.start && value.end === defaultRange.end;
+  const isDefault =
+    value.start === defaultRange.start && value.end === defaultRange.end;
 
   const pick = (month: string) => {
     if (!awaitingEnd) {
@@ -1178,7 +1242,9 @@ export function MonthRangeFilterChip({
     // range, which is what every date-range picker does and what a merchant
     // correcting an over-shot first click means.
     setDraft((prev) =>
-      month < prev.start ? { start: month, end: prev.end } : { start: prev.start, end: month }
+      month < prev.start
+        ? { start: month, end: prev.end }
+        : { start: prev.start, end: month },
     );
     setAwaitingEnd(false);
   };
@@ -1213,7 +1279,11 @@ export function MonthRangeFilterChip({
           />
         </PopoverTrigger>
       </FilterChipShell>
-      <PopoverContent align="end" className="w-60 p-3" onCloseAutoFocus={chip.onCloseAutoFocus}>
+      <PopoverContent
+        align="end"
+        className="w-60 p-3"
+        onCloseAutoFocus={chip.onCloseAutoFocus}
+      >
         <div className="flex items-center justify-between">
           <IconButton
             aria-label="Previous year"
@@ -1224,7 +1294,9 @@ export function MonthRangeFilterChip({
           >
             <ChevronLeft className="h-3.5 w-3.5" />
           </IconButton>
-          <span className="text-[12.5px] font-semibold text-foreground">{year}</span>
+          <span className="text-[12.5px] font-semibold text-foreground">
+            {year}
+          </span>
           <IconButton
             aria-label="Next year"
             variant="ghost"
@@ -1240,9 +1312,12 @@ export function MonthRangeFilterChip({
           {MONTHS_SHORT.map((monthLabel, index) => {
             const monthValue = monthKey(year, index);
             // Plain string comparison: "YYYY-MM" sorts chronologically.
-            const inBounds = monthValue >= bounds.start && monthValue <= bounds.end;
-            const isEdge = monthValue === draft.start || monthValue === draft.end;
-            const isBetween = monthValue > draft.start && monthValue < draft.end;
+            const inBounds =
+              monthValue >= bounds.start && monthValue <= bounds.end;
+            const isEdge =
+              monthValue === draft.start || monthValue === draft.end;
+            const isBetween =
+              monthValue > draft.start && monthValue < draft.end;
             const hasData = monthsWithData.has(monthValue);
 
             return (
@@ -1258,7 +1333,7 @@ export function MonthRangeFilterChip({
                 className={cn(
                   "relative h-auto min-h-0 w-full justify-center rounded-md px-0 pb-2.5 pt-1.5 text-[12px]",
                   !isEdge && "text-foreground hover:bg-muted/60",
-                  isBetween && "bg-primary/15 text-primary"
+                  isBetween && "bg-primary/15 text-primary",
                 )}
               >
                 {monthLabel}
@@ -1267,7 +1342,7 @@ export function MonthRangeFilterChip({
                     aria-hidden
                     className={cn(
                       "absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full",
-                      isEdge ? "bg-primary-foreground" : "bg-primary"
+                      isEdge ? "bg-primary-foreground" : "bg-primary",
                     )}
                   />
                 )}
@@ -1276,8 +1351,13 @@ export function MonthRangeFilterChip({
           })}
         </div>
 
-        <p className="mt-2 truncate text-[11px] text-muted-foreground" title={summary}>
-          {awaitingEnd ? `${formatMonthLabel(draft.start)} – pick an end month` : summary}
+        <p
+          className="mt-2 truncate text-[11px] text-muted-foreground"
+          title={summary}
+        >
+          {awaitingEnd
+            ? `${formatMonthLabel(draft.start)} – pick an end month`
+            : summary}
         </p>
 
         <Separator className="my-2" />
@@ -1288,7 +1368,11 @@ export function MonthRangeFilterChip({
             size="sm"
             leftIcon={<X className="h-3 w-3" />}
             onClick={reset}
-            disabled={isDefault && draft.start === defaultRange.start && draft.end === defaultRange.end}
+            disabled={
+              isDefault &&
+              draft.start === defaultRange.start &&
+              draft.end === defaultRange.end
+            }
             className="text-muted-foreground hover:text-foreground"
           >
             Reset
@@ -1394,7 +1478,9 @@ export function TextFilterChip({
           }}
           className="h-8 text-[12.5px]"
         />
-        {hint ? <p className="text-[11px] text-muted-foreground">{hint}</p> : null}
+        {hint ? (
+          <p className="text-[11px] text-muted-foreground">{hint}</p>
+        ) : null}
       </div>
       <FilterChipActions
         onClear={() => {
@@ -1446,7 +1532,8 @@ export function NumberRangeFilterChip({
   const chip = useFilterChipState(chipKey, { open, onOpenChange });
   const [draft, setDraft] = useState<NumberRangeValue>(value);
   const isActive = !!(value.min || value.max);
-  const inverted = !!draft.min && !!draft.max && Number(draft.min) > Number(draft.max);
+  const inverted =
+    !!draft.min && !!draft.max && Number(draft.min) > Number(draft.max);
 
   return (
     <FilterChip
@@ -1465,7 +1552,9 @@ export function NumberRangeFilterChip({
       <div className="w-56 space-y-3 p-3">
         {(["min", "max"] as const).map((end) => (
           <label key={end} className="block space-y-1">
-            <span className="text-[11px] font-medium capitalize text-muted-foreground">{end}</span>
+            <span className="text-[11px] font-medium capitalize text-muted-foreground">
+              {end}
+            </span>
             <div className="relative">
               {prefix ? (
                 <span className="pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[12.5px] text-muted-foreground">
@@ -1476,14 +1565,18 @@ export function NumberRangeFilterChip({
                 type="number"
                 inputMode="decimal"
                 value={draft[end]}
-                onChange={(e) => setDraft((d) => ({ ...d, [end]: e.target.value }))}
+                onChange={(e) =>
+                  setDraft((d) => ({ ...d, [end]: e.target.value }))
+                }
                 className={cn("h-8 text-[12.5px]", prefix && "pl-6")}
               />
             </div>
           </label>
         ))}
         {inverted ? (
-          <p className="text-[11px] text-destructive">Min must not exceed max.</p>
+          <p className="text-[11px] text-destructive">
+            Min must not exceed max.
+          </p>
         ) : hint ? (
           <p className="text-[11px] text-muted-foreground">{hint}</p>
         ) : null}
@@ -1547,7 +1640,12 @@ export interface AddFilterMenuProps extends FilterChipControl {
 type MenuRow =
   | { kind: "heading"; id: string; text: string }
   | { kind: "filter"; id: string; filter: AddFilterDefinition }
-  | { kind: "value"; id: string; filter: AddFilterDefinition; option: FilterChipOption };
+  | {
+      kind: "value";
+      id: string;
+      filter: AddFilterDefinition;
+      option: FilterChipOption;
+    };
 
 /**
  * "Filter" — a searchable way to reach every filter a table has, instead of a
@@ -1601,7 +1699,7 @@ export function AddFilterMenu({
       const valueMatches = filters.flatMap((f) =>
         (f.options ?? [])
           .filter((o) => o.label.toLowerCase().includes(q))
-          .map((option) => ({ filter: f, option }))
+          .map((option) => ({ filter: f, option })),
       );
       if (valueMatches.length && onSelectValue) {
         out.push({ kind: "heading", id: "h-values", text: "Values" });
@@ -1615,7 +1713,9 @@ export function AddFilterMenu({
         }
       }
 
-      const nameMatches = filters.filter((f) => f.label.toLowerCase().includes(q));
+      const nameMatches = filters.filter((f) =>
+        f.label.toLowerCase().includes(q),
+      );
       if (nameMatches.length) {
         out.push({ kind: "heading", id: "h-fields", text: "Filters" });
         for (const filter of nameMatches) {
@@ -1639,8 +1739,9 @@ export function AddFilterMenu({
   }, [filters, q, onSelectValue, onRemoveFilter]);
 
   const selectable = useMemo(
-    () => rows.map((r, i) => (r.kind === "heading" ? -1 : i)).filter((i) => i >= 0),
-    [rows]
+    () =>
+      rows.map((r, i) => (r.kind === "heading" ? -1 : i)).filter((i) => i >= 0),
+    [rows],
   );
 
   /**
@@ -1653,7 +1754,9 @@ export function AddFilterMenu({
    * would then fight the arrow keys, snapping the highlight back to the first
    * row each time the parent happened to re-render. Deriving it cannot.
    */
-  const cursor = selectable.includes(storedCursor) ? storedCursor : (selectable[0] ?? -1);
+  const cursor = selectable.includes(storedCursor)
+    ? storedCursor
+    : (selectable[0] ?? -1);
 
   /** Keeps the highlighted row inside the scroll viewport. */
   useEffect(() => {
@@ -1695,7 +1798,8 @@ export function AddFilterMenu({
   const moveCursor = (delta: number) => {
     if (!selectable.length) return;
     const at = selectable.indexOf(cursor);
-    const next = selectable[(at + delta + selectable.length) % selectable.length];
+    const next =
+      selectable[(at + delta + selectable.length) % selectable.length];
     setCursor(next);
   };
 
@@ -1731,7 +1835,9 @@ export function AddFilterMenu({
             active={false}
             rightIcon={<SlidersHorizontal className="h-3 w-3" />}
             aria-label={
-              activeCount > 0 ? `${label}. ${activeCount} filters applied.` : label
+              activeCount > 0
+                ? `${label}. ${activeCount} filters applied.`
+                : label
             }
           />
         </PopoverTrigger>
@@ -1744,14 +1850,19 @@ export function AddFilterMenu({
         onCloseAutoFocus={onCloseAutoFocus}
       >
         <div className="flex h-10 shrink-0 items-center gap-2 border-b border-border px-3">
-          <Search className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+          <Search
+            className="size-3.5 shrink-0 text-muted-foreground"
+            aria-hidden
+          />
           <input
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Search filters and values"
             aria-controls={listId}
-            aria-activedescendant={cursor >= 0 ? `${listId}-${cursor}` : undefined}
+            aria-activedescendant={
+              cursor >= 0 ? `${listId}-${cursor}` : undefined
+            }
             className="h-full flex-1 bg-transparent text-[12.5px] outline-none placeholder:text-muted-foreground"
           />
         </div>
@@ -1786,13 +1897,15 @@ export function AddFilterMenu({
                   onClick={() => choose(row)}
                   className={cn(
                     "flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px] text-foreground",
-                    i === cursor && "bg-muted"
+                    i === cursor && "bg-muted",
                   )}
                 >
                   {row.kind === "value" ? (
                     <>
                       {row.option.icon}
-                      <span className="min-w-0 flex-1 truncate">{row.option.label}</span>
+                      <span className="min-w-0 flex-1 truncate">
+                        {row.option.label}
+                      </span>
                       {/* Names the field the value belongs to: "USD" alone is
                           ambiguous when two filters both take currencies. */}
                       <span className="shrink-0 text-[11px] text-muted-foreground">
@@ -1801,7 +1914,9 @@ export function AddFilterMenu({
                     </>
                   ) : (
                     <>
-                      <span className="min-w-0 flex-1 truncate">{row.filter.label}</span>
+                      <span className="min-w-0 flex-1 truncate">
+                        {row.filter.label}
+                      </span>
                       {row.filter.activeCount ? (
                         <span className="shrink-0 rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold tabular-nums text-primary">
                           {row.filter.activeCount}
@@ -1816,7 +1931,7 @@ export function AddFilterMenu({
                     </>
                   )}
                 </div>
-              )
+              ),
             )
           )}
         </div>
@@ -1859,10 +1974,14 @@ export function FilterToolbar({
         {search}
         {/* `contents` so the group adds no box of its own: the chips become
             direct children of the wrapping flex and can break between lines. */}
-        {chips ? <FilterChipGroup className="contents">{chips}</FilterChipGroup> : null}
+        {chips ? (
+          <FilterChipGroup className="contents">{chips}</FilterChipGroup>
+        ) : null}
       </div>
       {actions ? (
-        <div className="flex min-h-8 shrink-0 items-center gap-2">{actions}</div>
+        <div className="flex min-h-8 shrink-0 items-center gap-2">
+          {actions}
+        </div>
       ) : null}
     </div>
   );
@@ -1877,7 +1996,10 @@ export function FilterToolbar({
  * classes by hand. Having it here means a toolbar's actions match its chips
  * without each one rediscovering that.
  */
-export function ToolbarButton({ className, ...props }: ComponentPropsWithoutRef<typeof Button>) {
+export function ToolbarButton({
+  className,
+  ...props
+}: ComponentPropsWithoutRef<typeof Button>) {
   return (
     <Button
       type="button"
@@ -1887,7 +2009,7 @@ export function ToolbarButton({ className, ...props }: ComponentPropsWithoutRef<
         // Dark text and a visible lift: elevation.control's shadow-sm barely
         // reads at this compact size. Matches ColumnManager's trigger.
         "h-auto min-h-0 shrink-0 py-1 text-foreground shadow-[0_1px_2px_rgba(15,23,42,0.08),0_2px_8px_rgba(15,23,42,0.12)]",
-        className
+        className,
       )}
       {...props}
     />

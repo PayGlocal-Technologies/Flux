@@ -9031,7 +9031,17 @@ function FilterChipActions({
             children: "Clear"
           }
         ),
-        /* @__PURE__ */ jsx79(Button, { type: "button", variant: "primary", size: "sm", onClick: onApply, disabled: applyDisabled, children: "Apply" })
+        /* @__PURE__ */ jsx79(
+          Button,
+          {
+            type: "button",
+            variant: "primary",
+            size: "sm",
+            onClick: onApply,
+            disabled: applyDisabled,
+            children: "Apply"
+          }
+        )
       ]
     }
   );
@@ -9222,7 +9232,13 @@ function FilterChipPanel({
       option.value
     )) }),
     invert !== void 0 ? /* @__PURE__ */ jsxs51("label", { className: "flex shrink-0 cursor-pointer items-center gap-2 border-t border-border px-3 py-2 text-[12.5px] text-foreground", children: [
-      /* @__PURE__ */ jsx79(Checkbox, { checked: invert, onCheckedChange: (c) => onInvertChange(c === true) }),
+      /* @__PURE__ */ jsx79(
+        Checkbox,
+        {
+          checked: invert,
+          onCheckedChange: (c) => onInvertChange(c === true)
+        }
+      ),
       invertLabel
     ] }) : null
   ] });
@@ -9277,7 +9293,6 @@ function SingleSelectFilterChip({
     }
   );
 }
-var DATE_CHIP_TRIGGER = "[&>button]:!h-10 [&>button]:!min-h-0 [&>button]:!gap-2 [&>button]:!rounded-lg [&>button]:!px-3.5 [&>button]:!text-sm [&>button]:!font-normal [&>button]:!shadow-none [&>button>svg]:!size-4";
 var EMPTY_RELATIVE_RANGE = {
   weeks: "",
   days: "",
@@ -9312,6 +9327,16 @@ function relativeRangeLabel(value) {
   });
   return parts.length ? `Last ${parts.join(" ")}` : "";
 }
+var toRangeKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+var fromRangeKey = (key) => {
+  const m = key.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : void 0;
+};
+var rangeDayLabel = (key) => fromRangeKey(key)?.toLocaleDateString("en-GB", {
+  day: "numeric",
+  month: "short",
+  year: "numeric"
+}) ?? key;
 function DateRangeFilterChip({
   chipKey = "date",
   label = "Date",
@@ -9338,6 +9363,10 @@ function DateRangeFilterChip({
   const relativeLabel = hasRelativeRange(relativeValue) ? relativeRangeLabel(relativeValue) : "";
   const isActive = !!(value.from && value.to) || !!relativeLabel;
   const isPartial = !!draft.from !== !!draft.to;
+  const isComplete = !!draft.from && !!draft.to;
+  const [month, setMonth] = useState22(void 0);
+  const minDate = min ? fromRangeKey(min) : void 0;
+  const maxDate = max ? fromRangeKey(max) : void 0;
   const outside = (d) => !!d && (!!min && d < min || !!max && d > max);
   const outOfRange = outside(draft.from) || outside(draft.to);
   const emptyRange = { from: "", to: "" };
@@ -9360,6 +9389,7 @@ function DateRangeFilterChip({
       onOpenChange: chip.onOpenChange,
       onOpen: () => {
         setDraft(value);
+        setMonth(fromRangeKey(value.to) ?? fromRangeKey(value.from) ?? maxDate);
         setRelativeDraft(relativeValue ?? EMPTY_RELATIVE_RANGE);
         setMode(hasRelativeRange(relativeValue) ? "relative" : "absolute");
       },
@@ -9370,11 +9400,18 @@ function DateRangeFilterChip({
         setRelativeDraft(EMPTY_RELATIVE_RANGE);
       },
       children: [
-        /* @__PURE__ */ jsxs51("div", { className: "w-72 space-y-3 p-3", children: [
-          supportsRelative ? /* @__PURE__ */ jsx79(Tabs, { value: mode, onValueChange: (v) => setMode(v), children: /* @__PURE__ */ jsxs51(TabsList, { className: "w-full", children: [
-            /* @__PURE__ */ jsx79(TabsTrigger, { value: "absolute", className: "flex-1", children: "Date range" }),
-            /* @__PURE__ */ jsx79(TabsTrigger, { value: "relative", className: "flex-1", children: "Last\u2026" })
-          ] }) }) : null,
+        /* @__PURE__ */ jsxs51("div", { className: "w-80 space-y-3 p-3", children: [
+          supportsRelative ? /* @__PURE__ */ jsx79(
+            Tabs,
+            {
+              value: mode,
+              onValueChange: (v) => setMode(v),
+              children: /* @__PURE__ */ jsxs51(TabsList, { className: "w-full", children: [
+                /* @__PURE__ */ jsx79(TabsTrigger, { value: "absolute", className: "flex-1", children: "Date range" }),
+                /* @__PURE__ */ jsx79(TabsTrigger, { value: "relative", className: "flex-1", children: "Last\u2026" })
+              ] })
+            }
+          ) : null,
           isRelative ? /* @__PURE__ */ jsx79("div", { className: "grid grid-cols-2 gap-2", children: RELATIVE_UNITS.map((unit) => /* @__PURE__ */ jsxs51("label", { className: "space-y-1.5", children: [
             /* @__PURE__ */ jsx79("span", { className: "text-[11px] font-medium text-muted-foreground", children: unit.label }),
             /* @__PURE__ */ jsx79(
@@ -9385,40 +9422,39 @@ function DateRangeFilterChip({
                 inputMode: "numeric",
                 placeholder: "0",
                 value: relativeDraft[unit.key],
-                onChange: (e) => setRelativeDraft((prev) => ({ ...prev, [unit.key]: e.target.value })),
+                onChange: (e) => setRelativeDraft((prev) => ({
+                  ...prev,
+                  [unit.key]: e.target.value
+                })),
                 className: "h-8 text-[12.5px]"
               }
             )
           ] }, unit.key)) }) : /* @__PURE__ */ jsxs51(Fragment16, { children: [
-            /* @__PURE__ */ jsxs51("div", { className: "space-y-1", children: [
-              /* @__PURE__ */ jsx79("p", { className: "text-[11px] font-medium text-muted-foreground", children: "From" }),
-              /* @__PURE__ */ jsx79(
-                DatePicker,
-                {
-                  value: draft.from,
-                  onChange: (v) => setDraft((d) => ({ ...d, from: v })),
-                  min,
-                  max,
-                  placeholder: "Select start date",
-                  className: DATE_CHIP_TRIGGER
-                }
-              )
-            ] }),
-            /* @__PURE__ */ jsxs51("div", { className: "space-y-1", children: [
-              /* @__PURE__ */ jsx79("p", { className: "text-[11px] font-medium text-muted-foreground", children: "To" }),
-              /* @__PURE__ */ jsx79(
-                DatePicker,
-                {
-                  value: draft.to,
-                  onChange: (v) => setDraft((d) => ({ ...d, to: v })),
-                  min: draft.from || min,
-                  max,
-                  placeholder: "Select end date",
-                  className: DATE_CHIP_TRIGGER
-                }
-              )
-            ] }),
-            isPartial ? /* @__PURE__ */ jsx79("p", { className: "text-[11px] text-muted-foreground", children: "Pick both ends of the range." }) : null,
+            /* @__PURE__ */ jsx79(
+              Calendar,
+              {
+                mode: "range",
+                fullWidth: true,
+                className: "bg-transparent p-0",
+                month,
+                onMonthChange: setMonth,
+                startMonth: minDate,
+                endMonth: maxDate,
+                disabled: [
+                  ...minDate ? [{ before: minDate }] : [],
+                  ...maxDate ? [{ after: maxDate }] : []
+                ],
+                selected: {
+                  from: fromRangeKey(draft.from),
+                  to: fromRangeKey(draft.to)
+                },
+                onSelect: (range) => setDraft({
+                  from: range?.from ? toRangeKey(range.from) : "",
+                  to: range?.to ? toRangeKey(range.to) : ""
+                })
+              }
+            ),
+            /* @__PURE__ */ jsx79("p", { className: "text-[11px] text-muted-foreground", children: isComplete ? draft.from === draft.to ? rangeDayLabel(draft.from) : `${rangeDayLabel(draft.from)} \u2013 ${rangeDayLabel(draft.to)}` : isPartial ? "Pick the other end of the range." : "Pick a start and an end date." }),
             outOfRange && outOfRangeHint ? /* @__PURE__ */ jsx79("p", { className: "text-[11px] text-destructive", children: outOfRangeHint }) : null
           ] })
         ] }),
@@ -9427,7 +9463,7 @@ function DateRangeFilterChip({
           {
             onClear: () => commit(emptyRange, EMPTY_RELATIVE_RANGE),
             clearDisabled: !draft.from && !draft.to && !hasRelativeRange(relativeDraft) && !value.from && !value.to && !relativeLabel,
-            applyDisabled: isRelative ? !hasRelativeRange(relativeDraft) : isPartial || outOfRange,
+            applyDisabled: isRelative ? !hasRelativeRange(relativeDraft) : !isComplete || outOfRange,
             onApply: () => isRelative ? commit(emptyRange, relativeDraft) : commit(draft, EMPTY_RELATIVE_RANGE)
           }
         )
@@ -9489,99 +9525,114 @@ function MonthRangeFilterChip({
             active: true
           }
         ) }) }),
-        /* @__PURE__ */ jsxs51(PopoverContent, { align: "end", className: "w-60 p-3", onCloseAutoFocus: chip.onCloseAutoFocus, children: [
-          /* @__PURE__ */ jsxs51("div", { className: "flex items-center justify-between", children: [
-            /* @__PURE__ */ jsx79(
-              IconButton,
-              {
-                "aria-label": "Previous year",
-                variant: "ghost",
-                size: "xs",
-                disabled: year <= minYear,
-                onClick: () => setYear((prev) => prev - 1),
-                children: /* @__PURE__ */ jsx79(ChevronLeft7, { className: "h-3.5 w-3.5" })
-              }
-            ),
-            /* @__PURE__ */ jsx79("span", { className: "text-[12.5px] font-semibold text-foreground", children: year }),
-            /* @__PURE__ */ jsx79(
-              IconButton,
-              {
-                "aria-label": "Next year",
-                variant: "ghost",
-                size: "xs",
-                disabled: year >= maxYear,
-                onClick: () => setYear((prev) => prev + 1),
-                children: /* @__PURE__ */ jsx79(ChevronRight9, { className: "h-3.5 w-3.5" })
-              }
-            )
-          ] }),
-          /* @__PURE__ */ jsx79("div", { className: "mt-2 grid grid-cols-4 gap-1", children: MONTHS_SHORT.map((monthLabel, index) => {
-            const monthValue = monthKey(year, index);
-            const inBounds = monthValue >= bounds.start && monthValue <= bounds.end;
-            const isEdge = monthValue === draft.start || monthValue === draft.end;
-            const isBetween = monthValue > draft.start && monthValue < draft.end;
-            const hasData = monthsWithData.has(monthValue);
-            return /* @__PURE__ */ jsxs51(
-              Button,
-              {
-                type: "button",
-                variant: isEdge ? "primary" : "ghost",
-                size: "sm",
-                disabled: !inBounds,
-                "aria-pressed": isEdge || isBetween,
-                "aria-label": `${monthLabel} ${year}${hasData ? ", has receipts" : ""}`,
-                onClick: () => pick(monthValue),
-                className: cn(
-                  "relative h-auto min-h-0 w-full justify-center rounded-md px-0 pb-2.5 pt-1.5 text-[12px]",
-                  !isEdge && "text-foreground hover:bg-muted/60",
-                  isBetween && "bg-primary/15 text-primary"
+        /* @__PURE__ */ jsxs51(
+          PopoverContent,
+          {
+            align: "end",
+            className: "w-60 p-3",
+            onCloseAutoFocus: chip.onCloseAutoFocus,
+            children: [
+              /* @__PURE__ */ jsxs51("div", { className: "flex items-center justify-between", children: [
+                /* @__PURE__ */ jsx79(
+                  IconButton,
+                  {
+                    "aria-label": "Previous year",
+                    variant: "ghost",
+                    size: "xs",
+                    disabled: year <= minYear,
+                    onClick: () => setYear((prev) => prev - 1),
+                    children: /* @__PURE__ */ jsx79(ChevronLeft7, { className: "h-3.5 w-3.5" })
+                  }
                 ),
-                children: [
-                  monthLabel,
-                  hasData && /* @__PURE__ */ jsx79(
-                    "span",
-                    {
-                      "aria-hidden": true,
-                      className: cn(
-                        "absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full",
-                        isEdge ? "bg-primary-foreground" : "bg-primary"
+                /* @__PURE__ */ jsx79("span", { className: "text-[12.5px] font-semibold text-foreground", children: year }),
+                /* @__PURE__ */ jsx79(
+                  IconButton,
+                  {
+                    "aria-label": "Next year",
+                    variant: "ghost",
+                    size: "xs",
+                    disabled: year >= maxYear,
+                    onClick: () => setYear((prev) => prev + 1),
+                    children: /* @__PURE__ */ jsx79(ChevronRight9, { className: "h-3.5 w-3.5" })
+                  }
+                )
+              ] }),
+              /* @__PURE__ */ jsx79("div", { className: "mt-2 grid grid-cols-4 gap-1", children: MONTHS_SHORT.map((monthLabel, index) => {
+                const monthValue = monthKey(year, index);
+                const inBounds = monthValue >= bounds.start && monthValue <= bounds.end;
+                const isEdge = monthValue === draft.start || monthValue === draft.end;
+                const isBetween = monthValue > draft.start && monthValue < draft.end;
+                const hasData = monthsWithData.has(monthValue);
+                return /* @__PURE__ */ jsxs51(
+                  Button,
+                  {
+                    type: "button",
+                    variant: isEdge ? "primary" : "ghost",
+                    size: "sm",
+                    disabled: !inBounds,
+                    "aria-pressed": isEdge || isBetween,
+                    "aria-label": `${monthLabel} ${year}${hasData ? ", has receipts" : ""}`,
+                    onClick: () => pick(monthValue),
+                    className: cn(
+                      "relative h-auto min-h-0 w-full justify-center rounded-md px-0 pb-2.5 pt-1.5 text-[12px]",
+                      !isEdge && "text-foreground hover:bg-muted/60",
+                      isBetween && "bg-primary/15 text-primary"
+                    ),
+                    children: [
+                      monthLabel,
+                      hasData && /* @__PURE__ */ jsx79(
+                        "span",
+                        {
+                          "aria-hidden": true,
+                          className: cn(
+                            "absolute bottom-1 left-1/2 size-1 -translate-x-1/2 rounded-full",
+                            isEdge ? "bg-primary-foreground" : "bg-primary"
+                          )
+                        }
                       )
-                    }
-                  )
-                ]
-              },
-              monthValue
-            );
-          }) }),
-          /* @__PURE__ */ jsx79("p", { className: "mt-2 truncate text-[11px] text-muted-foreground", title: summary, children: awaitingEnd ? `${formatMonthLabel(draft.start)} \u2013 pick an end month` : summary }),
-          /* @__PURE__ */ jsx79(Separator, { className: "my-2" }),
-          /* @__PURE__ */ jsxs51("div", { className: "flex items-center justify-between gap-2", children: [
-            /* @__PURE__ */ jsx79(
-              Button,
-              {
-                variant: "ghost",
-                size: "sm",
-                leftIcon: /* @__PURE__ */ jsx79(X12, { className: "h-3 w-3" }),
-                onClick: reset,
-                disabled: isDefault && draft.start === defaultRange.start && draft.end === defaultRange.end,
-                className: "text-muted-foreground hover:text-foreground",
-                children: "Reset"
-              }
-            ),
-            /* @__PURE__ */ jsx79(
-              Button,
-              {
-                variant: "primary",
-                size: "sm",
-                onClick: () => {
-                  onChange(draft);
-                  chip.onOpenChange(false);
-                },
-                children: "Apply"
-              }
-            )
-          ] })
-        ] })
+                    ]
+                  },
+                  monthValue
+                );
+              }) }),
+              /* @__PURE__ */ jsx79(
+                "p",
+                {
+                  className: "mt-2 truncate text-[11px] text-muted-foreground",
+                  title: summary,
+                  children: awaitingEnd ? `${formatMonthLabel(draft.start)} \u2013 pick an end month` : summary
+                }
+              ),
+              /* @__PURE__ */ jsx79(Separator, { className: "my-2" }),
+              /* @__PURE__ */ jsxs51("div", { className: "flex items-center justify-between gap-2", children: [
+                /* @__PURE__ */ jsx79(
+                  Button,
+                  {
+                    variant: "ghost",
+                    size: "sm",
+                    leftIcon: /* @__PURE__ */ jsx79(X12, { className: "h-3 w-3" }),
+                    onClick: reset,
+                    disabled: isDefault && draft.start === defaultRange.start && draft.end === defaultRange.end,
+                    className: "text-muted-foreground hover:text-foreground",
+                    children: "Reset"
+                  }
+                ),
+                /* @__PURE__ */ jsx79(
+                  Button,
+                  {
+                    variant: "primary",
+                    size: "sm",
+                    onClick: () => {
+                      onChange(draft);
+                      chip.onOpenChange(false);
+                    },
+                    children: "Apply"
+                  }
+                )
+              ] })
+            ]
+          }
+        )
       ]
     }
   );
@@ -9767,7 +9818,9 @@ function AddFilterMenu({
           });
         }
       }
-      const nameMatches = filters.filter((f) => f.label.toLowerCase().includes(q));
+      const nameMatches = filters.filter(
+        (f) => f.label.toLowerCase().includes(q)
+      );
       if (nameMatches.length) {
         out.push({ kind: "heading", id: "h-fields", text: "Filters" });
         for (const filter of nameMatches) {
@@ -9862,7 +9915,13 @@ function AddFilterMenu({
             onCloseAutoFocus,
             children: [
               /* @__PURE__ */ jsxs51("div", { className: "flex h-10 shrink-0 items-center gap-2 border-b border-border px-3", children: [
-                /* @__PURE__ */ jsx79(Search6, { className: "size-3.5 shrink-0 text-muted-foreground", "aria-hidden": true }),
+                /* @__PURE__ */ jsx79(
+                  Search6,
+                  {
+                    className: "size-3.5 shrink-0 text-muted-foreground",
+                    "aria-hidden": true
+                  }
+                ),
                 /* @__PURE__ */ jsx79(
                   "input",
                   {
@@ -9954,7 +10013,10 @@ function FilterToolbar({
     ] })
   );
 }
-function ToolbarButton({ className, ...props }) {
+function ToolbarButton({
+  className,
+  ...props
+}) {
   return /* @__PURE__ */ jsx79(
     Button,
     {

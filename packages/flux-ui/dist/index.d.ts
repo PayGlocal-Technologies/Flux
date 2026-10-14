@@ -2559,9 +2559,11 @@ interface DateRangeFilterChipProps extends FilterChipControl {
     align?: "start" | "center" | "end";
 }
 /**
- * From / To, staged behind Apply. A half-filled range cannot be applied: an
- * open-ended date filter reads as a bug far more often than it is what someone
- * meant, and the disabled Apply says so without an error message.
+ * A date range on one calendar, staged behind Apply: the first click picks one
+ * end, the second the other (react-day-picker's range selection), the same way
+ * the report drawer's calendar works. Apply stays off until both ends are
+ * picked: an empty or open-ended date filter reads as a bug far more often
+ * than it is what someone meant, and the disabled Apply says so.
  */
 declare function DateRangeFilterChip({ chipKey, label, value, onChange, relativeValue, onRelativeChange, min, max, outOfRangeHint, align, open, onOpenChange, }: DateRangeFilterChipProps): React$1.JSX.Element;
 interface MonthRange {
