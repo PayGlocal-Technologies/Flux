@@ -60,16 +60,27 @@ export function UnderlineTabs({
   const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
 
   useEffect(() => {
+    const el = tabRefs.current[value];
+    if (!el) return;
     const measure = () => {
-      const el = tabRefs.current[value];
-      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+      const next = { left: el.offsetLeft, width: el.offsetWidth };
+      setIndicator((prev) =>
+        prev && prev.left === next.left && prev.width === next.width ? prev : next
+      );
     };
-    // Deferred into a rAF / resize callback rather than called in the effect
-    // body: it reads post-layout geometry, which is not derivable from render.
-    const raf = requestAnimationFrame(measure);
+    // Measured from a ResizeObserver callback rather than the effect body: it
+    // reads post-layout geometry, which is not derivable from render. The
+    // observer fires once on observe (the initial measure) and again whenever
+    // the active tab or the strip changes size, so a label that grows after
+    // the first paint (a count arriving beside a tab's name) or a sibling
+    // whose change shifts this tab along the row both move the indicator;
+    // keyed on `value` alone, it used to sit where the tab was first measured.
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    if (el.parentElement) observer.observe(el.parentElement);
     window.addEventListener("resize", measure);
     return () => {
-      cancelAnimationFrame(raf);
+      observer.disconnect();
       window.removeEventListener("resize", measure);
     };
   }, [value]);

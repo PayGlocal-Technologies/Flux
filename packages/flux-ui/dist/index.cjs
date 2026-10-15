@@ -3734,14 +3734,20 @@ function UnderlineTabs({
   const tabRefs = (0, import_react8.useRef)({});
   const [indicator, setIndicator] = (0, import_react8.useState)(null);
   (0, import_react8.useEffect)(() => {
+    const el = tabRefs.current[value];
+    if (!el) return;
     const measure = () => {
-      const el = tabRefs.current[value];
-      if (el) setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
+      const next = { left: el.offsetLeft, width: el.offsetWidth };
+      setIndicator(
+        (prev) => prev && prev.left === next.left && prev.width === next.width ? prev : next
+      );
     };
-    const raf = requestAnimationFrame(measure);
+    const observer = new ResizeObserver(measure);
+    observer.observe(el);
+    if (el.parentElement) observer.observe(el.parentElement);
     window.addEventListener("resize", measure);
     return () => {
-      cancelAnimationFrame(raf);
+      observer.disconnect();
       window.removeEventListener("resize", measure);
     };
   }, [value]);
