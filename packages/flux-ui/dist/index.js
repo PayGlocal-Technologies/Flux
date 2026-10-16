@@ -4471,9 +4471,12 @@ function DataTable({
                             /* @__PURE__ */ jsx52("td", { className: "sticky right-0 z-[1] w-0 p-0 align-middle", children: /* @__PURE__ */ jsx52(
                               "span",
                               {
-                                className: "absolute top-1/2 -translate-y-1/2 z-[1] inline-flex items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100",
-                                style: { right: actionGutter },
-                                children: rowAction != null ? typeof rowAction === "function" ? rowAction(row, i) : rowAction : /* @__PURE__ */ jsx52(
+                                className: "pointer-events-none absolute inset-y-0 right-0 z-[1] flex items-center pl-8 opacity-0 transition-opacity duration-150 [--row-action-bg:var(--card)] group-hover:opacity-100 group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_40%,var(--card))] group-has-[:focus-visible]:opacity-100 dark:group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_25%,var(--card))]",
+                                style: {
+                                  paddingRight: actionGutter,
+                                  backgroundImage: "linear-gradient(to right, transparent, var(--row-action-bg) 2rem)"
+                                },
+                                children: /* @__PURE__ */ jsx52("span", { className: "pointer-events-auto inline-flex items-center", children: rowAction != null ? typeof rowAction === "function" ? rowAction(row, i) : rowAction : /* @__PURE__ */ jsx52(
                                   "button",
                                   {
                                     type: "button",
@@ -4485,7 +4488,7 @@ function DataTable({
                                     ),
                                     children: rowCta?.label
                                   }
-                                )
+                                ) })
                               }
                             ) })
                           ) : null

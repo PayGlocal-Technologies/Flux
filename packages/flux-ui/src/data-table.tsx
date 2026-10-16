@@ -1076,11 +1076,30 @@ export function DataTable<T>({
                       {/* The action itself — `rowAction(row, i)` so it always
                           receives this row's record. Vertically centered in the
                           row and anchored `actionGutter`px from the right edge,
-                          overflowing left over the row content. Revealed on hover. */}
+                          overflowing left over the row content. Revealed on hover.
+
+                          It sits on a backdrop the row's full height, out to the
+                          right edge: solid in the row's own colour under the
+                          action and in the gutter (the hover tint pre-blended
+                          onto the card, as the sticky cells use, so it matches
+                          exactly), fading in from the left so the cells under it
+                          dissolve rather than show through or cut off. The
+                          backdrop ignores the pointer; only the action takes it.
+
+                          Besides hover, keyboard focus in the row reveals it
+                          (`:focus-visible`), not any focus: a mouse click on a
+                          link in the row (a GID opening a new tab) left the link
+                          focused, and the action showed on return until the next
+                          click elsewhere. */}
                       <span
-                        className="absolute top-1/2 -translate-y-1/2 z-[1] inline-flex items-center opacity-0 transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
-                        style={{ right: actionGutter }}
+                        className="pointer-events-none absolute inset-y-0 right-0 z-[1] flex items-center pl-8 opacity-0 transition-opacity duration-150 [--row-action-bg:var(--card)] group-hover:opacity-100 group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_40%,var(--card))] group-has-[:focus-visible]:opacity-100 dark:group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_25%,var(--card))]"
+                        style={{
+                          paddingRight: actionGutter,
+                          backgroundImage:
+                            "linear-gradient(to right, transparent, var(--row-action-bg) 2rem)",
+                        }}
                       >
+                        <span className="pointer-events-auto inline-flex items-center">
                         {rowAction != null ? (
                           typeof rowAction === "function" ? (
                             rowAction(row, i)
@@ -1102,6 +1121,7 @@ export function DataTable<T>({
                             {rowCta?.label}
                           </button>
                         )}
+                        </span>
                       </span>
                     </td>
                   ) : null}
