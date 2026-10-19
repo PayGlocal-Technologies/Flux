@@ -4397,6 +4397,7 @@ function DataTable({
   rowKey,
   rowCta,
   rowAction,
+  rowActionVisibility = "hover",
   onRowClick,
   density = "default",
   tableLayout = "fixed",
@@ -4433,6 +4434,7 @@ function DataTable({
     else if (pagination.mode === "client") setInternalPage(p);
   };
   const hasAction = rowAction != null || rowCta != null;
+  const actionInFlow = hasAction && rowActionVisibility === "always";
   const hasSpacer = tableLayout === "content";
   const [internalExpanded, setInternalExpanded] = (0, import_react9.useState)([]);
   const isExpandControlled = expandable?.expandedKeys !== void 0;
@@ -4543,7 +4545,7 @@ function DataTable({
                   tableLayout === "fixed" && !isEmpty && /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)("colgroup", { children: [
                     hasExpand ? /* @__PURE__ */ (0, import_jsx_runtime52.jsx)("col", { style: { width: 40 } }) : null,
                     columns.map((col) => /* @__PURE__ */ (0, import_jsx_runtime52.jsx)("col", { style: colWidthStyle(col) }, col.key)),
-                    hasAction ? /* @__PURE__ */ (0, import_jsx_runtime52.jsx)("col", { style: { width: 0 } }) : null
+                    hasAction ? /* @__PURE__ */ (0, import_jsx_runtime52.jsx)("col", { style: actionInFlow ? void 0 : { width: 0 } }) : null
                   ] }),
                   /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
                     "thead",
@@ -4623,7 +4625,7 @@ function DataTable({
                               );
                             }),
                             hasSpacer ? /* @__PURE__ */ (0, import_jsx_runtime52.jsx)("th", { className: "w-full p-0", "aria-hidden": true }) : null,
-                            hasAction ? /* @__PURE__ */ (0, import_jsx_runtime52.jsx)("th", { className: "sticky right-0 z-[1] w-0 p-0", "aria-hidden": true }) : null
+                            hasAction ? /* @__PURE__ */ (0, import_jsx_runtime52.jsx)("th", { className: cn("sticky right-0 z-[1] p-0", !actionInFlow && "w-0"), "aria-hidden": true }) : null
                           ]
                         }
                       )
@@ -4673,7 +4675,7 @@ function DataTable({
                             col.key
                           )),
                           hasSpacer ? /* @__PURE__ */ (0, import_jsx_runtime52.jsx)("td", { className: "p-0", "aria-hidden": true }) : null,
-                          hasAction ? /* @__PURE__ */ (0, import_jsx_runtime52.jsx)("td", { className: "sticky right-0 z-[1] w-0 p-0", "aria-hidden": true }) : null
+                          hasAction ? /* @__PURE__ */ (0, import_jsx_runtime52.jsx)("td", { className: cn("sticky right-0 z-[1] p-0", !actionInFlow && "w-0"), "aria-hidden": true }) : null
                         ]
                       },
                       r
@@ -4753,7 +4755,36 @@ function DataTable({
                             col.key
                           )),
                           hasSpacer ? /* @__PURE__ */ (0, import_jsx_runtime52.jsx)("td", { className: "p-0", "aria-hidden": true }) : null,
-                          hasAction ? (
+                          actionInFlow ? (
+                            // Always shown: a real cell sized to the action, pinned to
+                            // the right edge, so the table lays its columns out beside
+                            // it and nothing sits underneath. Opaque in the row's own
+                            // colour (the hover tint pre-blended onto the card, as the
+                            // sticky cells use) so cells scrolled beneath it never show
+                            // through. The fade off its left edge shows only while
+                            // there is more table to the right (`scrolled-end`), which
+                            // is when cells pass under it.
+                            /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
+                              "td",
+                              {
+                                className: "sticky right-0 z-[2] p-0 pl-3 align-middle bg-(--row-action-bg) [--row-action-bg:var(--card)] group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_40%,var(--card))] dark:group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_25%,var(--card))] before:pointer-events-none before:absolute before:inset-y-0 before:right-full before:w-6 before:bg-[linear-gradient(to_left,var(--row-action-bg),transparent)] before:opacity-0 before:transition-opacity before:duration-200 group-data-[scrolled-end=true]/table-scroll:before:opacity-100",
+                                style: { paddingRight: actionGutter },
+                                children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)("span", { className: "flex items-center justify-end whitespace-nowrap", children: rowAction != null ? typeof rowAction === "function" ? rowAction(row, i) : rowAction : /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
+                                  "button",
+                                  {
+                                    type: "button",
+                                    onClick: () => rowCta?.onClick?.(row),
+                                    className: cn(
+                                      "inline-flex items-center font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap",
+                                      elevation.control,
+                                      compact ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5 text-[12px]"
+                                    ),
+                                    children: rowCta?.label
+                                  }
+                                ) })
+                              }
+                            )
+                          ) : hasAction ? (
                             // Zero-width sticky cell pinned to the right edge of the
                             // viewport. Its children are positioned absolutely so they
                             // float over the row (out of the 0-width cell) — the action
@@ -5038,6 +5069,7 @@ function DataTableCard({
   pagination,
   sorting,
   rowAction,
+  rowActionVisibility,
   onRowClick,
   tableLayout = "content",
   expandable,
@@ -5091,6 +5123,7 @@ function DataTableCard({
             pagination,
             sorting,
             rowAction,
+            rowActionVisibility,
             onRowClick,
             emptyTitle,
             emptyDescription,

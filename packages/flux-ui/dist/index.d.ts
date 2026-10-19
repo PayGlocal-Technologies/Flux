@@ -1255,6 +1255,19 @@ interface DataTableProps<T> {
      */
     rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
     /**
+     * When the row action shows.
+     * - `hover` (default) — revealed on row hover or keyboard focus, floating as
+     *   an overlay over the row's trailing cells.
+     * - `always` — always shown, so it gets a column of its own: a real cell,
+     *   still pinned to the right edge, that the table sizes around. Nothing
+     *   sits under it until the table scrolls sideways, when a fade off its left
+     *   edge lets the cells passing beneath dissolve. Use this for an action
+     *   every row must show (an overflow menu): an always-visible overlay would
+     *   sit on the last column's text. Sizes to its content in the `content`
+     *   and `auto` layouts.
+     */
+    rowActionVisibility?: "hover" | "always";
+    /**
      * Makes the whole row a click target — the row itself opens a drawer, a
      * detail page, whatever the table drills into — instead of that living in a
      * per-cell wrapper or a hover-revealed button.
@@ -1290,7 +1303,7 @@ interface DataTableProps<T> {
     /** Per-row disclosure panel rendered beneath the row. See `DataTableExpandable`. */
     expandable?: DataTableExpandable<T>;
 }
-declare function DataTable<T>({ columns, data, isLoading, skeletonRows, emptyTitle, emptyDescription, pagination, sorting, className, rowKey, rowCta, rowAction, onRowClick, density, tableLayout, theadClassName, headerStyle, snug, expandable, }: DataTableProps<T>): React$1.JSX.Element;
+declare function DataTable<T>({ columns, data, isLoading, skeletonRows, emptyTitle, emptyDescription, pagination, sorting, className, rowKey, rowCta, rowAction, rowActionVisibility, onRowClick, density, tableLayout, theadClassName, headerStyle, snug, expandable, }: DataTableProps<T>): React$1.JSX.Element;
 /**
  * The classes and offset for a column frozen to the left edge, so a grid that
  * pins its identifier columns does not have to reinvent the recipe. Five
@@ -1399,6 +1412,8 @@ interface DataTableCardProps<T> {
     /** See {@link DataTableSorting}. */
     sorting?: DataTableSorting;
     rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
+    /** When the row action shows; see `DataTable`'s `rowActionVisibility`. */
+    rowActionVisibility?: "hover" | "always";
     /**
      * Makes the whole row a click target, for a grid that drills into a detail
      * view. Passed straight through, so it brings the keyboard affordances with
@@ -1424,7 +1439,7 @@ interface DataTableCardProps<T> {
     maxBodyHeight?: string;
     className?: string;
 }
-declare function DataTableCard<T>({ columns, data, rowKey, isLoading, title, description, actions, tabs, toolbar, footer, emptyTitle, emptyDescription, emptyState, errorState, pagination, sorting, rowAction, onRowClick, tableLayout, expandable, density, skeletonRows, maxBodyHeight, className, }: DataTableCardProps<T>): React$1.JSX.Element;
+declare function DataTableCard<T>({ columns, data, rowKey, isLoading, title, description, actions, tabs, toolbar, footer, emptyTitle, emptyDescription, emptyState, errorState, pagination, sorting, rowAction, rowActionVisibility, onRowClick, tableLayout, expandable, density, skeletonRows, maxBodyHeight, className, }: DataTableCardProps<T>): React$1.JSX.Element;
 /** Right-aligned group for toolbar action buttons. */
 declare function TableToolbarActions({ children }: {
     children: ReactNode;

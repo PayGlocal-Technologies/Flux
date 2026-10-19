@@ -78,6 +78,8 @@ export interface DataTableCardProps<T> {
   /** See {@link DataTableSorting}. */
   sorting?: DataTableSorting;
   rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
+  /** When the row action shows; see `DataTable`'s `rowActionVisibility`. */
+  rowActionVisibility?: "hover" | "always";
   /**
    * Makes the whole row a click target, for a grid that drills into a detail
    * view. Passed straight through, so it brings the keyboard affordances with
@@ -122,6 +124,7 @@ export function DataTableCard<T>({
   pagination,
   sorting,
   rowAction,
+  rowActionVisibility,
   onRowClick,
   tableLayout = "content",
   expandable,
@@ -184,6 +187,7 @@ export function DataTableCard<T>({
         pagination={pagination}
         sorting={sorting}
         rowAction={rowAction}
+        rowActionVisibility={rowActionVisibility}
         onRowClick={onRowClick}
         emptyTitle={emptyTitle}
         emptyDescription={emptyDescription}

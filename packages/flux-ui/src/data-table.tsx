@@ -269,6 +269,19 @@ interface DataTableProps<T> {
    */
   rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
   /**
+   * When the row action shows.
+   * - `hover` (default) — revealed on row hover or keyboard focus, floating as
+   *   an overlay over the row's trailing cells.
+   * - `always` — always shown, so it gets a column of its own: a real cell,
+   *   still pinned to the right edge, that the table sizes around. Nothing
+   *   sits under it until the table scrolls sideways, when a fade off its left
+   *   edge lets the cells passing beneath dissolve. Use this for an action
+   *   every row must show (an overflow menu): an always-visible overlay would
+   *   sit on the last column's text. Sizes to its content in the `content`
+   *   and `auto` layouts.
+   */
+  rowActionVisibility?: "hover" | "always";
+  /**
    * Makes the whole row a click target — the row itself opens a drawer, a
    * detail page, whatever the table drills into — instead of that living in a
    * per-cell wrapper or a hover-revealed button.
@@ -502,6 +515,7 @@ export function DataTable<T>({
   rowKey,
   rowCta,
   rowAction,
+  rowActionVisibility = "hover",
   onRowClick,
   density = "default",
   tableLayout = "fixed",
@@ -571,6 +585,8 @@ export function DataTable<T>({
   // right edge of the viewport (sticky), so the last data column stays flush
   // and there's no reserved/empty trailing column when scrolled to the end.
   const hasAction = rowAction != null || rowCta != null;
+  // An always-visible action is a real (sticky) column rather than an overlay.
+  const actionInFlow = hasAction && rowActionVisibility === "always";
 
   // `content` layout: a greedy, empty trailing column that absorbs leftover
   // horizontal space so the data columns stay at their content (minimum)
@@ -799,7 +815,7 @@ export function DataTable<T>({
               ))}
               {/* Zero-width column: the action floats out of it as an overlay,
                   so the last data column stays flush and nothing trails it. */}
-              {hasAction ? <col style={{ width: 0 }} /> : null}
+              {hasAction ? <col style={actionInFlow ? undefined : { width: 0 }} /> : null}
             </colgroup>
           )}
 
@@ -897,7 +913,7 @@ export function DataTable<T>({
               })}
               {hasSpacer ? <th className="w-full p-0" aria-hidden /> : null}
               {hasAction ? (
-                <th className="sticky right-0 z-[1] w-0 p-0" aria-hidden />
+                <th className={cn("sticky right-0 z-[1] p-0", !actionInFlow && "w-0")} aria-hidden />
               ) : null}
             </tr>
           </thead>
@@ -952,7 +968,7 @@ export function DataTable<T>({
                   ))}
                   {hasSpacer ? <td className="p-0" aria-hidden /> : null}
                   {hasAction ? (
-                    <td className="sticky right-0 z-[1] w-0 p-0" aria-hidden />
+                    <td className={cn("sticky right-0 z-[1] p-0", !actionInFlow && "w-0")} aria-hidden />
                   ) : null}
                 </tr>
               ))
@@ -1066,7 +1082,44 @@ export function DataTable<T>({
 
                   {hasSpacer ? <td className="p-0" aria-hidden /> : null}
 
-                  {hasAction ? (
+                  {actionInFlow ? (
+                    // Always shown: a real cell sized to the action, pinned to
+                    // the right edge, so the table lays its columns out beside
+                    // it and nothing sits underneath. Opaque in the row's own
+                    // colour (the hover tint pre-blended onto the card, as the
+                    // sticky cells use) so cells scrolled beneath it never show
+                    // through. The fade off its left edge shows only while
+                    // there is more table to the right (`scrolled-end`), which
+                    // is when cells pass under it.
+                    <td
+                      className="sticky right-0 z-[2] p-0 pl-3 align-middle bg-(--row-action-bg) [--row-action-bg:var(--card)] group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_40%,var(--card))] dark:group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_25%,var(--card))] before:pointer-events-none before:absolute before:inset-y-0 before:right-full before:w-6 before:bg-[linear-gradient(to_left,var(--row-action-bg),transparent)] before:opacity-0 before:transition-opacity before:duration-200 group-data-[scrolled-end=true]/table-scroll:before:opacity-100"
+                      style={{ paddingRight: actionGutter }}
+                    >
+                      <span className="flex items-center justify-end whitespace-nowrap">
+                        {rowAction != null ? (
+                          typeof rowAction === "function" ? (
+                            rowAction(row, i)
+                          ) : (
+                            rowAction
+                          )
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => rowCta?.onClick?.(row)}
+                            className={cn(
+                              "inline-flex items-center font-medium text-foreground bg-card rounded-lg border border-border hover:border-muted-foreground/50 whitespace-nowrap",
+                              elevation.control,
+                              compact
+                                ? "px-2.5 py-1 text-[11px]"
+                                : "px-3 py-1.5 text-[12px]"
+                            )}
+                          >
+                            {rowCta?.label}
+                          </button>
+                        )}
+                      </span>
+                    </td>
+                  ) : hasAction ? (
                     // Zero-width sticky cell pinned to the right edge of the
                     // viewport. Its children are positioned absolutely so they
                     // float over the row (out of the 0-width cell) — the action
