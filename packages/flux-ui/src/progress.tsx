@@ -59,10 +59,44 @@ export interface ProgressTrackerStep {
 
 export interface ProgressTrackerProps extends React.HTMLAttributes<HTMLDivElement> {
   steps: ProgressTrackerStep[];
+  /**
+   * `inline` is the compact one-line form for a dialog header: a small number
+   * beside each label, a short rule between, a finished step in success green.
+   * Default `default`, the stacked tracker for a page.
+   */
+  variant?: "default" | "inline";
 }
 
 const ProgressTracker = React.forwardRef<HTMLDivElement, ProgressTrackerProps>(
-  ({ className, steps, ...props }, ref) => (
+  ({ className, steps, variant = "default", ...props }, ref) =>
+    variant === "inline" ? (
+      <ol ref={ref as React.Ref<HTMLOListElement>} aria-label="Steps" className={cn("flex items-center gap-2", className)} {...(props as React.HTMLAttributes<HTMLOListElement>)}>
+        {steps.map((step, i) => (
+          <React.Fragment key={i}>
+            <li
+              aria-current={step.status === "current" ? "step" : undefined}
+              className={cn(
+                "flex items-center gap-1.5 text-xs font-medium",
+                step.status === "upcoming" ? "text-muted-foreground" : "text-foreground"
+              )}
+            >
+              <span
+                className={cn(
+                  "flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold",
+                  step.status === "complete" && "bg-green-500/15 text-green-700 dark:text-green-400",
+                  step.status === "current" && "bg-primary text-primary-foreground",
+                  step.status === "upcoming" && "border border-border text-muted-foreground"
+                )}
+              >
+                {step.status === "complete" ? <Check className="size-3" strokeWidth={3} /> : i + 1}
+              </span>
+              {step.label}
+            </li>
+            {i < steps.length - 1 && <li aria-hidden="true" className="h-px w-8 bg-border" />}
+          </React.Fragment>
+        ))}
+      </ol>
+    ) : (
     <div ref={ref} className={cn("flex items-start", className)} {...props}>
       {steps.map((step, i) => (
         <React.Fragment key={i}>
@@ -88,7 +122,7 @@ const ProgressTracker = React.forwardRef<HTMLDivElement, ProgressTrackerProps>(
         </React.Fragment>
       ))}
     </div>
-  )
+    )
 );
 ProgressTracker.displayName = "ProgressTracker";
 

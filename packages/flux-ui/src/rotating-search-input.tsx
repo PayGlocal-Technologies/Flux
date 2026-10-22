@@ -31,6 +31,8 @@ export interface RotatingSearchInputProps {
  * so they guess at what is searchable and conclude the box is broken when their
  * guess misses. Naming the fields in turn costs no space and answers it.
  *
+ * With a single word there is nothing to cycle, so the hint is shown static.
+ *
  * `onSearch` is debounced, so a search that hits the network fires once the
  * user pauses rather than once per keystroke.
  */
@@ -90,6 +92,12 @@ export function RotatingSearchInput({
     [words]
   );
 
+  /**
+   * One word has nothing to rotate to: it would only slide out and back in.
+   * The hint is then static, "Search by Username".
+   */
+  const rotates = words.length > 1;
+
   // A new word list restarts the carousel rather than leaving the index
   // pointing into a list that no longer has that many entries.
   useEffect(() => {
@@ -101,24 +109,24 @@ export function RotatingSearchInput({
   }, [words.length]);
 
   useEffect(() => {
-    if (words.length === 0) return;
+    if (!rotates) return;
     const id = setInterval(() => {
       setWithTransition(true);
       setIndex((prev) => prev + 1);
     }, 2500);
     return () => clearInterval(id);
-  }, [words.length]);
+  }, [rotates]);
 
   // Landed on the duplicated first word: let it rest, then snap back to the
   // real one with the transition off.
   useEffect(() => {
-    if (index !== words.length) return;
+    if (!rotates || index !== words.length) return;
     const timer = setTimeout(() => {
       setWithTransition(false);
       setIndex(0);
     }, 2000);
     return () => clearTimeout(timer);
-  }, [index, words.length]);
+  }, [index, words.length, rotates]);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setInternalValue(e.target.value);
@@ -134,18 +142,22 @@ export function RotatingSearchInput({
       {!internalValue && words.length > 0 && (
         <div className="pointer-events-none absolute left-8 top-1/2 z-10 flex h-5 -translate-y-1/2 items-start gap-1 overflow-hidden text-xs text-muted-foreground">
           <span className="h-5 shrink-0 leading-5">Search by</span>
-          <div
-            style={{
-              transform: `translateY(-${index * WORD_HEIGHT}px)`,
-              transition: withTransition ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
-            }}
-          >
-            {extendedWords.map((word, i) => (
-              <div key={`${word}-${i}`} className="h-5 leading-5">
-                {word}
-              </div>
-            ))}
-          </div>
+          {rotates ? (
+            <div
+              style={{
+                transform: `translateY(-${index * WORD_HEIGHT}px)`,
+                transition: withTransition ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
+              }}
+            >
+              {extendedWords.map((word, i) => (
+                <div key={`${word}-${i}`} className="h-5 leading-5">
+                  {word}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <span className="h-5 leading-5">{words[0]}</span>
+          )}
         </div>
       )}
 

@@ -395,6 +395,121 @@ interface CheckboxProps extends React$1.ComponentPropsWithoutRef<typeof Checkbox
 }
 declare const Checkbox: React$1.ForwardRefExoticComponent<CheckboxProps & React$1.RefAttributes<HTMLButtonElement>>;
 
+/**
+ * One node of a {@link CheckboxTree}. A node with `children` is a branch; one
+ * without is a leaf. Only leaves are ever "checked": a branch's state is
+ * derived from the leaves under it.
+ */
+interface CheckboxTreeNode {
+    /** Unique across the whole tree. */
+    key: string;
+    label: React$1.ReactNode;
+    /**
+     * The text search matches against. Defaults to `label` when it is a string,
+     * plus the key. Set it when the label is markup.
+     */
+    searchText?: string;
+    /** Native tooltip on the label, e.g. a machine name behind a friendly label. */
+    title?: string;
+    children?: CheckboxTreeNode[];
+}
+interface CheckboxTreeProps {
+    nodes: CheckboxTreeNode[];
+    /** The checked leaf keys. Branch keys in here are ignored. */
+    checkedKeys: ReadonlySet<string> | readonly string[];
+    /**
+     * Receives the next set of checked leaf keys. Omit it and the tree is a
+     * read-only check list: same marks, nothing toggles, nothing greyed out.
+     */
+    onCheckedChange?: (next: string[]) => void;
+    /** Show the tree's own filter box above it. Default true. */
+    searchable?: boolean;
+    searchPlaceholder?: string;
+    /**
+     * The filter text, when the page owns the search box (a toolbar that holds
+     * more than the search). Pass `searchable={false}` alongside it.
+     */
+    query?: string;
+    /**
+     * How matches show while filtering. `tree` keeps each match inside its
+     * opened path; `flat` lists the matching leaves alone, each with its path
+     * under its label, which scans faster when a match sits three levels down.
+     * Default `tree`.
+     */
+    searchLayout?: "tree" | "flat";
+    /**
+     * Which branches start open, when the page does not control it. `"checked"`
+     * opens every branch holding a checked leaf, the natural default for a
+     * read-only view. Default `"none"`.
+     */
+    defaultExpanded?: "none" | "checked" | "all";
+    /** The open branch keys, when the page controls them (an "Expand all" button). */
+    expandedKeys?: ReadonlySet<string>;
+    onExpandedChange?: (next: Set<string>) => void;
+    /** Show `picked/total` beside each branch. Default true. */
+    showCounts?: boolean;
+    /** Lay a branch's leaves out in two columns from `sm` up. Default 1. */
+    leafColumns?: 1 | 2;
+    /** Shown when nothing matches the filter, or there are no nodes. */
+    emptyTitle?: string;
+    emptyDescription?: string;
+    /** Draw the tree's own border. Off when a panel around it already has one. Default true. */
+    bordered?: boolean;
+    /** Prefix for the generated element ids, when two trees share a page. */
+    idPrefix?: string;
+    className?: string;
+}
+/**
+ * The keys of the branches in a tree, optionally only those `pick` accepts.
+ * For a page that drives `expandedKeys`: "Expand all" is every branch key.
+ */
+declare function getCheckboxTreeBranchKeys(nodes: CheckboxTreeNode[], pick?: (node: CheckboxTreeNode, leaves: string[]) => boolean, out?: Set<string>): Set<string>;
+/**
+ * A hierarchy of tri-state checkboxes: ticking a branch ticks every leaf under
+ * it, and a branch shows checked, partly checked or empty from its leaves.
+ *
+ * The stand-in for antd's checkable `Tree` and multiple `Cascader`: a caller
+ * that needs the selection in a collapsed form (a whole branch as one entry)
+ * derives it from the leaf keys, which keeps this component free of any one
+ * backend's encoding.
+ */
+declare function CheckboxTree({ nodes, checkedKeys, onCheckedChange, searchable, searchPlaceholder, query, searchLayout, defaultExpanded, expandedKeys, onExpandedChange, showCounts, leafColumns, emptyTitle, emptyDescription, bordered, idPrefix, className, }: CheckboxTreeProps): React$1.JSX.Element;
+
+interface SegmentedControlOption<T extends string = string> {
+    value: T;
+    label: React$1.ReactNode;
+    /**
+     * `destructive` paints the option red while it is selected: for a choice
+     * whose consequence is a block or a removal (Deny beside Allow).
+     */
+    tone?: "default" | "destructive";
+    disabled?: boolean;
+}
+interface SegmentedControlProps<T extends string = string> {
+    options: readonly SegmentedControlOption<T>[];
+    /** The chosen value. `""` (or one no option has) leaves every segment off. */
+    value: T | "";
+    onValueChange: (value: T) => void;
+    /** Accessible name of the group. */
+    label: string;
+    /** `sm` sits inside a list row; `md` beside a form field. Default `md`. */
+    size?: "sm" | "md";
+    disabled?: boolean;
+    /** Marks the group invalid, for a required choice left unmade. */
+    invalid?: boolean;
+    className?: string;
+}
+/**
+ * A pill strip for picking one value from two to four: Allow / Deny, Read /
+ * All, Both / Self / Child.
+ *
+ * It looks like the `Tabs` pill, but it is a radio group underneath, because
+ * it sets a value rather than switching a view: screen readers announce "radio
+ * button, 2 of 3" and the arrow keys move the choice. For switching what is
+ * shown beside it, use `SegmentedTabs`.
+ */
+declare function SegmentedControl<T extends string>({ options, value, onValueChange, label, size, disabled, invalid, className, }: SegmentedControlProps<T>): React$1.JSX.Element;
+
 declare const RadioGroup: React$1.ForwardRefExoticComponent<Omit<RadioGroupPrimitive.RadioGroupProps & React$1.RefAttributes<HTMLDivElement>, "ref"> & React$1.RefAttributes<HTMLDivElement>>;
 type RadioGroupItemProps = React$1.ComponentPropsWithoutRef<typeof RadioGroupPrimitive.Item>;
 declare const RadioGroupItem: React$1.ForwardRefExoticComponent<Omit<RadioGroupPrimitive.RadioGroupItemProps & React$1.RefAttributes<HTMLButtonElement>, "ref"> & React$1.RefAttributes<HTMLButtonElement>>;
@@ -1009,6 +1124,12 @@ interface ProgressTrackerStep {
 }
 interface ProgressTrackerProps extends React$1.HTMLAttributes<HTMLDivElement> {
     steps: ProgressTrackerStep[];
+    /**
+     * `inline` is the compact one-line form for a dialog header: a small number
+     * beside each label, a short rule between, a finished step in success green.
+     * Default `default`, the stacked tracker for a page.
+     */
+    variant?: "default" | "inline";
 }
 declare const ProgressTracker: React$1.ForwardRefExoticComponent<ProgressTrackerProps & React$1.RefAttributes<HTMLDivElement>>;
 
@@ -1659,6 +1780,8 @@ interface RotatingSearchInputProps {
  * dozen fields, and a static "Search" placeholder tells the user none of them,
  * so they guess at what is searchable and conclude the box is broken when their
  * guess misses. Naming the fields in turn costs no space and answers it.
+ *
+ * With a single word there is nothing to cycle, so the hint is shown static.
  *
  * `onSearch` is debounced, so a search that hits the network fires once the
  * user pauses rather than once per keystroke.
@@ -2894,4 +3017,4 @@ declare function formatWeekdayDate(value: string | number | Date | null | undefi
 /** `Jan 2026` — a month key (`YYYY-MM`) as a label. */
 declare function formatMonthLabel(monthKey: string): string;
 
-export { Accordion, AccordionContent, AccordionItem, AccordionTrigger, type AddFilterDefinition, AddFilterMenu, type AddFilterMenuProps, Alert, AlertDescription, type AlertProps, AlertTitle, type AttentionListItem, AttentionListTemplate, type AttentionListTemplateProps, Avatar, AvatarFallback, AvatarGroup, type AvatarGroupItem, type AvatarGroupProps, AvatarImage, AvatarTag, type AvatarTagProps, type AvatarTagSize, Badge, type BadgeProps, type BadgeTrailIcon, type BadgeVariant, Banner, type BannerProps, Blanket, type BlanketProps, Box, type BoxProps, Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, type Breakpoint, Button, ButtonGroup, type ButtonGroupProps, type ButtonProps, COPY_BUTTON_COPIED_CLASSES, COUNTRIES, Calendar, CalendarDateFilterChip, type CalendarDateFilterChipProps, type CalendarDatePreset, type CalendarDateValue, CalendarDayButton, type CalendarProps, type CalendarRange, Callout, CalloutIcon, type CalloutProps, CalloutText, CalloutTitle, type CalloutVariant, Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, CategoryBarChartTemplate, type CategoryBarChartTemplateProps, type CategoryBarPoint, type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartSkeleton, ChartStyle, ChartTooltip, ChartTooltipContent, Checkbox, type CheckboxProps, CheckboxSelect, type CheckboxSelectOption, type CheckboxSelectProps, Code, CodeBlock, type CodeBlockProps, type CodeProps, type Column, ColumnManager, type ColumnManagerProps, type ColumnPreferences, Command, CommandEmpty, type CommandEmptyProps, CommandGroup, type CommandGroupProps, CommandInput, type CommandInputProps, CommandItem, type CommandItemProps, CommandList, type CommandListProps, type CommandProps, CommandSeparator, type CommandSeparatorProps, CommandShortcut, type CommandShortcutProps, CopyButton, type CopyButtonProps, CopyableCell, type CopyableCellProps, type Country, CountrySelect, type CountrySelectProps, CurrencyAmountInput, DAYS_SHORT, type DashboardAreaChartPoint, DashboardAreaChartTemplate, type DashboardAreaChartTemplateProps, DataCardList, type DataCardListProps, DataTable, DataTableCard, type DataTableCardProps, type DataTableDensity, type DataTableExpandable, type DataTableFooterSummary, type DataTableHeaderStyle, type DataTablePagination, type DataTableSortState, type DataTableSorting, type DatePickMode, DatePicker, type DatePickerTimeOptions, DateRangeFilterChip, type DateRangeFilterChipProps, type DateRangeValue, Dialog, DialogClose, DialogContent, DialogDescription, DialogPortal, DialogTitle, DialogTrigger, Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, EMPTY_DATE, EMPTY_RELATIVE_RANGE, EmptyState, Field, type FieldConfig, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSeparator, FieldSet, FieldTitle, type FieldsConfig, FilterChip, FilterChipActions, FilterChipClearButton, type FilterChipControl, FilterChipGroup, FilterChipLabelTrigger, type FilterChipOption, FilterChipShell, FilterToolbar, type FilterableOption, Flag, type FlagAction, FlagGroup, type FlagGroupPosition, type FlagGroupProps, type FlagProps, type FlagVariant, Flex, type FlexAlign, type FlexDirection, type FlexJustify, type FlexProps, type FlexWrap, Form, FormControl, FormDescription, FormError, type FormErrors, FormField, type FormFieldProps, FormItem, FormLabel, type FormProps, type FormValues, Grid, type GridCols, type GridFlow, type GridProps, GroupedBarChartTemplate, type GroupedBarChartTemplateProps, type GroupedBarSeries, Heading, type HeadingProps, Hide, type HideProps, IconButton, type IconButtonProps, Inline, InlineDialog, InlineDialogContent, type InlineDialogContentProps, type InlineDialogProps, InlineDialogTrigger, InlineEdit, type InlineEditProps, type InlineProps, Input, InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText, InputGroupTextarea, Label, type LayoutSpacing, Link, type LinkProps, Lozenge, type LozengeProps, MONTHS_SHORT, type ManagedColumn, Menu, MenuDivider, MenuItem, type MenuItemProps, type MenuProps, MenuSection, type MenuSectionProps, MetricSparklineCard, type MetricSparklineCardProps, type MetricSparklinePoint, MetricText, type MetricTextProps, MiniSparklineChartCard, type MiniSparklineChartCardProps, type MiniSparklinePoint, type MiniSparklineStat, type MonthRange, MonthRangeFilterChip, NumberRangeFilterChip, type NumberRangeFilterChipProps, type NumberRangeValue, type OptionFilter, OtpInput, type OtpInputProps, PageHeader, Pagination, PaginationContent, type PaginationContentProps, PaginationEllipsis, type PaginationEllipsisProps, PaginationItem, type PaginationItemProps, PaginationLink, type PaginationLinkProps, PaginationNext, type PaginationNextProps, PaginationPrevious, type PaginationPreviousProps, type PaginationProps, PasswordInput, type PasswordInputProps, Popover, PopoverAnchor, PopoverContent, PopoverTrigger, Progress, ProgressIndicator, type ProgressIndicatorProps, type ProgressProps, ProgressTracker, type ProgressTrackerProps, type ProgressTrackerStep, RadioGroup, RadioGroupItem, type RadioGroupItemProps, type RankedBarItem, RankedBarListTemplate, type RankedBarListTemplateProps, type RegisterResult, type RelativeRangeValue, type ResponsiveCols, RotatingSearchInput, type RotatingSearchInputProps, ScrollArea, ScrollBar, ScrollLockTakeover, SectionMessage, SectionMessageActions, SectionMessageContent, type SectionMessageProps, SectionMessageTitle, type SectionMessageVariant, type SegmentedTabOption, SegmentedTabs, Select, SelectContent, SelectFilterChip, type SelectFilterChipProps, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, type SelectTriggerSize, SelectValue, Separator, Shimmer, Show, type ShowProps, SideNav, SideNavFooter, SideNavHeader, SideNavItem, type SideNavItemProps, type SideNavProps, SideNavSection, SingleSelect, SingleSelectFilterChip, type SingleSelectFilterChipProps, type SingleSelectOption, type SingleSelectProps, Slider, type SliderProps, type SortOrder, Spinner, type SpinnerProps, SplitButton, SplitButtonItem, type SplitButtonItemProps, type SplitButtonProps, Spotlight, SpotlightCard, type SpotlightCardProps, type SpotlightProps, type SpotlightStep, Stack, type StackProps, StatCardSkeleton, StatusBadge, type StatusBadgeProps, Switch, type SwitchProps, TableRowSkeleton, TableToolbarActions, Tabs, TabsContent, TabsList, TabsTrigger, Tag, TagGroup, type TagGroupProps, type TagProps, Text, TextFilterChip, type TextFilterChipProps, type TextProps, Textarea, TimePicker, type TimePickerProps, Toaster, ToolbarButton, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, type UnderlineTab, UnderlineTabs, type UseBreakpointReturn, type UseColumnPreferencesOptions, type UseColumnPreferencesResult, type UseFlagGroupReturn, type UseFormReturn, type UseSpotlightReturn, type ValidatorRule, VisuallyHidden, type VisuallyHiddenProps, applyColumnPreferences, cn, defaultOptionFilter, elevation, formatDateOnly, formatDateStamp, formatDateTime, formatMonthLabel, formatTime, formatTimeStamp, formatTimestamp, formatWeekdayDate, frozenColumn, hasRelativeRange, isScrollLocked, parseApiDate, relativeRangeToMillis, useBreakpoint, useColumnPreferences, useFilterChipState, useFlagGroup, useForm, useSpotlight };
+export { Accordion, AccordionContent, AccordionItem, AccordionTrigger, type AddFilterDefinition, AddFilterMenu, type AddFilterMenuProps, Alert, AlertDescription, type AlertProps, AlertTitle, type AttentionListItem, AttentionListTemplate, type AttentionListTemplateProps, Avatar, AvatarFallback, AvatarGroup, type AvatarGroupItem, type AvatarGroupProps, AvatarImage, AvatarTag, type AvatarTagProps, type AvatarTagSize, Badge, type BadgeProps, type BadgeTrailIcon, type BadgeVariant, Banner, type BannerProps, Blanket, type BlanketProps, Box, type BoxProps, Breadcrumb, BreadcrumbEllipsis, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator, type Breakpoint, Button, ButtonGroup, type ButtonGroupProps, type ButtonProps, COPY_BUTTON_COPIED_CLASSES, COUNTRIES, Calendar, CalendarDateFilterChip, type CalendarDateFilterChipProps, type CalendarDatePreset, type CalendarDateValue, CalendarDayButton, type CalendarProps, type CalendarRange, Callout, CalloutIcon, type CalloutProps, CalloutText, CalloutTitle, type CalloutVariant, Card, CardAction, CardContent, CardDescription, CardFooter, CardHeader, CardTitle, CategoryBarChartTemplate, type CategoryBarChartTemplateProps, type CategoryBarPoint, type ChartConfig, ChartContainer, ChartLegend, ChartLegendContent, ChartSkeleton, ChartStyle, ChartTooltip, ChartTooltipContent, Checkbox, type CheckboxProps, CheckboxSelect, type CheckboxSelectOption, type CheckboxSelectProps, CheckboxTree, type CheckboxTreeNode, type CheckboxTreeProps, Code, CodeBlock, type CodeBlockProps, type CodeProps, type Column, ColumnManager, type ColumnManagerProps, type ColumnPreferences, Command, CommandEmpty, type CommandEmptyProps, CommandGroup, type CommandGroupProps, CommandInput, type CommandInputProps, CommandItem, type CommandItemProps, CommandList, type CommandListProps, type CommandProps, CommandSeparator, type CommandSeparatorProps, CommandShortcut, type CommandShortcutProps, CopyButton, type CopyButtonProps, CopyableCell, type CopyableCellProps, type Country, CountrySelect, type CountrySelectProps, CurrencyAmountInput, DAYS_SHORT, type DashboardAreaChartPoint, DashboardAreaChartTemplate, type DashboardAreaChartTemplateProps, DataCardList, type DataCardListProps, DataTable, DataTableCard, type DataTableCardProps, type DataTableDensity, type DataTableExpandable, type DataTableFooterSummary, type DataTableHeaderStyle, type DataTablePagination, type DataTableSortState, type DataTableSorting, type DatePickMode, DatePicker, type DatePickerTimeOptions, DateRangeFilterChip, type DateRangeFilterChipProps, type DateRangeValue, Dialog, DialogClose, DialogContent, DialogDescription, DialogPortal, DialogTitle, DialogTrigger, Drawer, DrawerClose, DrawerContent, DrawerDescription, DrawerFooter, DrawerHeader, DrawerTitle, DrawerTrigger, DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuGroup, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSeparator, DropdownMenuShortcut, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger, EMPTY_DATE, EMPTY_RELATIVE_RANGE, EmptyState, Field, type FieldConfig, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldLegend, FieldSeparator, FieldSet, FieldTitle, type FieldsConfig, FilterChip, FilterChipActions, FilterChipClearButton, type FilterChipControl, FilterChipGroup, FilterChipLabelTrigger, type FilterChipOption, FilterChipShell, FilterToolbar, type FilterableOption, Flag, type FlagAction, FlagGroup, type FlagGroupPosition, type FlagGroupProps, type FlagProps, type FlagVariant, Flex, type FlexAlign, type FlexDirection, type FlexJustify, type FlexProps, type FlexWrap, Form, FormControl, FormDescription, FormError, type FormErrors, FormField, type FormFieldProps, FormItem, FormLabel, type FormProps, type FormValues, Grid, type GridCols, type GridFlow, type GridProps, GroupedBarChartTemplate, type GroupedBarChartTemplateProps, type GroupedBarSeries, Heading, type HeadingProps, Hide, type HideProps, IconButton, type IconButtonProps, Inline, InlineDialog, InlineDialogContent, type InlineDialogContentProps, type InlineDialogProps, InlineDialogTrigger, InlineEdit, type InlineEditProps, type InlineProps, Input, InputGroup, InputGroupAddon, InputGroupButton, InputGroupInput, InputGroupText, InputGroupTextarea, Label, type LayoutSpacing, Link, type LinkProps, Lozenge, type LozengeProps, MONTHS_SHORT, type ManagedColumn, Menu, MenuDivider, MenuItem, type MenuItemProps, type MenuProps, MenuSection, type MenuSectionProps, MetricSparklineCard, type MetricSparklineCardProps, type MetricSparklinePoint, MetricText, type MetricTextProps, MiniSparklineChartCard, type MiniSparklineChartCardProps, type MiniSparklinePoint, type MiniSparklineStat, type MonthRange, MonthRangeFilterChip, NumberRangeFilterChip, type NumberRangeFilterChipProps, type NumberRangeValue, type OptionFilter, OtpInput, type OtpInputProps, PageHeader, Pagination, PaginationContent, type PaginationContentProps, PaginationEllipsis, type PaginationEllipsisProps, PaginationItem, type PaginationItemProps, PaginationLink, type PaginationLinkProps, PaginationNext, type PaginationNextProps, PaginationPrevious, type PaginationPreviousProps, type PaginationProps, PasswordInput, type PasswordInputProps, Popover, PopoverAnchor, PopoverContent, PopoverTrigger, Progress, ProgressIndicator, type ProgressIndicatorProps, type ProgressProps, ProgressTracker, type ProgressTrackerProps, type ProgressTrackerStep, RadioGroup, RadioGroupItem, type RadioGroupItemProps, type RankedBarItem, RankedBarListTemplate, type RankedBarListTemplateProps, type RegisterResult, type RelativeRangeValue, type ResponsiveCols, RotatingSearchInput, type RotatingSearchInputProps, ScrollArea, ScrollBar, ScrollLockTakeover, SectionMessage, SectionMessageActions, SectionMessageContent, type SectionMessageProps, SectionMessageTitle, type SectionMessageVariant, SegmentedControl, type SegmentedControlOption, type SegmentedControlProps, type SegmentedTabOption, SegmentedTabs, Select, SelectContent, SelectFilterChip, type SelectFilterChipProps, SelectGroup, SelectItem, SelectLabel, SelectScrollDownButton, SelectScrollUpButton, SelectSeparator, SelectTrigger, type SelectTriggerSize, SelectValue, Separator, Shimmer, Show, type ShowProps, SideNav, SideNavFooter, SideNavHeader, SideNavItem, type SideNavItemProps, type SideNavProps, SideNavSection, SingleSelect, SingleSelectFilterChip, type SingleSelectFilterChipProps, type SingleSelectOption, type SingleSelectProps, Slider, type SliderProps, type SortOrder, Spinner, type SpinnerProps, SplitButton, SplitButtonItem, type SplitButtonItemProps, type SplitButtonProps, Spotlight, SpotlightCard, type SpotlightCardProps, type SpotlightProps, type SpotlightStep, Stack, type StackProps, StatCardSkeleton, StatusBadge, type StatusBadgeProps, Switch, type SwitchProps, TableRowSkeleton, TableToolbarActions, Tabs, TabsContent, TabsList, TabsTrigger, Tag, TagGroup, type TagGroupProps, type TagProps, Text, TextFilterChip, type TextFilterChipProps, type TextProps, Textarea, TimePicker, type TimePickerProps, Toaster, ToolbarButton, Tooltip, TooltipContent, TooltipProvider, TooltipTrigger, type UnderlineTab, UnderlineTabs, type UseBreakpointReturn, type UseColumnPreferencesOptions, type UseColumnPreferencesResult, type UseFlagGroupReturn, type UseFormReturn, type UseSpotlightReturn, type ValidatorRule, VisuallyHidden, type VisuallyHiddenProps, applyColumnPreferences, cn, defaultOptionFilter, elevation, formatDateOnly, formatDateStamp, formatDateTime, formatMonthLabel, formatTime, formatTimeStamp, formatTimestamp, formatWeekdayDate, frozenColumn, getCheckboxTreeBranchKeys, hasRelativeRange, isScrollLocked, parseApiDate, relativeRangeToMillis, useBreakpoint, useColumnPreferences, useFilterChipState, useFlagGroup, useForm, useSpotlight };
