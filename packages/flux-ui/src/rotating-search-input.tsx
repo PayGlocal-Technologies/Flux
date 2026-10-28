@@ -7,6 +7,10 @@ import { cn } from "./utils";
 
 /** Height of one word slot, in px. The carousel translates by multiples of it. */
 const WORD_HEIGHT = 20;
+/** How long each word shows before the next slides in. */
+const STEP_MS = 2500;
+/** How long the duplicated first word rests before the silent jump back to the real one. */
+const REST_MS = 2000;
 
 export interface RotatingSearchInputProps {
   /** Controlled value. Omit to let the field own it. */
@@ -108,25 +112,43 @@ export function RotatingSearchInput({
     return () => clearTimeout(timer);
   }, [words.length]);
 
+  /**
+   * One timer at a time, scheduled from the word on screen. On the duplicated
+   * first word (or anywhere past it) it rests, then snaps back to the real
+   * first word with the transition off; otherwise it steps to the next word.
+   *
+   * It used to be a free-running step interval beside a separate snap-back
+   * timeout that fired only on exactly the last index. A background tab
+   * throttles timers, so the step could fire before the snap; the index then
+   * ran past the end, the snap never matched again, and the hint scrolled out
+   * of view for good, leaving only "Search by".
+   */
+  // Set by the snap back, so the first word's next step keeps the rhythm: the
+  // rest has already spent most of a step on it.
+  const justSnapped = useRef(false);
   useEffect(() => {
     if (!rotates) return;
-    const id = setInterval(() => {
-      setWithTransition(true);
-      setIndex((prev) => prev + 1);
-    }, 2500);
-    return () => clearInterval(id);
-  }, [rotates]);
-
-  // Landed on the duplicated first word: let it rest, then snap back to the
-  // real one with the transition off.
-  useEffect(() => {
-    if (!rotates || index !== words.length) return;
-    const timer = setTimeout(() => {
-      setWithTransition(false);
-      setIndex(0);
-    }, 2000);
+    if (index >= words.length) {
+      const timer = setTimeout(() => {
+        justSnapped.current = true;
+        setWithTransition(false);
+        setIndex(0);
+      }, REST_MS);
+      return () => clearTimeout(timer);
+    }
+    const timer = setTimeout(
+      () => {
+        justSnapped.current = false;
+        setWithTransition(true);
+        setIndex(index + 1);
+      },
+      justSnapped.current ? STEP_MS - REST_MS : STEP_MS
+    );
     return () => clearTimeout(timer);
   }, [index, words.length, rotates]);
+
+  /** Never further than the duplicated first word, so a hint is always in view. */
+  const shownIndex = Math.min(index, words.length);
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setInternalValue(e.target.value);
@@ -145,7 +167,7 @@ export function RotatingSearchInput({
           {rotates ? (
             <div
               style={{
-                transform: `translateY(-${index * WORD_HEIGHT}px)`,
+                transform: `translateY(-${shownIndex * WORD_HEIGHT}px)`,
                 transition: withTransition ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)" : "none",
               }}
             >

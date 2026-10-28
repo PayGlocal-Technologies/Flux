@@ -5473,6 +5473,8 @@ import { useEffect as useEffect6, useMemo as useMemo7, useRef as useRef8, useSta
 import { Search as Search4 } from "lucide-react";
 import { jsx as jsx59, jsxs as jsxs37 } from "react/jsx-runtime";
 var WORD_HEIGHT = 20;
+var STEP_MS = 2500;
+var REST_MS = 2e3;
 function RotatingSearchInput({
   value,
   onSearch,
@@ -5518,22 +5520,28 @@ function RotatingSearchInput({
     }, 0);
     return () => clearTimeout(timer);
   }, [words.length]);
+  const justSnapped = useRef8(false);
   useEffect6(() => {
     if (!rotates) return;
-    const id = setInterval(() => {
-      setWithTransition(true);
-      setIndex((prev) => prev + 1);
-    }, 2500);
-    return () => clearInterval(id);
-  }, [rotates]);
-  useEffect6(() => {
-    if (!rotates || index !== words.length) return;
-    const timer = setTimeout(() => {
-      setWithTransition(false);
-      setIndex(0);
-    }, 2e3);
+    if (index >= words.length) {
+      const timer2 = setTimeout(() => {
+        justSnapped.current = true;
+        setWithTransition(false);
+        setIndex(0);
+      }, REST_MS);
+      return () => clearTimeout(timer2);
+    }
+    const timer = setTimeout(
+      () => {
+        justSnapped.current = false;
+        setWithTransition(true);
+        setIndex(index + 1);
+      },
+      justSnapped.current ? STEP_MS - REST_MS : STEP_MS
+    );
     return () => clearTimeout(timer);
   }, [index, words.length, rotates]);
+  const shownIndex = Math.min(index, words.length);
   const handleChange = (e) => {
     setInternalValue(e.target.value);
     debouncedRef.current?.(e.target.value);
@@ -5545,7 +5553,7 @@ function RotatingSearchInput({
         "div",
         {
           style: {
-            transform: `translateY(-${index * WORD_HEIGHT}px)`,
+            transform: `translateY(-${shownIndex * WORD_HEIGHT}px)`,
             transition: withTransition ? "transform 2s cubic-bezier(0.4, 0, 0.2, 1)" : "none"
           },
           children: extendedWords.map((word, i) => /* @__PURE__ */ jsx59("div", { className: "h-5 leading-5", children: word }, `${word}-${i}`))
