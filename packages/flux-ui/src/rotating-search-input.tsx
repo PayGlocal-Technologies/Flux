@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ChangeEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type ChangeEvent, type KeyboardEvent } from "react";
 import { Search } from "lucide-react";
 import { Input } from "./input";
 import { cn } from "./utils";
@@ -15,12 +15,22 @@ const REST_MS = 2000;
 export interface RotatingSearchInputProps {
   /** Controlled value. Omit to let the field own it. */
   value?: string;
-  /** Fires on the debounced value, not on every keystroke. */
+  /**
+   * Fires on the debounced value, not on every keystroke. With `searchOnEnter`
+   * it fires on Enter instead, and when the field is cleared.
+   */
   onSearch: (value: string) => void;
   /** The hints to cycle through: "Amount", "Transaction ID", "Email". */
   words: string[];
-  /** Debounce before `onSearch` fires. Default 300ms. */
+  /** Debounce before `onSearch` fires. Default 300ms. Ignored with `searchOnEnter`. */
   debounceDelay?: number;
+  /**
+   * Search only when the user presses Enter, not when they pause typing. For
+   * grids whose search is an expensive backend query, where every pause on a
+   * half-typed ID would otherwise fire one. Emptying the field still searches
+   * at once, so clearing it brings the unfiltered list back without an Enter.
+   */
+  searchOnEnter?: boolean;
   className?: string;
   /** Screen-reader name for the field. */
   ariaLabel?: string;
@@ -45,6 +55,7 @@ export function RotatingSearchInput({
   onSearch,
   words,
   debounceDelay = 300,
+  searchOnEnter = false,
   className,
   ariaLabel = "Search",
 }: RotatingSearchInputProps) {
@@ -152,7 +163,15 @@ export function RotatingSearchInput({
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     setInternalValue(e.target.value);
-    debouncedRef.current?.(e.target.value);
+    if (!searchOnEnter) debouncedRef.current?.(e.target.value);
+    else if (e.target.value === "") latestOnSearch.current("");
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    // An IME composing a word also sends Enter; that one picks a candidate.
+    if (!searchOnEnter || e.key !== "Enter" || e.nativeEvent.isComposing) return;
+    e.preventDefault();
+    latestOnSearch.current(internalValue);
   };
 
   return (
@@ -191,6 +210,7 @@ export function RotatingSearchInput({
         value={internalValue}
         placeholder=""
         onChange={handleChange}
+        onKeyDown={handleKeyDown}
         className="!h-8 min-h-0 bg-muted/50 pl-8 text-xs"
       />
     </div>

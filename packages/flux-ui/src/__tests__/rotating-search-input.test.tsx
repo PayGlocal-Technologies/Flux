@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { act, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { RotatingSearchInput } from "../rotating-search-input";
 
 /** One word is a static hint; two or more rotate. */
@@ -52,6 +52,35 @@ describe("RotatingSearchInput", () => {
       act(() => vi.advanceTimersByTime(60_000));
       expect(shownSlot(container)).toBeLessThanOrEqual(words.length);
     }
+  });
+
+  it("debounces onSearch by default", () => {
+    const onSearch = vi.fn();
+    render(<RotatingSearchInput words={["Amount"]} onSearch={onSearch} />);
+    fireEvent.change(screen.getByRole("textbox"), { target: { value: "abc" } });
+    expect(onSearch).not.toHaveBeenCalled();
+    act(() => vi.advanceTimersByTime(300));
+    expect(onSearch).toHaveBeenCalledWith("abc");
+  });
+
+  it("with searchOnEnter, searches on Enter and not on a pause", () => {
+    const onSearch = vi.fn();
+    render(<RotatingSearchInput words={["Amount"]} onSearch={onSearch} searchOnEnter />);
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "abc" } });
+    act(() => vi.advanceTimersByTime(5000));
+    expect(onSearch).not.toHaveBeenCalled();
+    fireEvent.keyDown(input, { key: "Enter" });
+    expect(onSearch).toHaveBeenCalledExactlyOnceWith("abc");
+  });
+
+  it("with searchOnEnter, clearing the field searches at once", () => {
+    const onSearch = vi.fn();
+    render(<RotatingSearchInput words={["Amount"]} onSearch={onSearch} searchOnEnter />);
+    const input = screen.getByRole("textbox");
+    fireEvent.change(input, { target: { value: "abc" } });
+    fireEvent.change(input, { target: { value: "" } });
+    expect(onSearch).toHaveBeenCalledExactlyOnceWith("");
   });
 });
 

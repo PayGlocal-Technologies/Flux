@@ -5480,6 +5480,7 @@ function RotatingSearchInput({
   onSearch,
   words,
   debounceDelay = 300,
+  searchOnEnter = false,
   className,
   ariaLabel = "Search"
 }) {
@@ -5544,7 +5545,13 @@ function RotatingSearchInput({
   const shownIndex = Math.min(index, words.length);
   const handleChange = (e) => {
     setInternalValue(e.target.value);
-    debouncedRef.current?.(e.target.value);
+    if (!searchOnEnter) debouncedRef.current?.(e.target.value);
+    else if (e.target.value === "") latestOnSearch.current("");
+  };
+  const handleKeyDown = (e) => {
+    if (!searchOnEnter || e.key !== "Enter" || e.nativeEvent.isComposing) return;
+    e.preventDefault();
+    latestOnSearch.current(internalValue);
   };
   return /* @__PURE__ */ jsxs37("div", { className: cn("relative", className), children: [
     !internalValue && words.length > 0 && /* @__PURE__ */ jsxs37("div", { className: "pointer-events-none absolute left-8 top-1/2 z-10 flex h-5 -translate-y-1/2 items-start gap-1 overflow-hidden text-xs text-muted-foreground", children: [
@@ -5569,6 +5576,7 @@ function RotatingSearchInput({
         value: internalValue,
         placeholder: "",
         onChange: handleChange,
+        onKeyDown: handleKeyDown,
         className: "!h-8 min-h-0 bg-muted/50 pl-8 text-xs"
       }
     )

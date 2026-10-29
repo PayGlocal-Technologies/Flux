@@ -1762,12 +1762,22 @@ declare const CopyButton: React$1.ForwardRefExoticComponent<CopyButtonProps & Re
 interface RotatingSearchInputProps {
     /** Controlled value. Omit to let the field own it. */
     value?: string;
-    /** Fires on the debounced value, not on every keystroke. */
+    /**
+     * Fires on the debounced value, not on every keystroke. With `searchOnEnter`
+     * it fires on Enter instead, and when the field is cleared.
+     */
     onSearch: (value: string) => void;
     /** The hints to cycle through: "Amount", "Transaction ID", "Email". */
     words: string[];
-    /** Debounce before `onSearch` fires. Default 300ms. */
+    /** Debounce before `onSearch` fires. Default 300ms. Ignored with `searchOnEnter`. */
     debounceDelay?: number;
+    /**
+     * Search only when the user presses Enter, not when they pause typing. For
+     * grids whose search is an expensive backend query, where every pause on a
+     * half-typed ID would otherwise fire one. Emptying the field still searches
+     * at once, so clearing it brings the unfiltered list back without an Enter.
+     */
+    searchOnEnter?: boolean;
     className?: string;
     /** Screen-reader name for the field. */
     ariaLabel?: string;
@@ -1786,7 +1796,7 @@ interface RotatingSearchInputProps {
  * `onSearch` is debounced, so a search that hits the network fires once the
  * user pauses rather than once per keystroke.
  */
-declare function RotatingSearchInput({ value, onSearch, words, debounceDelay, className, ariaLabel, }: RotatingSearchInputProps): React$1.JSX.Element;
+declare function RotatingSearchInput({ value, onSearch, words, debounceDelay, searchOnEnter, className, ariaLabel, }: RotatingSearchInputProps): React$1.JSX.Element;
 
 /**
  * A column as the manager sees it: a key and something to call it in the list.
