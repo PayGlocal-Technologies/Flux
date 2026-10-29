@@ -260,10 +260,26 @@ const columns: Column<Row>[] = [
 // Row action — a render-prop button revealed on row hover, pinned to
 // the right edge of the viewport. Prefer this over rowCta when you
 // need per-row navigation or a custom button style.
+//
+// rowActionVisibility decides where it lives:
+// - "reserved" (default): the hover overlay, plus an invisible trailing
+//   column exactly the action's width (pure CSS, nothing measured). Where
+//   the table fits, that room comes out of the slack it already has; where
+//   it scrolls, it exists only at the far right, so at the scroll end the
+//   action sits on empty space instead of the last column's data.
+//   Under tableLayout="fixed" it behaves as "hover".
+// - "hover": the overlay alone, with no room kept. At the scroll end it
+//   covers the last column while the row is hovered.
+// - "always": a real pinned column, always visible. For an action every
+//   row must show, such as an overflow menu.
+//
+// The overlay stays visible while a menu inside it is open, so a row's
+// ⋯ menu is not left hanging off a hidden trigger.
 <DataTable
   rowKey={(r) => r.id}
   columns={columns}
   data={rows}
+  tableLayout="content"
   rowAction={(row) => (
     <Button variant="outline" size="sm" onClick={() => openDetails(row)}>
       View details
@@ -276,7 +292,8 @@ const columns: Column<Row>[] = [
 // access (focusable, Enter / Space). Clicks that start inside a button,
 // link, form control or anything marked data-row-click-ignore do not
 // fire it, so per-row buttons and copy controls keep working on their
-// own without stopping propagation.
+// own without stopping propagation. A click that ends a text selection
+// does not fire it either, so any cell's text can be selected and copied.
 <DataTable
   rowKey={(r) => r.id}
   columns={columns}

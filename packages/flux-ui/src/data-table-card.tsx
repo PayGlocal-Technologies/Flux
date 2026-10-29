@@ -79,7 +79,7 @@ export interface DataTableCardProps<T> {
   sorting?: DataTableSorting;
   rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
   /** When the row action shows; see `DataTable`'s `rowActionVisibility`. */
-  rowActionVisibility?: "hover" | "always";
+  rowActionVisibility?: "hover" | "always" | "reserved";
   /**
    * Makes the whole row a click target, for a grid that drills into a detail
    * view. Passed straight through, so it brings the keyboard affordances with

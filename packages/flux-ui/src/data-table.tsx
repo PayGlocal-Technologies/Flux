@@ -270,8 +270,12 @@ interface DataTableProps<T> {
   rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
   /**
    * When the row action shows.
-   * - `hover` (default) — revealed on row hover or keyboard focus, floating as
-   *   an overlay over the row's trailing cells.
+   * - `reserved` (default) — the `hover` overlay, plus room for it after the
+   *   last column (below), so it never has to sit on data at the scroll end.
+   *   Falls back to plain `hover` under `tableLayout="fixed"`, where a column
+   *   cannot size itself to its contents.
+   * - `hover` — revealed on row hover or keyboard focus, floating as an overlay
+   *   over the row's trailing cells, with no room kept for it.
    * - `always` — always shown, so it gets a column of its own: a real cell,
    *   still pinned to the right edge, that the table sizes around. Nothing
    *   sits under it until the table scrolls sideways, when a fade off its left
@@ -279,8 +283,15 @@ interface DataTableProps<T> {
    *   every row must show (an overflow menu): an always-visible overlay would
    *   sit on the last column's text. Sizes to its content in the `content`
    *   and `auto` layouts.
+   * - `reserved`, in full — the `hover` overlay, plus room for it after the
+   *   last column. A trailing, non-sticky column holds an invisible copy of the
+   *   action, so the browser sizes it to the action with no measuring. Where
+   *   the table fits, that room comes out of the slack the grid already has;
+   *   where it scrolls, it exists only at the far right, so once scrolled to
+   *   the end the overlay sits on empty space instead of the last column's
+   *   data. Mid-scroll it behaves exactly like `hover`.
    */
-  rowActionVisibility?: "hover" | "always";
+  rowActionVisibility?: "hover" | "always" | "reserved";
   /**
    * Makes the whole row a click target — the row itself opens a drawer, a
    * detail page, whatever the table drills into — instead of that living in a
@@ -515,7 +526,7 @@ export function DataTable<T>({
   rowKey,
   rowCta,
   rowAction,
-  rowActionVisibility = "hover",
+  rowActionVisibility = "reserved",
   onRowClick,
   density = "default",
   tableLayout = "fixed",
@@ -581,12 +592,18 @@ export function DataTable<T>({
   };
 
   // The right-pinned row action. `rowAction` takes precedence over `rowCta`.
-  // It is NOT a real column: it renders as a per-row overlay floating at the
-  // right edge of the viewport (sticky), so the last data column stays flush
-  // and there's no reserved/empty trailing column when scrolled to the end.
+  // Except under `always`, it is not a real column: it renders as a per-row
+  // overlay floating at the right edge of the viewport (sticky). `reserved`
+  // (the default) adds an invisible trailing column the action's width, so at
+  // the scroll end the overlay lands on that room rather than on data.
   const hasAction = rowAction != null || rowCta != null;
   // An always-visible action is a real (sticky) column rather than an overlay.
   const actionInFlow = hasAction && rowActionVisibility === "always";
+  // The overlay's room at the end of the row: an extra trailing column. Not
+  // under `fixed`, which sizes columns from the colgroup and ignores content,
+  // so the column would take a share of the slack instead of the action's width.
+  const actionReserved =
+    hasAction && rowActionVisibility === "reserved" && tableLayout !== "fixed";
 
   // `content` layout: a greedy, empty trailing column that absorbs leftover
   // horizontal space so the data columns stay at their content (minimum)
@@ -602,7 +619,11 @@ export function DataTable<T>({
   const hasExpand = expandable != null;
   /** Every column the expansion panel has to span. */
   const totalColSpan =
-    columns.length + (hasExpand ? 1 : 0) + (hasSpacer ? 1 : 0) + (hasAction ? 1 : 0);
+    columns.length +
+    (hasExpand ? 1 : 0) +
+    (hasSpacer ? 1 : 0) +
+    (actionReserved ? 1 : 0) +
+    (hasAction ? 1 : 0);
 
   /** Whether this row is open — drives both its own styling and the panel. */
   const rowExpanded = (row: T, index: number) =>
@@ -751,6 +772,11 @@ export function DataTable<T>({
   /** Whether a click/keypress inside a row should reach `onRowClick`. */
   const isRowClickTarget = (target: EventTarget | null, rowEl: HTMLElement) => {
     if (!(target instanceof Element)) return false;
+    // A click that ends a text selection (dragging across a value) is the user
+    // selecting, not opening the row, so any cell's text can be copied with the
+    // browser's own copy, not only the ones with a copy button.
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed && selection.toString().trim()) return false;
     // A React portal re-dispatches its clicks through the React tree, not the
     // DOM tree, so a row's overflow menu — rendered into document.body — still
     // arrives at this row's onClick. The target is not a DOM descendant of the
@@ -764,6 +790,43 @@ export function DataTable<T>({
     const interactive = target.closest(ROW_CLICK_IGNORE);
     return !(interactive && rowEl.contains(interactive));
   };
+
+  /*
+    The reserved column's contents: the same action the overlay shows, drawn
+    invisibly so the browser gives the column exactly its width. `invisible`
+    (visibility: hidden) also keeps it out of the tab order, the accessibility
+    tree and the pointer, so the copy is layout only.
+  */
+  const reservedActionCell = (row: T, i: number) => (
+    // `w-px`: the automatic layout gives a 1px-wide column its content width
+    // and no more, so it never soaks up spare width the way auto columns do.
+    <td className="w-px p-0 align-middle" aria-hidden>
+      {/* The table's standard cell gutter either side, so at the scroll end
+          the overlay (which keeps `actionGutter` on its right) sits inside it
+          with the same breathing room as any cell. */}
+      <span
+        className="invisible flex items-center whitespace-nowrap"
+        style={{ paddingLeft: cellPadLeft, paddingRight: actionGutter }}
+      >
+        {rowAction != null ? (
+          typeof rowAction === "function" ? (
+            rowAction(row, i)
+          ) : (
+            rowAction
+          )
+        ) : (
+          <span
+            className={cn(
+              "inline-flex items-center font-medium rounded-lg border whitespace-nowrap",
+              compact ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5 text-[12px]"
+            )}
+          >
+            {rowCta?.label}
+          </span>
+        )}
+      </span>
+    </td>
+  );
 
   return (
     <div
@@ -912,6 +975,7 @@ export function DataTable<T>({
                 );
               })}
               {hasSpacer ? <th className="w-full p-0" aria-hidden /> : null}
+              {actionReserved ? <th className="w-px p-0" aria-hidden /> : null}
               {hasAction ? (
                 <th className={cn("sticky right-0 z-[1] p-0", !actionInFlow && "w-0")} aria-hidden />
               ) : null}
@@ -967,6 +1031,7 @@ export function DataTable<T>({
                     </td>
                   ))}
                   {hasSpacer ? <td className="p-0" aria-hidden /> : null}
+                  {actionReserved ? <td className="w-px p-0" aria-hidden /> : null}
                   {hasAction ? (
                     <td className={cn("sticky right-0 z-[1] p-0", !actionInFlow && "w-0")} aria-hidden />
                   ) : null}
@@ -1081,6 +1146,7 @@ export function DataTable<T>({
                   ))}
 
                   {hasSpacer ? <td className="p-0" aria-hidden /> : null}
+                  {actionReserved ? reservedActionCell(row, i) : null}
 
                   {actionInFlow ? (
                     // Always shown: a real cell sized to the action, pinned to
@@ -1143,9 +1209,15 @@ export function DataTable<T>({
                           (`:focus-visible`), not any focus: a mouse click on a
                           link in the row (a GID opening a new tab) left the link
                           focused, and the action showed on return until the next
-                          click elsewhere. */}
+                          click elsewhere.
+
+                          It also stays while a menu it holds is open (a trigger
+                          with `data-state="open"`): the menu renders in a
+                          portal, so moving onto it leaves the row, and the
+                          overlay fading would strand the menu on a hidden
+                          trigger. */}
                       <span
-                        className="pointer-events-none absolute inset-y-0 right-0 z-[1] flex items-center pl-8 opacity-0 transition-opacity duration-150 [--row-action-bg:var(--card)] group-hover:opacity-100 group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_40%,var(--card))] group-has-[:focus-visible]:opacity-100 dark:group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_25%,var(--card))]"
+                        className="pointer-events-none absolute inset-y-0 right-0 z-[1] flex items-center pl-8 opacity-0 transition-opacity duration-150 [--row-action-bg:var(--card)] group-hover:opacity-100 group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_40%,var(--card))] group-has-[:focus-visible]:opacity-100 has-[[data-state=open]]:opacity-100 dark:group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_25%,var(--card))]"
                         style={{
                           paddingRight: actionGutter,
                           backgroundImage:

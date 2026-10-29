@@ -1377,8 +1377,12 @@ interface DataTableProps<T> {
     rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
     /**
      * When the row action shows.
-     * - `hover` (default) — revealed on row hover or keyboard focus, floating as
-     *   an overlay over the row's trailing cells.
+     * - `reserved` (default) — the `hover` overlay, plus room for it after the
+     *   last column (below), so it never has to sit on data at the scroll end.
+     *   Falls back to plain `hover` under `tableLayout="fixed"`, where a column
+     *   cannot size itself to its contents.
+     * - `hover` — revealed on row hover or keyboard focus, floating as an overlay
+     *   over the row's trailing cells, with no room kept for it.
      * - `always` — always shown, so it gets a column of its own: a real cell,
      *   still pinned to the right edge, that the table sizes around. Nothing
      *   sits under it until the table scrolls sideways, when a fade off its left
@@ -1386,8 +1390,15 @@ interface DataTableProps<T> {
      *   every row must show (an overflow menu): an always-visible overlay would
      *   sit on the last column's text. Sizes to its content in the `content`
      *   and `auto` layouts.
+     * - `reserved`, in full — the `hover` overlay, plus room for it after the
+     *   last column. A trailing, non-sticky column holds an invisible copy of the
+     *   action, so the browser sizes it to the action with no measuring. Where
+     *   the table fits, that room comes out of the slack the grid already has;
+     *   where it scrolls, it exists only at the far right, so once scrolled to
+     *   the end the overlay sits on empty space instead of the last column's
+     *   data. Mid-scroll it behaves exactly like `hover`.
      */
-    rowActionVisibility?: "hover" | "always";
+    rowActionVisibility?: "hover" | "always" | "reserved";
     /**
      * Makes the whole row a click target — the row itself opens a drawer, a
      * detail page, whatever the table drills into — instead of that living in a
@@ -1534,7 +1545,7 @@ interface DataTableCardProps<T> {
     sorting?: DataTableSorting;
     rowAction?: ReactNode | ((row: T, index: number) => ReactNode);
     /** When the row action shows; see `DataTable`'s `rowActionVisibility`. */
-    rowActionVisibility?: "hover" | "always";
+    rowActionVisibility?: "hover" | "always" | "reserved";
     /**
      * Makes the whole row a click target, for a grid that drills into a detail
      * view. Passed straight through, so it brings the keyboard affordances with

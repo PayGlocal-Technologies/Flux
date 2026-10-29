@@ -4710,7 +4710,7 @@ function DataTable({
   rowKey,
   rowCta,
   rowAction,
-  rowActionVisibility = "hover",
+  rowActionVisibility = "reserved",
   onRowClick,
   density = "default",
   tableLayout = "fixed",
@@ -4748,12 +4748,13 @@ function DataTable({
   };
   const hasAction = rowAction != null || rowCta != null;
   const actionInFlow = hasAction && rowActionVisibility === "always";
+  const actionReserved = hasAction && rowActionVisibility === "reserved" && tableLayout !== "fixed";
   const hasSpacer = tableLayout === "content";
   const [internalExpanded, setInternalExpanded] = (0, import_react9.useState)([]);
   const isExpandControlled = expandable?.expandedKeys !== void 0;
   const expandedKeys = isExpandControlled ? expandable.expandedKeys : internalExpanded;
   const hasExpand = expandable != null;
-  const totalColSpan = columns.length + (hasExpand ? 1 : 0) + (hasSpacer ? 1 : 0) + (hasAction ? 1 : 0);
+  const totalColSpan = columns.length + (hasExpand ? 1 : 0) + (hasSpacer ? 1 : 0) + (actionReserved ? 1 : 0) + (hasAction ? 1 : 0);
   const rowExpanded = (row, index) => hasExpand && (expandable.isExpandable?.(row, index) ?? true) && expandedKeys.includes(rowKeys[index]);
   const toggleExpanded = (key, row, index) => {
     const isOpen = expandedKeys.includes(key);
@@ -4807,10 +4808,33 @@ function DataTable({
   }, [syncEdges, columns.length, paginated.length]);
   const isRowClickTarget = (target, rowEl) => {
     if (!(target instanceof Element)) return false;
+    const selection = window.getSelection();
+    if (selection && !selection.isCollapsed && selection.toString().trim()) return false;
     if (!rowEl.contains(target)) return false;
     const interactive = target.closest(ROW_CLICK_IGNORE);
     return !(interactive && rowEl.contains(interactive));
   };
+  const reservedActionCell = (row, i) => (
+    // `w-px`: the automatic layout gives a 1px-wide column its content width
+    // and no more, so it never soaks up spare width the way auto columns do.
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)("td", { className: "w-px p-0 align-middle", "aria-hidden": true, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+      "span",
+      {
+        className: "invisible flex items-center whitespace-nowrap",
+        style: { paddingLeft: cellPadLeft, paddingRight: actionGutter },
+        children: rowAction != null ? typeof rowAction === "function" ? rowAction(row, i) : rowAction : /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+          "span",
+          {
+            className: cn(
+              "inline-flex items-center font-medium rounded-lg border whitespace-nowrap",
+              compact ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5 text-[12px]"
+            ),
+            children: rowCta?.label
+          }
+        )
+      }
+    ) })
+  );
   return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(
     "div",
     {
@@ -4938,6 +4962,7 @@ function DataTable({
                               );
                             }),
                             hasSpacer ? /* @__PURE__ */ (0, import_jsx_runtime54.jsx)("th", { className: "w-full p-0", "aria-hidden": true }) : null,
+                            actionReserved ? /* @__PURE__ */ (0, import_jsx_runtime54.jsx)("th", { className: "w-px p-0", "aria-hidden": true }) : null,
                             hasAction ? /* @__PURE__ */ (0, import_jsx_runtime54.jsx)("th", { className: cn("sticky right-0 z-[1] p-0", !actionInFlow && "w-0"), "aria-hidden": true }) : null
                           ]
                         }
@@ -4988,6 +5013,7 @@ function DataTable({
                             col.key
                           )),
                           hasSpacer ? /* @__PURE__ */ (0, import_jsx_runtime54.jsx)("td", { className: "p-0", "aria-hidden": true }) : null,
+                          actionReserved ? /* @__PURE__ */ (0, import_jsx_runtime54.jsx)("td", { className: "w-px p-0", "aria-hidden": true }) : null,
                           hasAction ? /* @__PURE__ */ (0, import_jsx_runtime54.jsx)("td", { className: cn("sticky right-0 z-[1] p-0", !actionInFlow && "w-0"), "aria-hidden": true }) : null
                         ]
                       },
@@ -5068,6 +5094,7 @@ function DataTable({
                             col.key
                           )),
                           hasSpacer ? /* @__PURE__ */ (0, import_jsx_runtime54.jsx)("td", { className: "p-0", "aria-hidden": true }) : null,
+                          actionReserved ? reservedActionCell(row, i) : null,
                           actionInFlow ? (
                             // Always shown: a real cell sized to the action, pinned to
                             // the right edge, so the table lays its columns out beside
@@ -5106,7 +5133,7 @@ function DataTable({
                             /* @__PURE__ */ (0, import_jsx_runtime54.jsx)("td", { className: "sticky right-0 z-[1] w-0 p-0 align-middle", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
                               "span",
                               {
-                                className: "pointer-events-none absolute inset-y-0 right-0 z-[1] flex items-center pl-8 opacity-0 transition-opacity duration-150 [--row-action-bg:var(--card)] group-hover:opacity-100 group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_40%,var(--card))] group-has-[:focus-visible]:opacity-100 dark:group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_25%,var(--card))]",
+                                className: "pointer-events-none absolute inset-y-0 right-0 z-[1] flex items-center pl-8 opacity-0 transition-opacity duration-150 [--row-action-bg:var(--card)] group-hover:opacity-100 group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_40%,var(--card))] group-has-[:focus-visible]:opacity-100 has-[[data-state=open]]:opacity-100 dark:group-hover:[--row-action-bg:color-mix(in_oklab,var(--muted)_25%,var(--card))]",
                                 style: {
                                   paddingRight: actionGutter,
                                   backgroundImage: "linear-gradient(to right, transparent, var(--row-action-bg) 2rem)"

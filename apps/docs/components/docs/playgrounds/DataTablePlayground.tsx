@@ -72,6 +72,7 @@ export function DataTablePlayground() {
   const [rowsPerPage, setRowsPerPage] = useState(false);
   const [sortable, setSortable] = useState(true);
   const [showRowAction, setShowRowAction] = useState(false);
+  const [rowActionMode, setRowActionMode] = useState<"reserved" | "hover" | "always">("reserved");
   const [rowClickable, setRowClickable] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [showCode, setShowCode] = useState(false);
@@ -151,8 +152,11 @@ export function DataTablePlayground() {
     const sortProp = sortable
       ? `\n  sorting={{ value: sort, onChange: setSort }}`
       : "";
+    // `reserved` is the default, so the snippet only names the other two.
+    const visibilityProp =
+      rowActionMode === "reserved" ? "" : `\n  rowActionVisibility="${rowActionMode}"`;
     const rowActionProp = showRowAction
-      ? `\n  rowAction={(row) => (\n    <Button variant="outline" size="sm" onClick={() => openDetails(row)}>\n      View details\n    </Button>\n  )}`
+      ? `\n  rowAction={(row) => (\n    <Button variant="outline" size="sm" onClick={() => openDetails(row)}>\n      View details\n    </Button>\n  )}${visibilityProp}`
       : "";
     const rowClickProp = rowClickable ? `\n  onRowClick={(row) => openDetails(row)}` : "";
     return `import { DataTable, Button, type Column } from "@payglocal_ui/flux-ui";
@@ -176,6 +180,7 @@ export function DataTablePlayground() {
     tableLayout,
     isLoading,
     showRowAction,
+    rowActionMode,
     rowClickable,
   ]);
 
@@ -270,6 +275,19 @@ export function DataTablePlayground() {
             ]}
           />
         </DocsVariantField>
+        {showRowAction ? (
+          <DocsVariantField label="Action shows">
+            <DocsVariantSelect
+              value={rowActionMode}
+              onChange={(v) => setRowActionMode(v as typeof rowActionMode)}
+              options={[
+                { value: "reserved", label: "Reserved (default)" },
+                { value: "hover", label: "Hover overlay" },
+                { value: "always", label: "Always, own column" },
+              ]}
+            />
+          </DocsVariantField>
+        ) : null}
         <DocsVariantField label="Row click">
           <DocsVariantSelect
             value={rowClickable ? "yes" : "no"}
@@ -300,6 +318,12 @@ export function DataTablePlayground() {
         >
           {showCode ? "Hide generated code" : "Show generated code"}
         </button>
+        {showRowAction && rowActionMode === "reserved" && tableLayout === "fixed" ? (
+          <span className="text-sm text-muted-foreground">
+            Fixed layout cannot size a column to its contents, so Reserved acts as Hover here.
+            Switch Table layout to Content to see the room it keeps.
+          </span>
+        ) : null}
         {pagerMode === "cursor" ? (
           <span className="text-sm text-muted-foreground">
             No total, so the footer numbers only the pages a cursor can step to.
@@ -333,6 +357,7 @@ export function DataTablePlayground() {
               )
             : undefined
         }
+        rowActionVisibility={rowActionMode}
         onRowClick={rowClickable ? (row) => setClickedRow(row.name) : undefined}
       />
     </div>
