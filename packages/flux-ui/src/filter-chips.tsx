@@ -30,7 +30,7 @@ import { Tabs, TabsList, TabsTrigger } from "./tabs";
 import { IconButton } from "./icon-button";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { Separator } from "./separator";
-import { formatMonthLabel, MONTHS_SHORT } from "./format-datetime";
+import { formatDateOnly, formatMonthLabel, MONTHS_SHORT } from "./format-datetime";
 
 /**
  * Bounds a popover by the space that is actually below (or above) the trigger,
@@ -947,13 +947,15 @@ const fromRangeKey = (key: string): Date | undefined => {
   return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : undefined;
 };
 
-/** `YYYY-MM-DD` → "12 Oct 2026", for the line under the calendar. */
-const rangeDayLabel = (key: string): string =>
-  fromRangeKey(key)?.toLocaleDateString("en-GB", {
-    day: "numeric",
-    month: "short",
-    year: "numeric",
-  }) ?? key;
+/**
+ * `YYYY-MM-DD` → "12 Oct '26", the app-wide date form (formatDateOnly), for the
+ * chip's label and the line under the calendar. The stored value stays
+ * `YYYY-MM-DD`; only what is shown changes.
+ */
+const rangeDayLabel = (key: string): string => {
+  const date = fromRangeKey(key);
+  return date ? formatDateOnly(date) : key;
+};
 
 /**
  * A date range on one calendar, staged behind Apply: the first click picks one
@@ -1027,7 +1029,7 @@ export function DateRangeFilterChip({
         relativeLabel
           ? `${label}: ${relativeLabel}`
           : isActive
-            ? `${label}: ${value.from} → ${value.to}`
+            ? `${label}: ${rangeDayLabel(value.from)} → ${rangeDayLabel(value.to)}`
             : label
       }
       active={isActive}

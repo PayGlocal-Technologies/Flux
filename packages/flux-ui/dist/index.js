@@ -9728,11 +9728,10 @@ var fromRangeKey = (key) => {
   const m = key.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   return m ? new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3])) : void 0;
 };
-var rangeDayLabel = (key) => fromRangeKey(key)?.toLocaleDateString("en-GB", {
-  day: "numeric",
-  month: "short",
-  year: "numeric"
-}) ?? key;
+var rangeDayLabel = (key) => {
+  const date = fromRangeKey(key);
+  return date ? formatDateOnly(date) : key;
+};
 function DateRangeFilterChip({
   chipKey = "date",
   label = "Date",
@@ -9778,7 +9777,7 @@ function DateRangeFilterChip({
     FilterChip,
     {
       chipKey,
-      label: relativeLabel ? `${label}: ${relativeLabel}` : isActive ? `${label}: ${value.from} \u2192 ${value.to}` : label,
+      label: relativeLabel ? `${label}: ${relativeLabel}` : isActive ? `${label}: ${rangeDayLabel(value.from)} \u2192 ${rangeDayLabel(value.to)}` : label,
       active: isActive,
       align,
       open: chip.open,
