@@ -610,8 +610,14 @@ var variantClasses = {
   ghost: "bg-transparent text-foreground border border-transparent hover:bg-muted focus-visible:bg-muted/80 active:bg-muted/90",
   danger: `bg-red-600 text-white border border-red-600 ${elevation.control} hover:bg-red-700`,
   outline: `bg-card text-foreground border border-border ${elevation.control} hover:bg-muted`,
-  link: "h-auto min-h-0 rounded-md border border-transparent bg-transparent px-2 py-2 text-[15px] font-medium text-primary shadow-none underline-offset-4 hover:bg-primary/5 hover:underline focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:no-underline"
+  link: "h-auto min-h-0 rounded-md border border-transparent bg-transparent px-2 py-2 font-medium text-primary shadow-none underline-offset-4 hover:bg-primary/5 hover:underline focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:no-underline"
 };
+var linkSizes = {
+  sm: "text-[13px]",
+  md: "text-sm",
+  lg: "text-[15px]"
+};
+var LINK_DEFAULT_SIZE = "text-[15px]";
 var sizes = {
   sm: "h-9 min-h-9 px-3.5 text-xs gap-1.5 rounded-lg",
   md: "h-10 min-h-10 px-5 text-sm gap-2 rounded-lg",
@@ -620,7 +626,8 @@ var sizes = {
 var Button = (0, import_react.forwardRef)(
   ({
     variant = "primary",
-    size = "md",
+    // No default here: a link tells "no size given" apart from "md" (see linkSizes).
+    size: sizeProp,
     isLoading = false,
     leftIcon,
     rightIcon,
@@ -629,6 +636,7 @@ var Button = (0, import_react.forwardRef)(
     disabled,
     ...props
   }, ref) => {
+    const size = sizeProp ?? "md";
     return /* @__PURE__ */ (0, import_jsx_runtime3.jsxs)(
       "button",
       {
@@ -647,6 +655,7 @@ var Button = (0, import_react.forwardRef)(
           variant !== "link" && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
           variantClasses[variant],
           variant !== "link" && sizes[size],
+          variant === "link" && (sizeProp ? linkSizes[sizeProp] : LINK_DEFAULT_SIZE),
           className
         ),
         ...props,
@@ -5653,7 +5662,8 @@ function CopyableCell({
   }
   const valueNode = onClick ? (
     // A bare <button>, deliberately, where the rest of flux would reach for
-    // `Button variant="link"`. That variant hard-codes `text-[15px]`, and
+    // `Button variant="link"`. That variant sets a fixed size (15px, or 13px at
+    // `size="sm"`) rather than inheriting the cell's, and
     // the obvious override — `text-[inherit]` — does not beat it: Tailwind
     // and tailwind-merge read `text-[<non-length>]` as a COLOUR, so the
     // size class survives and the cell renders 2px larger than every other

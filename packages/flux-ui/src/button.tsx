@@ -25,8 +25,21 @@ const variantClasses: Record<NonNullable<ButtonProps["variant"]>, string> = {
   outline:
     `bg-card text-foreground border border-border ${elevation.control} hover:bg-muted`,
   link:
-    "h-auto min-h-0 rounded-md border border-transparent bg-transparent px-2 py-2 text-[15px] font-medium text-primary shadow-none underline-offset-4 hover:bg-primary/5 hover:underline focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:no-underline",
+    "h-auto min-h-0 rounded-md border border-transparent bg-transparent px-2 py-2 font-medium text-primary shadow-none underline-offset-4 hover:bg-primary/5 hover:underline focus-visible:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35 disabled:pointer-events-none disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:no-underline",
 };
+
+/**
+ * A link's text size. A link has no box to size, so `size` sets only its type:
+ * `sm` is the 13px of table cells and description lists, where small links live.
+ * A link given no `size` keeps the 15px it always had, so existing links that
+ * never asked for a size do not move.
+ */
+const linkSizes = {
+  sm: "text-[13px]",
+  md: "text-sm",
+  lg: "text-[15px]",
+};
+const LINK_DEFAULT_SIZE = "text-[15px]";
 
 /** Heights and padding match dashboard primary actions (~44–48px) and comfortable tap targets. */
 const sizes = {
@@ -39,7 +52,8 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
   (
     {
       variant = "primary",
-      size = "md",
+      // No default here: a link tells "no size given" apart from "md" (see linkSizes).
+      size: sizeProp,
       isLoading = false,
       leftIcon,
       rightIcon,
@@ -50,6 +64,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     },
     ref
   ) => {
+    const size = sizeProp ?? "md";
     return (
       <button
         ref={ref}
@@ -67,6 +82,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
           variant !== "link" && "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35",
           variantClasses[variant],
           variant !== "link" && sizes[size],
+          variant === "link" && (sizeProp ? linkSizes[sizeProp] : LINK_DEFAULT_SIZE),
           className
         )}
         {...props}

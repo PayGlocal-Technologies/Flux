@@ -195,7 +195,8 @@ export function CopyableCell({
    */
   const valueNode = onClick ? (
     // A bare <button>, deliberately, where the rest of flux would reach for
-    // `Button variant="link"`. That variant hard-codes `text-[15px]`, and
+    // `Button variant="link"`. That variant sets a fixed size (15px, or 13px at
+    // `size="sm"`) rather than inheriting the cell's, and
     // the obvious override — `text-[inherit]` — does not beat it: Tailwind
     // and tailwind-merge read `text-[<non-length>]` as a COLOUR, so the
     // size class survives and the cell renders 2px larger than every other
