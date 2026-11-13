@@ -171,39 +171,64 @@ interface DatePickerProps {
  * antd's behaviour and the reason each column is padded underneath: without the
  * padding the last few values can never reach the top and look unreachable.
  */
-function TimeColumn<T extends string | number>({
+export function TimeColumn<T extends string | number>({
   label,
   items,
   selected,
   onSelect,
   render,
+  height = TIME_COL_H,
+  tone = "solid",
 }: {
   label: string;
   items: T[];
   selected: T;
   onSelect: (item: T) => void;
   render?: (item: T) => string;
+  /** Visible height of the scrolling list. Defaults to the DatePicker's. */
+  height?: number;
+  /**
+   * `solid` (the DatePicker's): bold rows and a filled primary selection.
+   * `subtle`: the range calendar's own weight, with plain-case muted labels
+   * like its weekday row and a tinted selection, for columns that sit beside
+   * a calendar and should not outweigh it.
+   */
+  tone?: "solid" | "subtle";
 }) {
   const ref = useRef<HTMLDivElement>(null);
   const index = items.indexOf(selected);
 
   // Scrolled with the panel's own layout effect timing rather than on every
   // render: a click that lands mid-scroll would otherwise fight the animation.
+  // The first scroll, on open, jumps straight there as antd's does; only later
+  // picks animate.
+  const scrolledRef = useRef(false);
   useEffect(() => {
     const el = ref.current;
     if (!el || index < 0) return;
-    el.scrollTo({ top: index * TIME_ITEM_H, behavior: "smooth" });
+    el.scrollTo({
+      top: index * TIME_ITEM_H,
+      behavior: scrolledRef.current ? "smooth" : "auto",
+    });
+    scrolledRef.current = true;
   }, [index]);
 
   return (
     <div className="flex flex-col border-l border-border" style={{ width: TIME_COL_W }}>
-      <div className="py-1 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+      <div
+        className={cn(
+          "py-1 text-center",
+          tone === "subtle"
+            ? "text-[0.8rem] font-normal text-muted-foreground"
+            : "text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70",
+        )}
+      >
         {label}
       </div>
       <div
         ref={ref}
         className="overflow-y-auto"
-        style={{ height: TIME_COL_H, scrollbarWidth: "none", msOverflowStyle: "none" }}
+        style={{ height, scrollbarWidth: "none", msOverflowStyle: "none" }}
       >
         {items.map((item) => {
           const active = item === selected;
@@ -213,19 +238,31 @@ function TimeColumn<T extends string | number>({
               type="button"
               onClick={() => onSelect(item)}
               className={cn(
-                "flex w-full items-center justify-center rounded-md text-[13px] font-medium transition-colors",
-                active
-                  ? "font-semibold text-white"
-                  : "text-foreground hover:bg-muted",
+                "flex items-center justify-center rounded-md text-[13px] transition-colors",
+                tone === "subtle"
+                  ? cn(
+                      // Inset, so a tinted row never touches the dividers.
+                      "mx-1 w-[calc(100%-0.5rem)] tabular-nums",
+                      active
+                        ? "bg-primary/10 font-medium text-primary"
+                        : "font-normal text-foreground/75 hover:bg-muted/80",
+                    )
+                  : cn(
+                      "w-full font-medium",
+                      active ? "font-semibold text-white" : "text-foreground hover:bg-muted",
+                    ),
               )}
-              style={{ height: TIME_ITEM_H, background: active ? PRIMARY : undefined }}
+              style={{
+                height: TIME_ITEM_H,
+                background: active && tone === "solid" ? PRIMARY : undefined,
+              }}
             >
               {render ? render(item) : String(item)}
             </button>
           );
         })}
         {/* Lets the final value reach the top of the column. */}
-        <div style={{ height: TIME_COL_H - TIME_ITEM_H }} />
+        <div style={{ height: height - TIME_ITEM_H }} />
       </div>
     </div>
   );

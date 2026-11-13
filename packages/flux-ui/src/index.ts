@@ -388,6 +388,8 @@ export {
   TextFilterChip,
   MonthRangeFilterChip,
   EMPTY_RELATIVE_RANGE,
+  DEFAULT_RANGE_FROM_TIME,
+  DEFAULT_RANGE_TO_TIME,
   hasRelativeRange,
   relativeRangeToMillis,
   AddFilterMenu,

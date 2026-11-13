@@ -291,10 +291,8 @@ export function CalendarDateFilterChip({
       </div>
 
       <FilterChipActions
-        onClear={() => {
-          clear();
-          chip.onOpenChange(false);
-        }}
+        // Drops the filter but stays open, like every chip's Clear.
+        onClear={clear}
         hideClear={!clearable}
         clearDisabled={!hasDraft && !isActive}
         applyDisabled={!hasDraft}

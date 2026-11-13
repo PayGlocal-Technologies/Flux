@@ -28,6 +28,7 @@ import { Checkbox } from "./checkbox";
 import { Input } from "./input";
 import { Tabs, TabsList, TabsTrigger } from "./tabs";
 import { IconButton } from "./icon-button";
+import { TimeColumn } from "./date-picker";
 import { Popover, PopoverContent, PopoverTrigger } from "./popover";
 import { Separator } from "./separator";
 import { formatDateOnly, formatMonthLabel, MONTHS_SHORT } from "./format-datetime";
@@ -411,12 +412,10 @@ FilterChipLabelTrigger.displayName = "FilterChipLabelTrigger";
  * Apply / Clear footer shared by every panel, so the two buttons sit in the
  * same place and read the same wherever a chip's editor puts them.
  *
- * Both buttons **commit and close**. Clear is not "untick everything and let me
- * carry on" — that reading leaves the panel open over a filter that is still
- * applied, so the chip still reads "Type 1" while the list in front of you
- * shows nothing ticked, and closing the panel silently keeps the old filter.
- * Clear is the same act as the chip's own little x, reached from inside the
- * panel: it drops the filter and gets out of the way.
+ * Apply commits and closes. Clear empties the selection **and** drops the
+ * applied filter, but leaves the panel open so a new value can be picked
+ * straight away. It commits rather than only emptying the draft, so the chip
+ * never reads "Type 1" over a panel with nothing ticked.
  */
 export function FilterChipActions({
   onClear,
@@ -662,7 +661,6 @@ export function SelectFilterChip({
           setDraft([]);
           onInvertChange?.(false);
           setDraftInvert(false);
-          chip.onOpenChange(false);
         }}
         // Disabled only when there is genuinely nothing to drop: an applied
         // value with an emptied draft is still something to clear.
@@ -836,7 +834,21 @@ export interface DateRangeValue {
   /** `yyyy-mm-dd`, or "" for unset. */
   from: string;
   to: string;
+  /**
+   * 24-hour `HH:MM` on the `from` day, set only by a chip with `withTime`. The
+   * start minute is inclusive from :00. Absent means 00:00.
+   */
+  fromTime?: string;
+  /**
+   * 24-hour `HH:MM` on the `to` day, set only by a chip with `withTime`. The end
+   * minute is inclusive, so `"18:30"` runs to 18:30:59. Absent means 23:59.
+   */
+  toTime?: string;
 }
+
+/** The clock a `withTime` range starts and ends on when none is picked. */
+export const DEFAULT_RANGE_FROM_TIME = "00:00";
+export const DEFAULT_RANGE_TO_TIME = "23:59";
 
 /**
  * "Last N weeks / days / hours / minutes", counted back from now.
@@ -934,8 +946,25 @@ export interface DateRangeFilterChipProps extends FilterChipControl {
   max?: string;
   /** Shown under the fields when a picked date falls outside `min`/`max`. */
   outOfRangeHint?: string;
+  /**
+   * Adds Start time and End time pickers under the calendar, defaulting to
+   * 00:00 and 23:59, and reports them as `fromTime` / `toTime`. Without it the
+   * chip never sets either field, so a date-only caller sees no change.
+   */
+  withTime?: boolean;
   align?: "start" | "center" | "end";
 }
+
+/** `HH:MM` → "6:30 PM", the 12-hour form flux prints timestamps in. */
+const clockLabel = (hhmm: string): string => {
+  const [h = 0, m = 0] = hhmm.split(":").map((n) => parseInt(n, 10) || 0);
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+};
+
+/** A range end as "12 Oct '26", plus ", 6:30 PM" when a clock is given. */
+const rangeEndLabel = (key: string, clock?: string): string =>
+  clock ? `${rangeDayLabel(key)}, ${clockLabel(clock)}` : rangeDayLabel(key);
 
 /** A local date as `YYYY-MM-DD`, the format the chip's value carries. */
 const toRangeKey = (d: Date): string =>
@@ -958,6 +987,73 @@ const rangeDayLabel = (key: string): string => {
 };
 
 /**
+ * One end of a `withTime` range at the top of the panel, antd RangePicker
+ * style: which end the time columns are editing, and what it is set to.
+ * Clicking it makes it the end the columns edit.
+ */
+function RangeEndTab({
+  label,
+  day,
+  time,
+  active,
+  onSelect,
+}: {
+  label: string;
+  day: string;
+  time: string;
+  active: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      onClick={onSelect}
+      aria-pressed={active}
+      className={cn(
+        "h-auto min-w-0 justify-start rounded-md border px-2.5 py-1.5 text-left",
+        active
+          ? "border-primary/60 bg-primary/5 hover:bg-primary/5"
+          : "border-border",
+      )}
+    >
+      {/* One wrapper, so the label sits above the value whatever layout the
+          Button gives its children. */}
+      <span className="flex min-w-0 flex-col items-start gap-0.5">
+        <span
+          className={cn(
+            "text-[11px] font-medium",
+            active ? "text-primary" : "text-muted-foreground",
+          )}
+        >
+          {label}
+        </span>
+        <span
+          className={cn(
+            "max-w-full truncate text-[12.5px] font-normal tabular-nums",
+            day ? "text-foreground" : "text-muted-foreground",
+          )}
+        >
+          {day ? rangeEndLabel(day, time) : "Pick a date"}
+        </span>
+      </span>
+    </Button>
+  );
+}
+
+/** antd's 12-hour order: 12, 01 … 11, ascending by the 24-hour value. */
+const HOUR_ITEMS = Array.from({ length: 12 }, (_, i) => i);
+const MINUTE_ITEMS = Array.from({ length: 60 }, (_, i) => i);
+const pad2 = (n: number) => String(n).padStart(2, "0");
+/** `HH:MM` → 24-hour parts. */
+const clockParts = (hhmm: string): { h: number; m: number } => {
+  const [h = 0, m = 0] = hhmm.split(":").map((n) => parseInt(n, 10) || 0);
+  return { h, m };
+};
+/** Height of the time columns, sized to sit flush with the calendar. */
+const RANGE_TIME_COL_H = 248;
+
+/**
  * A date range on one calendar, staged behind Apply: the first click picks one
  * end, the second the other (react-day-picker's range selection), the same way
  * the report drawer's calendar works. Apply stays off until both ends are
@@ -974,6 +1070,7 @@ export function DateRangeFilterChip({
   min,
   max,
   outOfRangeHint,
+  withTime = false,
   align = "start",
   open,
   onOpenChange,
@@ -983,6 +1080,19 @@ export function DateRangeFilterChip({
   const [relativeDraft, setRelativeDraft] = useState<RelativeRangeValue>(
     relativeValue ?? EMPTY_RELATIVE_RANGE,
   );
+
+  // Which end the time columns edit and the tabs highlight: the end the user
+  // last picked a day for, or the tab they clicked.
+  const [activeEnd, setActiveEnd] = useState<"from" | "to">("from");
+  // Which end the next calendar click sets. Separate from `activeEnd` so that
+  // picking the start day keeps Start active for its time while the next
+  // click still lands on the end.
+  const [nextPick, setNextPick] = useState<"from" | "to">("from");
+  /** Points the columns and the next day click at one end (tabs, open, Clear). */
+  const focusEnd = (end: "from" | "to") => {
+    setActiveEnd(end);
+    setNextPick(end);
+  };
 
   // The tab the panel opens on follows what is applied, so reopening a chip set
   // to "last 2 days" does not land on an empty date range.
@@ -1010,6 +1120,62 @@ export function DateRangeFilterChip({
   const emptyRange: DateRangeValue = { from: "", to: "" };
   const isRelative = supportsRelative && mode === "relative";
 
+  // With `withTime`, both clocks always have a value (the defaults fill any
+  // gap), so the applied range is never half-timed.
+  const draftFromTime = draft.fromTime || DEFAULT_RANGE_FROM_TIME;
+  const draftToTime = draft.toTime || DEFAULT_RANGE_TO_TIME;
+  // `HH:MM` compares correctly as a string. Only a one-day range can put the
+  // end before the start.
+  const clocksInvalid =
+    withTime &&
+    isComplete &&
+    draft.from === draft.to &&
+    draftToTime < draftFromTime;
+  /** What Apply commits: date-only callers get exactly what they always did. */
+  const appliedDraft: DateRangeValue = withTime
+    ? {
+        from: draft.from,
+        to: draft.to,
+        fromTime: draftFromTime,
+        toTime: draftToTime,
+      }
+    : { from: draft.from, to: draft.to };
+  /** The applied range's clocks for display, or none when they span whole days. */
+  const shownTimes = (r: DateRangeValue): [string?, string?] => {
+    if (!withTime) return [];
+    const f = r.fromTime || DEFAULT_RANGE_FROM_TIME;
+    const t = r.toTime || DEFAULT_RANGE_TO_TIME;
+    return f === DEFAULT_RANGE_FROM_TIME && t === DEFAULT_RANGE_TO_TIME
+      ? []
+      : [f, t];
+  };
+  const [labelFromTime, labelToTime] = shownTimes(value);
+
+  /**
+   * A calendar click, following the user's clicks:
+   * - When the end is due and the day is not before the start, it sets the
+   *   end. End becomes active for its time, and the next click starts over.
+   * - Otherwise it sets the start, keeping the old end while it is still
+   *   after it. Start stays active for its time, and the next click is the end.
+   * So a range is two clicks, each end's time can be set straight after its
+   * day, and the start can always be changed by clicking again.
+   */
+  const pickDay = (day: string) => {
+    if (nextPick === "to" && draft.from && day >= draft.from) {
+      setDraft((prev) => ({ ...prev, to: day }));
+      setActiveEnd("to");
+      setNextPick("from");
+      return;
+    }
+    setDraft((prev) => ({
+      ...prev,
+      from: day,
+      to: prev.to && prev.to >= day ? prev.to : "",
+    }));
+    setActiveEnd("from");
+    setNextPick("to");
+  };
+
   // Applying one mode clears the other, so the applied value is never both a
   // duration and a pair of dates.
   const commit = (range: DateRangeValue, relative: RelativeRangeValue) => {
@@ -1029,7 +1195,7 @@ export function DateRangeFilterChip({
         relativeLabel
           ? `${label}: ${relativeLabel}`
           : isActive
-            ? `${label}: ${rangeDayLabel(value.from)} → ${rangeDayLabel(value.to)}`
+            ? `${label}: ${rangeEndLabel(value.from, labelFromTime)} → ${rangeEndLabel(value.to, labelToTime)}`
             : label
       }
       active={isActive}
@@ -1038,6 +1204,7 @@ export function DateRangeFilterChip({
       onOpenChange={chip.onOpenChange}
       onOpen={() => {
         setDraft(value);
+        focusEnd("from");
         setMonth(fromRangeKey(value.to) ?? fromRangeKey(value.from) ?? maxDate);
         setRelativeDraft(relativeValue ?? EMPTY_RELATIVE_RANGE);
         setMode(hasRelativeRange(relativeValue) ? "relative" : "absolute");
@@ -1049,7 +1216,13 @@ export function DateRangeFilterChip({
         setRelativeDraft(EMPTY_RELATIVE_RANGE);
       }}
     >
-      <div className="w-80 space-y-3 p-3">
+      <div
+        className={cn(
+          "space-y-3 p-3",
+          // The calendar keeps its 296px; antd's time columns sit beside it.
+          withTime ? "w-[31.5rem]" : "w-80",
+        )}
+      >
         {supportsRelative ? (
           <Tabs
             value={mode}
@@ -1092,40 +1265,116 @@ export function DateRangeFilterChip({
           </div>
         ) : (
           <>
-            <Calendar
-              mode="range"
-              fullWidth
-              className="bg-transparent p-0"
-              month={month}
-              onMonthChange={setMonth}
-              startMonth={minDate}
-              endMonth={maxDate}
-              disabled={[
-                ...(minDate ? [{ before: minDate }] : []),
-                ...(maxDate ? [{ after: maxDate }] : []),
-              ]}
-              selected={{
-                from: fromRangeKey(draft.from),
-                to: fromRangeKey(draft.to),
-              }}
-              // react-day-picker decides what each click does to the range;
-              // the chip only mirrors the result as YYYY-MM-DD.
-              onSelect={(range) =>
-                setDraft({
-                  from: range?.from ? toRangeKey(range.from) : "",
-                  to: range?.to ? toRangeKey(range.to) : "",
-                })
-              }
-            />
-            <p className="text-[11px] text-muted-foreground">
-              {isComplete
-                ? draft.from === draft.to
-                  ? rangeDayLabel(draft.from)
-                  : `${rangeDayLabel(draft.from)} – ${rangeDayLabel(draft.to)}`
-                : isPartial
-                  ? "Pick the other end of the range."
-                  : "Pick a start and an end date."}
-            </p>
+            {withTime ? (
+              <div className="grid grid-cols-2 gap-2">
+                <RangeEndTab
+                  label="Start"
+                  day={draft.from}
+                  time={draftFromTime}
+                  active={activeEnd === "from"}
+                  onSelect={() => focusEnd("from")}
+                />
+                <RangeEndTab
+                  label="End"
+                  day={draft.to}
+                  time={draftToTime}
+                  active={activeEnd === "to"}
+                  onSelect={() => focusEnd("to")}
+                />
+              </div>
+            ) : null}
+            <div className="flex items-start gap-2">
+              <div className="w-[296px] shrink-0">
+                <Calendar
+                  mode="range"
+                  fullWidth
+                  className="bg-transparent p-0"
+                  month={month}
+                  onMonthChange={setMonth}
+                  startMonth={minDate}
+                  endMonth={maxDate}
+                  disabled={[
+                    ...(minDate ? [{ before: minDate }] : []),
+                    ...(maxDate ? [{ after: maxDate }] : []),
+                  ]}
+                  selected={{
+                    from: fromRangeKey(draft.from),
+                    to: fromRangeKey(draft.to),
+                  }}
+                  // Each click sets the active end (antd's RangePicker), rather
+                  // than react-day-picker's own rule, which only ever moves the end
+                  // once a start is picked, so the start could not be changed.
+                  onSelect={(_range, day) => pickDay(toRangeKey(day))}
+                />
+              </div>
+              {withTime ? (
+                <div className="flex self-stretch">
+                  {(() => {
+                    const clock =
+                      activeEnd === "from" ? draftFromTime : draftToTime;
+                    const { h, m } = clockParts(clock);
+                    const setClock = (nh: number, nm: number) => {
+                      const next = `${pad2(nh)}:${pad2(nm)}`;
+                      setDraft((prev) =>
+                        activeEnd === "from"
+                          ? { ...prev, fromTime: next }
+                          : { ...prev, toTime: next },
+                      );
+                    };
+                    const pm = h >= 12;
+                    return (
+                      <>
+                        <TimeColumn
+                          label="Hr"
+                          items={HOUR_ITEMS}
+                          selected={h % 12}
+                          render={(x) => pad2(x === 0 ? 12 : x)}
+                          onSelect={(x) => setClock(pm ? x + 12 : x, m)}
+                          height={RANGE_TIME_COL_H}
+                          tone="subtle"
+                        />
+                        <TimeColumn
+                          label="Min"
+                          items={MINUTE_ITEMS}
+                          selected={m}
+                          render={pad2}
+                          onSelect={(x) => setClock(h, x)}
+                          height={RANGE_TIME_COL_H}
+                          tone="subtle"
+                        />
+                        <TimeColumn
+                          label="AM/PM"
+                          items={["AM", "PM"]}
+                          selected={pm ? "PM" : "AM"}
+                          onSelect={(x) =>
+                            setClock((h % 12) + (x === "PM" ? 12 : 0), m)
+                          }
+                          height={RANGE_TIME_COL_H}
+                          tone="subtle"
+                        />
+                      </>
+                    );
+                  })()}
+                </div>
+              ) : null}
+            </div>
+            {/* The From/To rows already spell out the picked range. */}
+            {withTime ? null : (
+              <p className="text-[11px] text-muted-foreground">
+                {isComplete
+                  ? draft.from === draft.to
+                    ? rangeDayLabel(draft.from)
+                    : `${rangeDayLabel(draft.from)} – ${rangeDayLabel(draft.to)}`
+                  : isPartial
+                    ? "Pick the other end of the range."
+                    : "Pick a start and an end date."}
+              </p>
+            )}
+            {clocksInvalid ? (
+              <p className="text-[11px] text-destructive">
+                The end time must be after the start time.
+              </p>
+            ) : null}
             {outOfRange && outOfRangeHint ? (
               <p className="text-[11px] text-destructive">{outOfRangeHint}</p>
             ) : null}
@@ -1133,7 +1382,14 @@ export function DateRangeFilterChip({
         )}
       </div>
       <FilterChipActions
-        onClear={() => commit(emptyRange, EMPTY_RELATIVE_RANGE)}
+        // Empties both modes and drops the filter, but stays open.
+        onClear={() => {
+          onChange(emptyRange);
+          onRelativeChange?.(EMPTY_RELATIVE_RANGE);
+          setDraft(emptyRange);
+          setRelativeDraft(EMPTY_RELATIVE_RANGE);
+          focusEnd("from");
+        }}
         clearDisabled={
           !draft.from &&
           !draft.to &&
@@ -1147,12 +1403,12 @@ export function DateRangeFilterChip({
         applyDisabled={
           isRelative
             ? !hasRelativeRange(relativeDraft)
-            : !isComplete || outOfRange
+            : !isComplete || outOfRange || clocksInvalid
         }
         onApply={() =>
           isRelative
             ? commit(emptyRange, relativeDraft)
-            : commit(draft, EMPTY_RELATIVE_RANGE)
+            : commit(appliedDraft, EMPTY_RELATIVE_RANGE)
         }
       />
     </FilterChip>
@@ -1488,7 +1744,6 @@ export function TextFilterChip({
         onClear={() => {
           onChange("");
           setDraft("");
-          chip.onOpenChange(false);
         }}
         clearDisabled={!draft && !value}
         onApply={apply}
@@ -1588,7 +1843,6 @@ export function NumberRangeFilterChip({
           const empty = { min: "", max: "" };
           onChange(empty);
           setDraft(empty);
-          chip.onOpenChange(false);
         }}
         clearDisabled={!draft.min && !draft.max && !value.min && !value.max}
         applyDisabled={inverted}

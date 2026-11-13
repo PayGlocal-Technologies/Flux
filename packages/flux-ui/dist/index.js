@@ -6553,23 +6553,39 @@ function TimeColumn({
   items,
   selected,
   onSelect,
-  render
+  render,
+  height = TIME_COL_H,
+  tone = "solid"
 }) {
   const ref = useRef10(null);
   const index = items.indexOf(selected);
+  const scrolledRef = useRef10(false);
   useEffect9(() => {
     const el = ref.current;
     if (!el || index < 0) return;
-    el.scrollTo({ top: index * TIME_ITEM_H, behavior: "smooth" });
+    el.scrollTo({
+      top: index * TIME_ITEM_H,
+      behavior: scrolledRef.current ? "smooth" : "auto"
+    });
+    scrolledRef.current = true;
   }, [index]);
   return /* @__PURE__ */ jsxs43("div", { className: "flex flex-col border-l border-border", style: { width: TIME_COL_W }, children: [
-    /* @__PURE__ */ jsx67("div", { className: "py-1 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: label }),
+    /* @__PURE__ */ jsx67(
+      "div",
+      {
+        className: cn(
+          "py-1 text-center",
+          tone === "subtle" ? "text-[0.8rem] font-normal text-muted-foreground" : "text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70"
+        ),
+        children: label
+      }
+    ),
     /* @__PURE__ */ jsxs43(
       "div",
       {
         ref,
         className: "overflow-y-auto",
-        style: { height: TIME_COL_H, scrollbarWidth: "none", msOverflowStyle: "none" },
+        style: { height, scrollbarWidth: "none", msOverflowStyle: "none" },
         children: [
           items.map((item) => {
             const active = item === selected;
@@ -6579,16 +6595,26 @@ function TimeColumn({
                 type: "button",
                 onClick: () => onSelect(item),
                 className: cn(
-                  "flex w-full items-center justify-center rounded-md text-[13px] font-medium transition-colors",
-                  active ? "font-semibold text-white" : "text-foreground hover:bg-muted"
+                  "flex items-center justify-center rounded-md text-[13px] transition-colors",
+                  tone === "subtle" ? cn(
+                    // Inset, so a tinted row never touches the dividers.
+                    "mx-1 w-[calc(100%-0.5rem)] tabular-nums",
+                    active ? "bg-primary/10 font-medium text-primary" : "font-normal text-foreground/75 hover:bg-muted/80"
+                  ) : cn(
+                    "w-full font-medium",
+                    active ? "font-semibold text-white" : "text-foreground hover:bg-muted"
+                  )
                 ),
-                style: { height: TIME_ITEM_H, background: active ? PRIMARY : void 0 },
+                style: {
+                  height: TIME_ITEM_H,
+                  background: active && tone === "solid" ? PRIMARY : void 0
+                },
                 children: render ? render(item) : String(item)
               },
               String(item)
             );
           }),
-          /* @__PURE__ */ jsx67("div", { style: { height: TIME_COL_H - TIME_ITEM_H } })
+          /* @__PURE__ */ jsx67("div", { style: { height: height - TIME_ITEM_H } })
         ]
       }
     )
@@ -9582,7 +9608,6 @@ function SelectFilterChip({
               setDraft([]);
               onInvertChange?.(false);
               setDraftInvert(false);
-              chip.onOpenChange(false);
             },
             clearDisabled: draft.length === 0 && selected.length === 0 && !draftInvert && !invert,
             onApply: () => {
@@ -9699,6 +9724,8 @@ function SingleSelectFilterChip({
     }
   );
 }
+var DEFAULT_RANGE_FROM_TIME = "00:00";
+var DEFAULT_RANGE_TO_TIME = "23:59";
 var EMPTY_RELATIVE_RANGE = {
   weeks: "",
   days: "",
@@ -9733,6 +9760,12 @@ function relativeRangeLabel(value) {
   });
   return parts.length ? `Last ${parts.join(" ")}` : "";
 }
+var clockLabel = (hhmm) => {
+  const [h = 0, m = 0] = hhmm.split(":").map((n) => parseInt(n, 10) || 0);
+  const hour = h % 12 === 0 ? 12 : h % 12;
+  return `${hour}:${String(m).padStart(2, "0")} ${h < 12 ? "AM" : "PM"}`;
+};
+var rangeEndLabel = (key, clock) => clock ? `${rangeDayLabel(key)}, ${clockLabel(clock)}` : rangeDayLabel(key);
 var toRangeKey = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 var fromRangeKey = (key) => {
   const m = key.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -9742,6 +9775,57 @@ var rangeDayLabel = (key) => {
   const date = fromRangeKey(key);
   return date ? formatDateOnly(date) : key;
 };
+function RangeEndTab({
+  label,
+  day,
+  time,
+  active,
+  onSelect
+}) {
+  return /* @__PURE__ */ jsx81(
+    Button,
+    {
+      type: "button",
+      variant: "ghost",
+      onClick: onSelect,
+      "aria-pressed": active,
+      className: cn(
+        "h-auto min-w-0 justify-start rounded-md border px-2.5 py-1.5 text-left",
+        active ? "border-primary/60 bg-primary/5 hover:bg-primary/5" : "border-border"
+      ),
+      children: /* @__PURE__ */ jsxs52("span", { className: "flex min-w-0 flex-col items-start gap-0.5", children: [
+        /* @__PURE__ */ jsx81(
+          "span",
+          {
+            className: cn(
+              "text-[11px] font-medium",
+              active ? "text-primary" : "text-muted-foreground"
+            ),
+            children: label
+          }
+        ),
+        /* @__PURE__ */ jsx81(
+          "span",
+          {
+            className: cn(
+              "max-w-full truncate text-[12.5px] font-normal tabular-nums",
+              day ? "text-foreground" : "text-muted-foreground"
+            ),
+            children: day ? rangeEndLabel(day, time) : "Pick a date"
+          }
+        )
+      ] })
+    }
+  );
+}
+var HOUR_ITEMS = Array.from({ length: 12 }, (_, i) => i);
+var MINUTE_ITEMS = Array.from({ length: 60 }, (_, i) => i);
+var pad22 = (n) => String(n).padStart(2, "0");
+var clockParts = (hhmm) => {
+  const [h = 0, m = 0] = hhmm.split(":").map((n) => parseInt(n, 10) || 0);
+  return { h, m };
+};
+var RANGE_TIME_COL_H = 248;
 function DateRangeFilterChip({
   chipKey = "date",
   label = "Date",
@@ -9752,6 +9836,7 @@ function DateRangeFilterChip({
   min,
   max,
   outOfRangeHint,
+  withTime = false,
   align = "start",
   open,
   onOpenChange
@@ -9761,6 +9846,12 @@ function DateRangeFilterChip({
   const [relativeDraft, setRelativeDraft] = useState23(
     relativeValue ?? EMPTY_RELATIVE_RANGE
   );
+  const [activeEnd, setActiveEnd] = useState23("from");
+  const [nextPick, setNextPick] = useState23("from");
+  const focusEnd = (end) => {
+    setActiveEnd(end);
+    setNextPick(end);
+  };
   const supportsRelative = !!onRelativeChange;
   const [mode, setMode] = useState23(
     hasRelativeRange(relativeValue) ? "relative" : "absolute"
@@ -9776,6 +9867,37 @@ function DateRangeFilterChip({
   const outOfRange = outside(draft.from) || outside(draft.to);
   const emptyRange = { from: "", to: "" };
   const isRelative = supportsRelative && mode === "relative";
+  const draftFromTime = draft.fromTime || DEFAULT_RANGE_FROM_TIME;
+  const draftToTime = draft.toTime || DEFAULT_RANGE_TO_TIME;
+  const clocksInvalid = withTime && isComplete && draft.from === draft.to && draftToTime < draftFromTime;
+  const appliedDraft = withTime ? {
+    from: draft.from,
+    to: draft.to,
+    fromTime: draftFromTime,
+    toTime: draftToTime
+  } : { from: draft.from, to: draft.to };
+  const shownTimes = (r) => {
+    if (!withTime) return [];
+    const f = r.fromTime || DEFAULT_RANGE_FROM_TIME;
+    const t = r.toTime || DEFAULT_RANGE_TO_TIME;
+    return f === DEFAULT_RANGE_FROM_TIME && t === DEFAULT_RANGE_TO_TIME ? [] : [f, t];
+  };
+  const [labelFromTime, labelToTime] = shownTimes(value);
+  const pickDay = (day) => {
+    if (nextPick === "to" && draft.from && day >= draft.from) {
+      setDraft((prev) => ({ ...prev, to: day }));
+      setActiveEnd("to");
+      setNextPick("from");
+      return;
+    }
+    setDraft((prev) => ({
+      ...prev,
+      from: day,
+      to: prev.to && prev.to >= day ? prev.to : ""
+    }));
+    setActiveEnd("from");
+    setNextPick("to");
+  };
   const commit = (range, relative) => {
     onChange(range);
     onRelativeChange?.(relative);
@@ -9787,13 +9909,14 @@ function DateRangeFilterChip({
     FilterChip,
     {
       chipKey,
-      label: relativeLabel ? `${label}: ${relativeLabel}` : isActive ? `${label}: ${rangeDayLabel(value.from)} \u2192 ${rangeDayLabel(value.to)}` : label,
+      label: relativeLabel ? `${label}: ${relativeLabel}` : isActive ? `${label}: ${rangeEndLabel(value.from, labelFromTime)} \u2192 ${rangeEndLabel(value.to, labelToTime)}` : label,
       active: isActive,
       align,
       open: chip.open,
       onOpenChange: chip.onOpenChange,
       onOpen: () => {
         setDraft(value);
+        focusEnd("from");
         setMonth(fromRangeKey(value.to) ?? fromRangeKey(value.from) ?? maxDate);
         setRelativeDraft(relativeValue ?? EMPTY_RELATIVE_RANGE);
         setMode(hasRelativeRange(relativeValue) ? "relative" : "absolute");
@@ -9805,71 +9928,157 @@ function DateRangeFilterChip({
         setRelativeDraft(EMPTY_RELATIVE_RANGE);
       },
       children: [
-        /* @__PURE__ */ jsxs52("div", { className: "w-80 space-y-3 p-3", children: [
-          supportsRelative ? /* @__PURE__ */ jsx81(
-            Tabs,
-            {
-              value: mode,
-              onValueChange: (v) => setMode(v),
-              children: /* @__PURE__ */ jsxs52(TabsList, { className: "w-full", children: [
-                /* @__PURE__ */ jsx81(TabsTrigger, { value: "absolute", className: "flex-1", children: "Date range" }),
-                /* @__PURE__ */ jsx81(TabsTrigger, { value: "relative", className: "flex-1", children: "Last\u2026" })
-              ] })
-            }
-          ) : null,
-          isRelative ? /* @__PURE__ */ jsx81("div", { className: "grid grid-cols-2 gap-2", children: RELATIVE_UNITS.map((unit) => /* @__PURE__ */ jsxs52("label", { className: "space-y-1.5", children: [
-            /* @__PURE__ */ jsx81("span", { className: "text-[11px] font-medium text-muted-foreground", children: unit.label }),
-            /* @__PURE__ */ jsx81(
-              Input,
-              {
-                type: "number",
-                min: 0,
-                inputMode: "numeric",
-                placeholder: "0",
-                value: relativeDraft[unit.key],
-                onChange: (e) => setRelativeDraft((prev) => ({
-                  ...prev,
-                  [unit.key]: e.target.value
-                })),
-                className: "h-8 text-[12.5px]"
-              }
-            )
-          ] }, unit.key)) }) : /* @__PURE__ */ jsxs52(Fragment16, { children: [
-            /* @__PURE__ */ jsx81(
-              Calendar,
-              {
-                mode: "range",
-                fullWidth: true,
-                className: "bg-transparent p-0",
-                month,
-                onMonthChange: setMonth,
-                startMonth: minDate,
-                endMonth: maxDate,
-                disabled: [
-                  ...minDate ? [{ before: minDate }] : [],
-                  ...maxDate ? [{ after: maxDate }] : []
-                ],
-                selected: {
-                  from: fromRangeKey(draft.from),
-                  to: fromRangeKey(draft.to)
-                },
-                onSelect: (range) => setDraft({
-                  from: range?.from ? toRangeKey(range.from) : "",
-                  to: range?.to ? toRangeKey(range.to) : ""
-                })
-              }
+        /* @__PURE__ */ jsxs52(
+          "div",
+          {
+            className: cn(
+              "space-y-3 p-3",
+              // The calendar keeps its 296px; antd's time columns sit beside it.
+              withTime ? "w-[31.5rem]" : "w-80"
             ),
-            /* @__PURE__ */ jsx81("p", { className: "text-[11px] text-muted-foreground", children: isComplete ? draft.from === draft.to ? rangeDayLabel(draft.from) : `${rangeDayLabel(draft.from)} \u2013 ${rangeDayLabel(draft.to)}` : isPartial ? "Pick the other end of the range." : "Pick a start and an end date." }),
-            outOfRange && outOfRangeHint ? /* @__PURE__ */ jsx81("p", { className: "text-[11px] text-destructive", children: outOfRangeHint }) : null
-          ] })
-        ] }),
+            children: [
+              supportsRelative ? /* @__PURE__ */ jsx81(
+                Tabs,
+                {
+                  value: mode,
+                  onValueChange: (v) => setMode(v),
+                  children: /* @__PURE__ */ jsxs52(TabsList, { className: "w-full", children: [
+                    /* @__PURE__ */ jsx81(TabsTrigger, { value: "absolute", className: "flex-1", children: "Date range" }),
+                    /* @__PURE__ */ jsx81(TabsTrigger, { value: "relative", className: "flex-1", children: "Last\u2026" })
+                  ] })
+                }
+              ) : null,
+              isRelative ? /* @__PURE__ */ jsx81("div", { className: "grid grid-cols-2 gap-2", children: RELATIVE_UNITS.map((unit) => /* @__PURE__ */ jsxs52("label", { className: "space-y-1.5", children: [
+                /* @__PURE__ */ jsx81("span", { className: "text-[11px] font-medium text-muted-foreground", children: unit.label }),
+                /* @__PURE__ */ jsx81(
+                  Input,
+                  {
+                    type: "number",
+                    min: 0,
+                    inputMode: "numeric",
+                    placeholder: "0",
+                    value: relativeDraft[unit.key],
+                    onChange: (e) => setRelativeDraft((prev) => ({
+                      ...prev,
+                      [unit.key]: e.target.value
+                    })),
+                    className: "h-8 text-[12.5px]"
+                  }
+                )
+              ] }, unit.key)) }) : /* @__PURE__ */ jsxs52(Fragment16, { children: [
+                withTime ? /* @__PURE__ */ jsxs52("div", { className: "grid grid-cols-2 gap-2", children: [
+                  /* @__PURE__ */ jsx81(
+                    RangeEndTab,
+                    {
+                      label: "Start",
+                      day: draft.from,
+                      time: draftFromTime,
+                      active: activeEnd === "from",
+                      onSelect: () => focusEnd("from")
+                    }
+                  ),
+                  /* @__PURE__ */ jsx81(
+                    RangeEndTab,
+                    {
+                      label: "End",
+                      day: draft.to,
+                      time: draftToTime,
+                      active: activeEnd === "to",
+                      onSelect: () => focusEnd("to")
+                    }
+                  )
+                ] }) : null,
+                /* @__PURE__ */ jsxs52("div", { className: "flex items-start gap-2", children: [
+                  /* @__PURE__ */ jsx81("div", { className: "w-[296px] shrink-0", children: /* @__PURE__ */ jsx81(
+                    Calendar,
+                    {
+                      mode: "range",
+                      fullWidth: true,
+                      className: "bg-transparent p-0",
+                      month,
+                      onMonthChange: setMonth,
+                      startMonth: minDate,
+                      endMonth: maxDate,
+                      disabled: [
+                        ...minDate ? [{ before: minDate }] : [],
+                        ...maxDate ? [{ after: maxDate }] : []
+                      ],
+                      selected: {
+                        from: fromRangeKey(draft.from),
+                        to: fromRangeKey(draft.to)
+                      },
+                      onSelect: (_range, day) => pickDay(toRangeKey(day))
+                    }
+                  ) }),
+                  withTime ? /* @__PURE__ */ jsx81("div", { className: "flex self-stretch", children: (() => {
+                    const clock = activeEnd === "from" ? draftFromTime : draftToTime;
+                    const { h, m } = clockParts(clock);
+                    const setClock = (nh, nm) => {
+                      const next = `${pad22(nh)}:${pad22(nm)}`;
+                      setDraft(
+                        (prev) => activeEnd === "from" ? { ...prev, fromTime: next } : { ...prev, toTime: next }
+                      );
+                    };
+                    const pm = h >= 12;
+                    return /* @__PURE__ */ jsxs52(Fragment16, { children: [
+                      /* @__PURE__ */ jsx81(
+                        TimeColumn,
+                        {
+                          label: "Hr",
+                          items: HOUR_ITEMS,
+                          selected: h % 12,
+                          render: (x) => pad22(x === 0 ? 12 : x),
+                          onSelect: (x) => setClock(pm ? x + 12 : x, m),
+                          height: RANGE_TIME_COL_H,
+                          tone: "subtle"
+                        }
+                      ),
+                      /* @__PURE__ */ jsx81(
+                        TimeColumn,
+                        {
+                          label: "Min",
+                          items: MINUTE_ITEMS,
+                          selected: m,
+                          render: pad22,
+                          onSelect: (x) => setClock(h, x),
+                          height: RANGE_TIME_COL_H,
+                          tone: "subtle"
+                        }
+                      ),
+                      /* @__PURE__ */ jsx81(
+                        TimeColumn,
+                        {
+                          label: "AM/PM",
+                          items: ["AM", "PM"],
+                          selected: pm ? "PM" : "AM",
+                          onSelect: (x) => setClock(h % 12 + (x === "PM" ? 12 : 0), m),
+                          height: RANGE_TIME_COL_H,
+                          tone: "subtle"
+                        }
+                      )
+                    ] });
+                  })() }) : null
+                ] }),
+                withTime ? null : /* @__PURE__ */ jsx81("p", { className: "text-[11px] text-muted-foreground", children: isComplete ? draft.from === draft.to ? rangeDayLabel(draft.from) : `${rangeDayLabel(draft.from)} \u2013 ${rangeDayLabel(draft.to)}` : isPartial ? "Pick the other end of the range." : "Pick a start and an end date." }),
+                clocksInvalid ? /* @__PURE__ */ jsx81("p", { className: "text-[11px] text-destructive", children: "The end time must be after the start time." }) : null,
+                outOfRange && outOfRangeHint ? /* @__PURE__ */ jsx81("p", { className: "text-[11px] text-destructive", children: outOfRangeHint }) : null
+              ] })
+            ]
+          }
+        ),
         /* @__PURE__ */ jsx81(
           FilterChipActions,
           {
-            onClear: () => commit(emptyRange, EMPTY_RELATIVE_RANGE),
+            onClear: () => {
+              onChange(emptyRange);
+              onRelativeChange?.(EMPTY_RELATIVE_RANGE);
+              setDraft(emptyRange);
+              setRelativeDraft(EMPTY_RELATIVE_RANGE);
+              focusEnd("from");
+            },
             clearDisabled: !draft.from && !draft.to && !hasRelativeRange(relativeDraft) && !value.from && !value.to && !relativeLabel,
-            applyDisabled: isRelative ? !hasRelativeRange(relativeDraft) : !isComplete || outOfRange,
-            onApply: () => isRelative ? commit(emptyRange, relativeDraft) : commit(draft, EMPTY_RELATIVE_RANGE)
+            applyDisabled: isRelative ? !hasRelativeRange(relativeDraft) : !isComplete || outOfRange || clocksInvalid,
+            onApply: () => isRelative ? commit(emptyRange, relativeDraft) : commit(appliedDraft, EMPTY_RELATIVE_RANGE)
           }
         )
       ]
@@ -10105,7 +10314,6 @@ function TextFilterChip({
             onClear: () => {
               onChange("");
               setDraft("");
-              chip.onOpenChange(false);
             },
             clearDisabled: !draft && !value,
             onApply: apply
@@ -10171,7 +10379,6 @@ function NumberRangeFilterChip({
               const empty = { min: "", max: "" };
               onChange(empty);
               setDraft(empty);
-              chip.onOpenChange(false);
             },
             clearDisabled: !draft.min && !draft.max && !value.min && !value.max,
             applyDisabled: inverted,
@@ -10603,10 +10810,7 @@ function CalendarDateFilterChip({
         /* @__PURE__ */ jsx82(
           FilterChipActions,
           {
-            onClear: () => {
-              clear();
-              chip.onOpenChange(false);
-            },
+            onClear: clear,
             hideClear: !clearable,
             clearDisabled: !hasDraft && !isActive,
             applyDisabled: !hasDraft,
@@ -10688,6 +10892,8 @@ export {
   CountrySelect,
   CurrencyAmountInput,
   DAYS_SHORT,
+  DEFAULT_RANGE_FROM_TIME,
+  DEFAULT_RANGE_TO_TIME,
   DashboardAreaChartTemplate,
   DataCardList,
   DataTable,
