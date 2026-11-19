@@ -39,7 +39,6 @@ __export(index_exports, {
   Alert: () => Alert,
   AlertDescription: () => AlertDescription,
   AlertTitle: () => AlertTitle,
-  AttentionListTemplate: () => AttentionListTemplate,
   Avatar: () => Avatar,
   AvatarFallback: () => AvatarFallback,
   AvatarGroup: () => AvatarGroup,
@@ -74,14 +73,7 @@ __export(index_exports, {
   CardFooter: () => CardFooter,
   CardHeader: () => CardHeader,
   CardTitle: () => CardTitle,
-  CategoryBarChartTemplate: () => CategoryBarChartTemplate,
-  ChartContainer: () => ChartContainer,
-  ChartLegend: () => ChartLegend,
-  ChartLegendContent: () => ChartLegendContent,
   ChartSkeleton: () => ChartSkeleton,
-  ChartStyle: () => ChartStyle,
-  ChartTooltip: () => ChartTooltip,
-  ChartTooltipContent: () => ChartTooltipContent,
   Checkbox: () => Checkbox,
   CheckboxSelect: () => CheckboxSelect,
   CheckboxTree: () => CheckboxTree,
@@ -103,7 +95,6 @@ __export(index_exports, {
   DAYS_SHORT: () => DAYS_SHORT,
   DEFAULT_RANGE_FROM_TIME: () => DEFAULT_RANGE_FROM_TIME,
   DEFAULT_RANGE_TO_TIME: () => DEFAULT_RANGE_TO_TIME,
-  DashboardAreaChartTemplate: () => DashboardAreaChartTemplate,
   DataCardList: () => DataCardList,
   DataTable: () => DataTable,
   DataTableCard: () => DataTableCard,
@@ -170,7 +161,6 @@ __export(index_exports, {
   FormItem: () => FormItem,
   FormLabel: () => FormLabel,
   Grid: () => Grid,
-  GroupedBarChartTemplate: () => GroupedBarChartTemplate,
   Heading: () => Heading,
   Hide: () => Hide,
   IconButton: () => IconButton,
@@ -194,9 +184,7 @@ __export(index_exports, {
   MenuDivider: () => MenuDivider,
   MenuItem: () => MenuItem,
   MenuSection: () => MenuSection,
-  MetricSparklineCard: () => MetricSparklineCard,
   MetricText: () => MetricText,
-  MiniSparklineChartCard: () => MiniSparklineChartCard,
   MonthRangeFilterChip: () => MonthRangeFilterChip,
   NumberRangeFilterChip: () => NumberRangeFilterChip,
   OtpInput: () => OtpInput,
@@ -218,7 +206,6 @@ __export(index_exports, {
   ProgressTracker: () => ProgressTracker,
   RadioGroup: () => RadioGroup,
   RadioGroupItem: () => RadioGroupItem,
-  RankedBarListTemplate: () => RankedBarListTemplate,
   RotatingSearchInput: () => RotatingSearchInput,
   ScrollArea: () => ScrollArea,
   ScrollBar: () => ScrollBar,
@@ -7307,648 +7294,18 @@ function DatePicker({ value, onChange, placeholder = "Select date", className, m
   ] });
 }
 
-// src/chart.tsx
-var React44 = __toESM(require("react"), 1);
-var RechartsPrimitive = __toESM(require("recharts"), 1);
-var import_jsx_runtime68 = require("react/jsx-runtime");
-var THEMES = { light: "", dark: ".dark" };
-var INITIAL_DIMENSION = { width: 320, height: 200 };
-var ChartContext = React44.createContext(null);
-function useChart() {
-  const context = React44.useContext(ChartContext);
-  if (!context) {
-    throw new Error("useChart must be used within a <ChartContainer />");
-  }
-  return context;
-}
-function ChartContainer({
-  id,
-  className,
-  children,
-  config,
-  initialDimension = INITIAL_DIMENSION,
-  ...props
-}) {
-  const uniqueId = React44.useId();
-  const chartId = `chart-${id ?? uniqueId.replace(/:/g, "")}`;
-  return /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(ChartContext.Provider, { value: { config }, children: /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(
-    "div",
-    {
-      "data-slot": "chart",
-      "data-chart": chartId,
-      className: cn(
-        "flex aspect-video justify-center text-xs [&_.recharts-cartesian-axis-tick_text]:fill-muted-foreground [&_.recharts-cartesian-grid_line[stroke='#ccc']]:stroke-border/50 [&_.recharts-curve.recharts-tooltip-cursor]:stroke-border [&_.recharts-dot[stroke='#fff']]:stroke-transparent [&_.recharts-layer]:outline-hidden [&_.recharts-polar-grid_[stroke='#ccc']]:stroke-border [&_.recharts-radial-bar-background-sector]:fill-muted [&_.recharts-rectangle.recharts-tooltip-cursor]:fill-muted [&_.recharts-reference-line_[stroke='#ccc']]:stroke-border [&_.recharts-sector]:outline-hidden [&_.recharts-sector[stroke='#fff']]:stroke-transparent [&_.recharts-surface]:outline-hidden",
-        className
-      ),
-      ...props,
-      children: [
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(ChartStyle, { id: chartId, config }),
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
-          RechartsPrimitive.ResponsiveContainer,
-          {
-            initialDimension,
-            children
-          }
-        )
-      ]
-    }
-  ) });
-}
-var ChartStyle = ({ id, config }) => {
-  const colorConfig = Object.entries(config).filter(
-    ([, config2]) => config2.theme ?? config2.color
-  );
-  if (!colorConfig.length) {
-    return null;
-  }
-  return /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
-    "style",
-    {
-      dangerouslySetInnerHTML: {
-        __html: Object.entries(THEMES).map(
-          ([theme, prefix]) => `
-${prefix} [data-chart=${id}] {
-${colorConfig.map(([key, itemConfig]) => {
-            const color = itemConfig.theme?.[theme] ?? itemConfig.color;
-            return color ? `  --color-${key}: ${color};` : null;
-          }).join("\n")}
-}
-`
-        ).join("\n")
-      }
-    }
-  );
-};
-var ChartTooltip = RechartsPrimitive.Tooltip;
-function ChartTooltipContent({
-  active,
-  payload,
-  className,
-  indicator = "dot",
-  hideLabel = false,
-  hideIndicator = false,
-  label,
-  labelFormatter,
-  labelClassName,
-  formatter,
-  color,
-  nameKey,
-  labelKey
-}) {
-  const { config } = useChart();
-  const tooltipLabel = React44.useMemo(() => {
-    if (hideLabel || !payload?.length) {
-      return null;
-    }
-    const [item] = payload;
-    const key = `${labelKey ?? item?.dataKey ?? item?.name ?? "value"}`;
-    const itemConfig = getPayloadConfigFromPayload(config, item, key);
-    const value = !labelKey && typeof label === "string" ? config[label]?.label ?? label : itemConfig?.label;
-    if (labelFormatter) {
-      return /* @__PURE__ */ (0, import_jsx_runtime68.jsx)("div", { className: cn("font-medium", labelClassName), children: labelFormatter(value, payload) });
-    }
-    if (!value) {
-      return null;
-    }
-    return /* @__PURE__ */ (0, import_jsx_runtime68.jsx)("div", { className: cn("font-medium", labelClassName), children: value });
-  }, [
-    label,
-    labelFormatter,
-    payload,
-    hideLabel,
-    labelClassName,
-    config,
-    labelKey
-  ]);
-  if (!active || !payload?.length) {
-    return null;
-  }
-  const nestLabel = payload.length === 1 && indicator !== "dot";
-  return /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(
-    "div",
-    {
-      className: cn(
-        "grid min-w-[8rem] items-start gap-1.5 rounded-lg border border-border/50 bg-background px-2.5 py-1.5 text-xs shadow-xl",
-        className
-      ),
-      children: [
-        !nestLabel ? tooltipLabel : null,
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)("div", { className: "grid gap-1.5", children: payload.filter((item) => item.type !== "none").map((item, index) => {
-          const key = `${nameKey ?? item.name ?? item.dataKey ?? "value"}`;
-          const itemConfig = getPayloadConfigFromPayload(config, item, key);
-          const indicatorColor = color ?? item.payload?.fill ?? item.color;
-          return /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
-            "div",
-            {
-              className: cn(
-                "flex w-full flex-wrap items-stretch gap-2 [&>svg]:h-2.5 [&>svg]:w-2.5 [&>svg]:text-muted-foreground",
-                indicator === "dot" && "items-center"
-              ),
-              children: formatter && item?.value !== void 0 && item.name ? formatter(item.value, item.name, item, index, item.payload) : /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(import_jsx_runtime68.Fragment, { children: [
-                itemConfig?.icon ? /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(itemConfig.icon, {}) : !hideIndicator && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
-                  "div",
-                  {
-                    className: cn(
-                      "shrink-0 rounded-[2px] border-(--color-border) bg-(--color-bg)",
-                      {
-                        "h-2.5 w-2.5": indicator === "dot",
-                        "w-1": indicator === "line",
-                        "w-0 border-[1.5px] border-dashed bg-transparent": indicator === "dashed",
-                        "my-0.5": nestLabel && indicator === "dashed"
-                      }
-                    ),
-                    style: {
-                      "--color-bg": indicatorColor,
-                      "--color-border": indicatorColor
-                    }
-                  }
-                ),
-                /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(
-                  "div",
-                  {
-                    className: cn(
-                      "flex flex-1 justify-between leading-none",
-                      nestLabel ? "items-end" : "items-center"
-                    ),
-                    children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)("div", { className: "grid gap-1.5", children: [
-                        nestLabel ? tooltipLabel : null,
-                        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)("span", { className: "text-muted-foreground", children: itemConfig?.label ?? item.name })
-                      ] }),
-                      item.value != null && /* @__PURE__ */ (0, import_jsx_runtime68.jsx)("span", { className: "font-mono font-medium text-foreground tabular-nums", children: typeof item.value === "number" ? item.value.toLocaleString() : String(item.value) })
-                    ]
-                  }
-                )
-              ] })
-            },
-            index
-          );
-        }) })
-      ]
-    }
-  );
-}
-var ChartLegend = RechartsPrimitive.Legend;
-function ChartLegendContent({
-  className,
-  hideIcon = false,
-  payload,
-  verticalAlign = "bottom",
-  nameKey
-}) {
-  const { config } = useChart();
-  if (!payload?.length) {
-    return null;
-  }
-  return /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
-    "div",
-    {
-      className: cn(
-        "flex items-center justify-center gap-4",
-        verticalAlign === "top" ? "pb-3" : "pt-3",
-        className
-      ),
-      children: payload.filter((item) => item.type !== "none").map((item, index) => {
-        const key = `${nameKey ?? item.dataKey ?? "value"}`;
-        const itemConfig = getPayloadConfigFromPayload(config, item, key);
-        return /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(
-          "div",
-          {
-            className: cn(
-              "flex items-center gap-1.5 [&>svg]:h-3 [&>svg]:w-3 [&>svg]:text-muted-foreground"
-            ),
-            children: [
-              itemConfig?.icon && !hideIcon ? /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(itemConfig.icon, {}) : /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
-                "div",
-                {
-                  className: "h-2 w-2 shrink-0 rounded-[2px]",
-                  style: {
-                    backgroundColor: item.color
-                  }
-                }
-              ),
-              itemConfig?.label
-            ]
-          },
-          index
-        );
-      })
-    }
-  );
-}
-function getPayloadConfigFromPayload(config, payload, key) {
-  if (typeof payload !== "object" || payload === null) {
-    return void 0;
-  }
-  const payloadPayload = "payload" in payload && typeof payload.payload === "object" && payload.payload !== null ? payload.payload : void 0;
-  let configLabelKey = key;
-  if (key in payload && typeof payload[key] === "string") {
-    configLabelKey = payload[key];
-  } else if (payloadPayload && key in payloadPayload && typeof payloadPayload[key] === "string") {
-    configLabelKey = payloadPayload[key];
-  }
-  return configLabelKey in config ? config[configLabelKey] : config[key];
-}
-
-// src/chart-templates.tsx
-var React45 = __toESM(require("react"), 1);
-var import_recharts = require("recharts");
-var import_lucide_react37 = require("lucide-react");
-var import_jsx_runtime69 = require("react/jsx-runtime");
-var gridStroke = "color-mix(in srgb, var(--border) 65%, transparent)";
-var tickFill = "var(--muted-foreground)";
-function MetricSparklineCard({
-  title,
-  icon,
-  value,
-  trend,
-  data,
-  accentColor = "var(--chart-1)",
-  className,
-  onInfoClick
-}) {
-  const gid = React45.useId().replace(/:/g, "");
-  const chartData = data.map((d) => ({ ...d, y: d.y }));
-  const trendCls = trend?.direction === "up" ? "text-emerald-600 dark:text-emerald-400" : trend?.direction === "down" ? "text-red-600 dark:text-red-400" : "text-muted-foreground";
-  const TrendIcon = trend?.direction === "up" ? import_lucide_react37.ArrowUpRight : trend?.direction === "down" ? import_lucide_react37.ArrowDownRight : import_lucide_react37.Minus;
-  return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(
-    "div",
-    {
-      className: cn(
-        "relative overflow-hidden rounded-xl border border-border bg-card p-5 text-card-foreground",
-        elevation.surface,
-        className
-      ),
-      children: [
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: "flex items-start justify-between gap-2", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: "flex min-w-0 items-center gap-2", children: [
-            icon ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("span", { className: "flex shrink-0 text-muted-foreground [&_svg]:size-4", children: icon }) : null,
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("span", { className: "truncate text-sm font-semibold text-foreground", children: title })
-          ] }),
-          onInfoClick ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-            "button",
-            {
-              type: "button",
-              onClick: onInfoClick,
-              className: "shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-              "aria-label": "More info",
-              children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_lucide_react37.Info, { className: "size-3.5" })
-            }
-          ) : null
-        ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "mt-3 text-2xl font-semibold tabular-nums tracking-tight text-foreground", children: value }),
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "pointer-events-none absolute bottom-3 right-3 h-14 w-[46%] max-w-[9rem] opacity-95", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(import_recharts.AreaChart, { data: chartData, margin: { top: 4, right: 0, left: 0, bottom: 0 }, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("defs", { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("linearGradient", { id: gid, x1: "0", y1: "0", x2: "0", y2: "1", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("stop", { offset: "0%", stopColor: accentColor, stopOpacity: 0.35 }),
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("stop", { offset: "100%", stopColor: accentColor, stopOpacity: 0 })
-          ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-            import_recharts.Area,
-            {
-              type: "monotone",
-              dataKey: "y",
-              stroke: accentColor,
-              strokeWidth: 2,
-              fill: `url(#${gid})`,
-              isAnimationActive: false
-            }
-          )
-        ] }) }) }),
-        trend ? /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: cn("mt-10 flex items-center gap-1 text-xs font-medium", trendCls), children: [
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(TrendIcon, { className: "size-3.5 shrink-0", "aria-hidden": true }),
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("span", { children: trend.label })
-        ] }) : /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "mt-10" })
-      ]
-    }
-  );
-}
-function DashboardAreaChartTemplate({
-  title,
-  tabs,
-  activeTabId,
-  onTabChange,
-  headline,
-  delta,
-  data,
-  xKey,
-  areaKey,
-  compareLineKey,
-  height = 220,
-  formatYAxis = (v) => v >= 1e6 ? `${(v / 1e6).toFixed(1)}L` : v >= 1e3 ? `${(v / 1e3).toFixed(0)}K` : `${v}`,
-  footer,
-  className
-}) {
-  const areaGid = React45.useId().replace(/:/g, "");
-  return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: cn("rounded-xl border border-border bg-card text-card-foreground", elevation.surface, className), children: [
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: "flex flex-col gap-4 border-b border-border px-5 pt-4 pb-3 sm:flex-row sm:items-start sm:justify-between", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("h3", { className: "text-sm font-semibold text-foreground", children: title }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "flex flex-wrap gap-1 rounded-lg border border-border bg-muted/30 p-0.5", children: tabs.map((t) => /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-        "button",
-        {
-          type: "button",
-          onClick: () => onTabChange(t.id),
-          className: cn(
-            "rounded-md px-2.5 py-1 text-[11px] font-medium transition-colors",
-            activeTabId === t.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-          ),
-          children: t.label
-        },
-        t.id
-      )) })
-    ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: "px-5 pt-4", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "text-2xl font-semibold tabular-nums tracking-tight text-foreground", children: headline }),
-      delta ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "mt-1 text-sm", children: delta }) : null
-    ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "px-3 pb-2 pt-2", style: { height }, children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(import_recharts.AreaChart, { data, margin: { top: 8, right: 12, left: 0, bottom: 0 }, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("defs", { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("linearGradient", { id: areaGid, x1: "0", y1: "0", x2: "0", y2: "1", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("stop", { offset: "0%", stopColor: "var(--chart-1)", stopOpacity: 0.35 }),
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("stop", { offset: "100%", stopColor: "var(--chart-1)", stopOpacity: 0.02 })
-      ] }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.CartesianGrid, { strokeDasharray: "3 3", stroke: gridStroke, vertical: false }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-        import_recharts.XAxis,
-        {
-          dataKey: xKey,
-          axisLine: false,
-          tickLine: false,
-          tick: { fontSize: 10, fill: tickFill },
-          interval: "preserveStartEnd"
-        }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-        import_recharts.YAxis,
-        {
-          axisLine: false,
-          tickLine: false,
-          tick: { fontSize: 10, fill: tickFill },
-          tickFormatter: formatYAxis,
-          width: 44
-        }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-        import_recharts.Tooltip,
-        {
-          contentStyle: {
-            borderRadius: 10,
-            border: "1px solid var(--border)",
-            fontSize: 12,
-            background: "var(--popover)",
-            color: "var(--popover-foreground)"
-          }
-        }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-        import_recharts.Area,
-        {
-          type: "monotone",
-          dataKey: areaKey,
-          stroke: "var(--chart-1)",
-          strokeWidth: 2,
-          fill: `url(#${areaGid})`
-        }
-      ),
-      compareLineKey ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-        import_recharts.Line,
-        {
-          type: "monotone",
-          dataKey: compareLineKey,
-          stroke: "var(--muted-foreground)",
-          strokeWidth: 1.5,
-          strokeDasharray: "4 4",
-          dot: false
-        }
-      ) : null
-    ] }) }) }),
-    footer ? /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(import_jsx_runtime69.Fragment, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Separator, {}),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "px-5 py-3", children: footer })
-    ] }) : null
-  ] });
-}
-function GroupedBarChartTemplate({
-  title,
-  subtitle,
-  data,
-  xKey,
-  series,
-  height = 200,
-  formatYAxis = (v) => v >= 1e6 ? `${(v / 1e6).toFixed(1)}M` : v >= 1e3 ? `${(v / 1e3).toFixed(0)}K` : `${v}`,
-  className
-}) {
-  return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground", elevation.surface, className), children: [
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: "mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("h3", { className: "text-sm font-semibold text-foreground", children: title }),
-        subtitle ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("p", { className: "mt-0.5 text-xs text-muted-foreground", children: subtitle }) : null
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "flex flex-wrap items-center gap-4", children: series.map((s) => /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: "flex items-center gap-1.5", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "size-2.5 rounded-sm", style: { background: s.color } }),
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("span", { className: "text-[11px] font-medium text-muted-foreground", children: s.label })
-      ] }, s.key)) })
-    ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { style: { height }, children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(import_recharts.BarChart, { data, barCategoryGap: "22%", barGap: 4, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.CartesianGrid, { strokeDasharray: "3 3", stroke: gridStroke, vertical: false }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.XAxis, { dataKey: xKey, axisLine: false, tickLine: false, tick: { fontSize: 11, fill: tickFill } }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-        import_recharts.YAxis,
-        {
-          axisLine: false,
-          tickLine: false,
-          tick: { fontSize: 11, fill: tickFill },
-          tickFormatter: formatYAxis,
-          width: 40
-        }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-        import_recharts.Tooltip,
-        {
-          contentStyle: {
-            borderRadius: 10,
-            border: "1px solid var(--border)",
-            fontSize: 12,
-            background: "var(--popover)"
-          }
-        }
-      ),
-      series.map((s) => /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.Bar, { dataKey: s.key, name: s.label, fill: s.color, radius: [5, 5, 0, 0], maxBarSize: 36 }, s.key))
-    ] }) }) })
-  ] });
-}
-function RankedBarListTemplate({
-  title,
-  subtitle,
-  headerRight,
-  items,
-  barFrom = "var(--chart-1)",
-  barTo = "var(--chart-3)",
-  className
-}) {
-  return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground", elevation.surface, className), children: [
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: "mb-4 flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("h3", { className: "text-sm font-semibold text-foreground", children: title }),
-        subtitle ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("p", { className: "mt-0.5 text-xs text-muted-foreground", children: subtitle }) : null
-      ] }),
-      headerRight ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "shrink-0", children: headerRight }) : null
-    ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("ul", { className: "space-y-3", children: items.map((row) => /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("li", { className: "flex items-center gap-3 text-sm", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: "flex min-w-0 flex-1 items-center gap-2", children: [
-        row.leading ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("span", { className: "shrink-0 text-muted-foreground", children: row.leading }) : null,
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("span", { className: "truncate font-medium text-foreground", children: row.label })
-      ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "relative hidden h-2 w-[min(40%,9rem)] overflow-hidden rounded-full bg-muted sm:block", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-        "div",
-        {
-          className: "absolute inset-y-0 left-0 rounded-full",
-          style: {
-            width: `${Math.min(100, Math.max(0, row.percent))}%`,
-            background: `linear-gradient(90deg, ${barFrom}, ${barTo})`
-          }
-        }
-      ) }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("span", { className: "w-14 shrink-0 text-right text-xs font-semibold tabular-nums text-foreground", children: row.value })
-    ] }, row.id)) })
-  ] });
-}
-function CategoryBarChartTemplate({
-  title,
-  subtitle,
-  data,
-  valueLabel = "Share",
-  barColor = "var(--chart-1)",
-  height = 200,
-  className
-}) {
-  const chartData = data.map((d) => ({ name: d.category, v: d.value }));
-  return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: cn("rounded-xl border border-border bg-card px-5 pt-4 pb-3 text-card-foreground", elevation.surface, className), children: [
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: "mb-3", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("h3", { className: "text-sm font-semibold text-foreground", children: title }),
-      subtitle ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("p", { className: "mt-0.5 text-xs text-muted-foreground", children: subtitle }) : null
-    ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { style: { height }, children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(import_recharts.BarChart, { data: chartData, barCategoryGap: "28%", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.CartesianGrid, { strokeDasharray: "3 3", stroke: gridStroke, vertical: false }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.XAxis, { dataKey: "name", axisLine: false, tickLine: false, tick: { fontSize: 11, fill: tickFill } }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-        import_recharts.YAxis,
-        {
-          axisLine: false,
-          tickLine: false,
-          tick: { fontSize: 11, fill: tickFill },
-          tickFormatter: (v) => `${v}%`,
-          domain: [0, "dataMax + 5"],
-          width: 36
-        }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-        import_recharts.Tooltip,
-        {
-          formatter: (value) => [`${value ?? 0}%`, valueLabel],
-          contentStyle: {
-            borderRadius: 10,
-            border: "1px solid var(--border)",
-            fontSize: 12,
-            background: "var(--popover)"
-          }
-        }
-      ),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.Bar, { dataKey: "v", fill: barColor, radius: [6, 6, 0, 0], maxBarSize: 48 })
-    ] }) }) })
-  ] });
-}
-function MiniSparklineChartCard({
-  title,
-  value,
-  data,
-  accentColor = "var(--chart-4)",
-  height = 100,
-  stats,
-  className
-}) {
-  const gid = React45.useId().replace(/:/g, "");
-  const hasCompare = data.some((d) => d.compare != null);
-  return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground", elevation.surface, className), children: [
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("h3", { className: "text-sm font-semibold text-foreground", children: title }),
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "mt-2 text-2xl font-semibold tabular-nums", children: value }),
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "mt-2", style: { height }, children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.ResponsiveContainer, { width: "100%", height: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(import_recharts.AreaChart, { data, margin: { top: 4, right: 8, left: 0, bottom: 0 }, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("defs", { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("linearGradient", { id: gid, x1: "0", y1: "0", x2: "0", y2: "1", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("stop", { offset: "0%", stopColor: accentColor, stopOpacity: 0.3 }),
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("stop", { offset: "100%", stopColor: accentColor, stopOpacity: 0 })
-      ] }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.XAxis, { dataKey: "x", hide: true }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.YAxis, { hide: true, domain: ["dataMin - 1", "dataMax + 1"] }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_recharts.Area, { type: "monotone", dataKey: "y", stroke: accentColor, strokeWidth: 2, fill: `url(#${gid})` }),
-      hasCompare ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
-        import_recharts.Line,
-        {
-          type: "monotone",
-          dataKey: "compare",
-          stroke: "var(--muted-foreground)",
-          strokeWidth: 1.5,
-          strokeDasharray: "4 4",
-          dot: false,
-          connectNulls: true
-        }
-      ) : null
-    ] }) }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { className: "mt-3 flex flex-wrap gap-x-4 gap-y-2 border-t border-border pt-3 text-[11px]", children: stats.map((s) => /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: "flex items-center gap-1.5", children: [
-      s.dotClassName ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("span", { className: cn("size-1.5 rounded-full", s.dotClassName) }) : null,
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("span", { className: "text-muted-foreground", children: s.label }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("span", { className: "font-semibold tabular-nums text-foreground", children: s.value })
-    ] }, s.label)) })
-  ] });
-}
-var toneCls = {
-  default: "text-foreground",
-  warning: "text-amber-600 dark:text-amber-400",
-  danger: "text-red-600 dark:text-red-400"
-};
-function AttentionListTemplate({ title, items, className }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: cn("rounded-xl border border-border bg-card p-5 text-card-foreground", elevation.surface, className), children: [
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("h3", { className: "text-sm font-semibold text-foreground", children: title }),
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("ul", { className: "mt-4 space-y-4", children: items.map((item) => /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(
-      "li",
-      {
-        className: "flex flex-col gap-3 border-b border-border/60 pb-4 last:border-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between",
-        children: [
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: "min-w-0 space-y-0.5", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("p", { className: "text-sm font-semibold text-foreground", children: item.title }),
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("p", { className: cn("text-lg font-semibold tabular-nums", toneCls[item.valueTone ?? "default"]), children: item.value }),
-            item.meta ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("p", { className: "text-xs text-muted-foreground", children: item.meta }) : null
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(
-            Button,
-            {
-              type: "button",
-              variant: "outline",
-              size: "md",
-              className: "shrink-0 gap-1.5",
-              onClick: item.onAction,
-              children: [
-                item.actionLabel,
-                /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_lucide_react37.ExternalLink, { className: "size-3.5 opacity-70", "aria-hidden": true })
-              ]
-            }
-          )
-        ]
-      },
-      item.id
-    )) })
-  ] });
-}
-
 // src/sonner.tsx
 var import_next_themes = require("next-themes");
 var import_sonner3 = require("sonner");
 var import_react16 = require("react");
 var import_sonner4 = require("sonner");
-var import_jsx_runtime70 = require("react/jsx-runtime");
+var import_jsx_runtime68 = require("react/jsx-runtime");
 function Toaster({ theme, ...props }) {
   const { resolvedTheme } = (0, import_next_themes.useTheme)();
   const [mounted, setMounted] = (0, import_react16.useState)(false);
   (0, import_react16.useEffect)(() => setMounted(true), []);
   const resolved = theme ?? (mounted && resolvedTheme === "dark" ? "dark" : "light");
-  return /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
     import_sonner3.Toaster,
     {
       theme: resolved,
@@ -7965,10 +7322,10 @@ function Toaster({ theme, ...props }) {
 }
 
 // src/inline-edit.tsx
-var React46 = __toESM(require("react"), 1);
-var import_lucide_react38 = require("lucide-react");
-var import_jsx_runtime71 = require("react/jsx-runtime");
-var InlineEdit = React46.forwardRef(
+var React44 = __toESM(require("react"), 1);
+var import_lucide_react37 = require("lucide-react");
+var import_jsx_runtime69 = require("react/jsx-runtime");
+var InlineEdit = React44.forwardRef(
   ({
     value,
     onConfirm,
@@ -7979,14 +7336,14 @@ var InlineEdit = React46.forwardRef(
     readClassName,
     inputClassName
   }, ref) => {
-    const [editing, setEditing] = React46.useState(false);
-    const [draft, setDraft] = React46.useState(value);
-    const [hovered, setHovered] = React46.useState(false);
-    const inputRef = React46.useRef(null);
-    React46.useEffect(() => {
+    const [editing, setEditing] = React44.useState(false);
+    const [draft, setDraft] = React44.useState(value);
+    const [hovered, setHovered] = React44.useState(false);
+    const inputRef = React44.useRef(null);
+    React44.useEffect(() => {
       if (!editing) setDraft(value);
     }, [value, editing]);
-    React46.useEffect(() => {
+    React44.useEffect(() => {
       if (editing) {
         inputRef.current?.focus();
         if (inputRef.current) {
@@ -7996,15 +7353,15 @@ var InlineEdit = React46.forwardRef(
         }
       }
     }, [editing]);
-    const confirm = React46.useCallback(() => {
+    const confirm = React44.useCallback(() => {
       setEditing(false);
       if (draft !== value) onConfirm(draft);
     }, [draft, value, onConfirm]);
-    const cancel = React46.useCallback(() => {
+    const cancel = React44.useCallback(() => {
       setEditing(false);
       setDraft(value);
     }, [value]);
-    const handleKeyDown = React46.useCallback(
+    const handleKeyDown = React44.useCallback(
       (e) => {
         if (e.key === "Enter" && !multiline) {
           e.preventDefault();
@@ -8016,7 +7373,7 @@ var InlineEdit = React46.forwardRef(
       },
       [confirm, cancel, multiline]
     );
-    const handleBlur = React46.useCallback(
+    const handleBlur = React44.useCallback(
       (e) => {
         if (showButtons) {
           const related = e.relatedTarget;
@@ -8042,8 +7399,8 @@ var InlineEdit = React46.forwardRef(
       "disabled:cursor-not-allowed disabled:opacity-50",
       inputClassName
     );
-    return /* @__PURE__ */ (0, import_jsx_runtime71.jsx)("div", { ref, "data-inline-edit": "", className: "relative inline-flex flex-col gap-1 max-w-full", children: editing ? /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(import_jsx_runtime71.Fragment, { children: [
-      multiline ? /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("div", { ref, "data-inline-edit": "", className: "relative inline-flex flex-col gap-1 max-w-full", children: editing ? /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(import_jsx_runtime69.Fragment, { children: [
+      multiline ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
         "textarea",
         {
           ref: inputRef,
@@ -8055,7 +7412,7 @@ var InlineEdit = React46.forwardRef(
           rows: 3,
           className: cn(sharedInputClass, "resize-none leading-relaxed py-1.5")
         }
-      ) : /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+      ) : /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
         "input",
         {
           ref: inputRef,
@@ -8068,8 +7425,8 @@ var InlineEdit = React46.forwardRef(
           className: sharedInputClass
         }
       ),
-      showButtons && /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)("div", { className: "flex items-center gap-1", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+      showButtons && /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)("div", { className: "flex items-center gap-1", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
           "button",
           {
             type: "button",
@@ -8084,10 +7441,10 @@ var InlineEdit = React46.forwardRef(
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
             ),
             "aria-label": "Confirm",
-            children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(import_lucide_react38.Check, { className: "size-3.5" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_lucide_react37.Check, { className: "size-3.5" })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
           "button",
           {
             type: "button",
@@ -8102,11 +7459,11 @@ var InlineEdit = React46.forwardRef(
               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring/35"
             ),
             "aria-label": "Cancel",
-            children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(import_lucide_react38.X, { className: "size-3.5" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(import_lucide_react37.X, { className: "size-3.5" })
           }
         )
       ] })
-    ] }) : /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(
+    ] }) : /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(
       "span",
       {
         role: "button",
@@ -8129,9 +7486,9 @@ var InlineEdit = React46.forwardRef(
           readClassName
         ),
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)("span", { className: cn(!value && "text-muted-foreground"), children: value || placeholder }),
-          !disabled && /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
-            import_lucide_react38.Pencil,
+          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)("span", { className: cn(!value && "text-muted-foreground"), children: value || placeholder }),
+          !disabled && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
+            import_lucide_react37.Pencil,
             {
               className: cn(
                 "size-3.5 shrink-0 text-muted-foreground transition-opacity duration-pg-fast ease-pg-standard",
@@ -8148,10 +7505,10 @@ var InlineEdit = React46.forwardRef(
 InlineEdit.displayName = "InlineEdit";
 
 // src/inline-dialog.tsx
-var React47 = __toESM(require("react"), 1);
+var React45 = __toESM(require("react"), 1);
 var PopoverPrimitive4 = __toESM(require("@radix-ui/react-popover"), 1);
-var import_lucide_react39 = require("lucide-react");
-var import_jsx_runtime72 = require("react/jsx-runtime");
+var import_lucide_react38 = require("lucide-react");
+var import_jsx_runtime70 = require("react/jsx-runtime");
 var InlineDialog = PopoverPrimitive4.Root;
 InlineDialog.displayName = "InlineDialog";
 var InlineDialogTrigger = PopoverPrimitive4.Trigger;
@@ -8185,7 +7542,7 @@ function getArrowClasses(side) {
       );
   }
 }
-var InlineDialogContent = React47.forwardRef(
+var InlineDialogContent = React45.forwardRef(
   ({
     className,
     side = "bottom",
@@ -8193,7 +7550,7 @@ var InlineDialogContent = React47.forwardRef(
     hideClose = false,
     children,
     ...props
-  }, ref) => /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(PopoverPrimitive4.Portal, { children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(ScrollLockTakeover, { children: /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(
+  }, ref) => /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(PopoverPrimitive4.Portal, { children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(ScrollLockTakeover, { children: /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(
     PopoverPrimitive4.Content,
     {
       ref,
@@ -8212,8 +7569,8 @@ var InlineDialogContent = React47.forwardRef(
       ),
       ...props,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)("span", { className: getArrowClasses(side), "aria-hidden": "true" }),
-        !hideClose && /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)("span", { className: getArrowClasses(side), "aria-hidden": "true" }),
+        !hideClose && /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
           PopoverPrimitive4.Close,
           {
             className: cn(
@@ -8225,7 +7582,7 @@ var InlineDialogContent = React47.forwardRef(
               "disabled:cursor-not-allowed disabled:opacity-50"
             ),
             "aria-label": "Close",
-            children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(import_lucide_react39.X, { className: "size-3.5" })
+            children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(import_lucide_react38.X, { className: "size-3.5" })
           }
         ),
         children
@@ -8236,9 +7593,9 @@ var InlineDialogContent = React47.forwardRef(
 InlineDialogContent.displayName = "InlineDialogContent";
 
 // src/flag.tsx
-var React48 = __toESM(require("react"), 1);
-var import_lucide_react40 = require("lucide-react");
-var import_jsx_runtime73 = require("react/jsx-runtime");
+var React46 = __toESM(require("react"), 1);
+var import_lucide_react39 = require("lucide-react");
+var import_jsx_runtime71 = require("react/jsx-runtime");
 var DEFAULT_AUTO_DISMISS = 8e3;
 var variantBorder = {
   info: "border-l-blue-500",
@@ -8259,12 +7616,12 @@ var variantIconColor = {
   error: "text-red-500"
 };
 var defaultIcons = {
-  info: import_lucide_react40.Info,
-  success: import_lucide_react40.CheckCircle2,
-  warning: import_lucide_react40.AlertTriangle,
-  error: import_lucide_react40.XCircle
+  info: import_lucide_react39.Info,
+  success: import_lucide_react39.CheckCircle2,
+  warning: import_lucide_react39.AlertTriangle,
+  error: import_lucide_react39.XCircle
 };
-var Flag = React48.forwardRef(
+var Flag = React46.forwardRef(
   ({
     className,
     title,
@@ -8276,13 +7633,13 @@ var Flag = React48.forwardRef(
     actions,
     ...props
   }, ref) => {
-    const [progress, setProgress] = React48.useState(100);
-    const pausedRef = React48.useRef(false);
-    const startTimeRef = React48.useRef(null);
-    const elapsedRef = React48.useRef(0);
-    const rafRef = React48.useRef(null);
+    const [progress, setProgress] = React46.useState(100);
+    const pausedRef = React46.useRef(false);
+    const startTimeRef = React46.useRef(null);
+    const elapsedRef = React46.useRef(0);
+    const rafRef = React46.useRef(null);
     const duration = autoDismiss === false ? null : autoDismiss;
-    React48.useEffect(() => {
+    React46.useEffect(() => {
       if (duration === null) return;
       const tick = (now) => {
         if (pausedRef.current) {
@@ -8315,8 +7672,8 @@ var Flag = React48.forwardRef(
       startTimeRef.current = null;
     };
     const DefaultIcon = defaultIcons[variant];
-    const renderedIcon = icon ?? /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(DefaultIcon, { className: cn("size-4 shrink-0 mt-0.5", variantIconColor[variant]), "aria-hidden": true });
-    return /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(
+    const renderedIcon = icon ?? /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(DefaultIcon, { className: cn("size-4 shrink-0 mt-0.5", variantIconColor[variant]), "aria-hidden": true });
+    return /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(
       "div",
       {
         ref,
@@ -8334,12 +7691,12 @@ var Flag = React48.forwardRef(
         ),
         ...props,
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)("div", { className: "flex gap-3 p-4 pr-10", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)("div", { className: "flex gap-3 p-4 pr-10", children: [
             renderedIcon,
-            /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)("div", { className: "flex-1 min-w-0", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("p", { className: "text-sm font-semibold text-card-foreground leading-snug", children: title }),
-              description && /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("p", { className: "mt-1 text-sm text-muted-foreground leading-relaxed", children: description }),
-              actions && actions.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("div", { className: "mt-3 flex flex-wrap gap-2", children: actions.map((action) => /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)("div", { className: "flex-1 min-w-0", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime71.jsx)("p", { className: "text-sm font-semibold text-card-foreground leading-snug", children: title }),
+              description && /* @__PURE__ */ (0, import_jsx_runtime71.jsx)("p", { className: "mt-1 text-sm text-muted-foreground leading-relaxed", children: description }),
+              actions && actions.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime71.jsx)("div", { className: "mt-3 flex flex-wrap gap-2", children: actions.map((action) => /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
                 "button",
                 {
                   type: "button",
@@ -8351,17 +7708,17 @@ var Flag = React48.forwardRef(
               )) })
             ] })
           ] }),
-          onDismiss && /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+          onDismiss && /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
             "button",
             {
               type: "button",
               "aria-label": "Dismiss notification",
               onClick: onDismiss,
               className: "absolute top-3 right-3 rounded p-0.5 text-muted-foreground hover:text-foreground hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-              children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(import_lucide_react40.X, { className: "size-3.5", "aria-hidden": true })
+              children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(import_lucide_react39.X, { className: "size-3.5", "aria-hidden": true })
             }
           ),
-          duration !== null && /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("div", { className: "absolute bottom-0 left-0 right-0 h-0.5 bg-muted", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+          duration !== null && /* @__PURE__ */ (0, import_jsx_runtime71.jsx)("div", { className: "absolute bottom-0 left-0 right-0 h-0.5 bg-muted", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
             "div",
             {
               className: cn("h-full transition-none", variantProgressBar[variant]),
@@ -8380,8 +7737,8 @@ var positionClasses = {
   "top-right": "top-4 right-4 flex-col",
   "top-left": "top-4 left-4 flex-col"
 };
-var FlagGroup = React48.forwardRef(
-  ({ className, position = "bottom-right", children, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+var FlagGroup = React46.forwardRef(
+  ({ className, position = "bottom-right", children, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
     "div",
     {
       ref,
@@ -8397,11 +7754,11 @@ var FlagGroup = React48.forwardRef(
 );
 FlagGroup.displayName = "FlagGroup";
 function useFlagGroup() {
-  const [flags, setFlags] = React48.useState([]);
-  const removeFlag = React48.useCallback((id) => {
+  const [flags, setFlags] = React46.useState([]);
+  const removeFlag = React46.useCallback((id) => {
     setFlags((prev) => prev.filter((f) => f.id !== id));
   }, []);
-  const addFlag = React48.useCallback(
+  const addFlag = React46.useCallback(
     (flag) => {
       const id = flag.id ?? `flag-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       setFlags((prev) => [...prev, { ...flag, id, onDismiss: () => removeFlag(id) }]);
@@ -8409,15 +7766,15 @@ function useFlagGroup() {
     },
     [removeFlag]
   );
-  const clearAll = React48.useCallback(() => {
+  const clearAll = React46.useCallback(() => {
     setFlags([]);
   }, []);
   return { flags, addFlag, removeFlag, clearAll };
 }
 
 // src/responsive.tsx
-var React49 = __toESM(require("react"), 1);
-var import_jsx_runtime74 = require("react/jsx-runtime");
+var React47 = __toESM(require("react"), 1);
+var import_jsx_runtime72 = require("react/jsx-runtime");
 var BREAKPOINT_ORDER = ["sm", "md", "lg", "xl", "2xl"];
 var BREAKPOINT_MIN_WIDTH = {
   sm: 640,
@@ -8478,7 +7835,7 @@ var HIDDEN_ABOVE_CLASS = {
   xl: "xl:hidden",
   "2xl": "2xl:hidden"
 };
-var Show = React49.forwardRef(
+var Show = React47.forwardRef(
   ({
     above,
     below,
@@ -8496,7 +7853,7 @@ var Show = React49.forwardRef(
     } else {
       visibilityClass = "";
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
       Tag2,
       {
         ref,
@@ -8508,7 +7865,7 @@ var Show = React49.forwardRef(
   }
 );
 Show.displayName = "Show";
-var Hide = React49.forwardRef(
+var Hide = React47.forwardRef(
   ({
     above,
     below,
@@ -8526,7 +7883,7 @@ var Hide = React49.forwardRef(
     } else {
       visibilityClass = "";
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
       Tag2,
       {
         ref,
@@ -8549,10 +7906,10 @@ function getActiveBreakpoint() {
   return null;
 }
 function useBreakpoint() {
-  const [breakpoint, setBreakpoint] = React49.useState(
+  const [breakpoint, setBreakpoint] = React47.useState(
     () => getActiveBreakpoint()
   );
-  React49.useEffect(() => {
+  React47.useEffect(() => {
     if (typeof window === "undefined") return;
     const queries = BREAKPOINT_ORDER.map(
       (bp) => window.matchMedia(`(min-width: ${BREAKPOINT_MIN_WIDTH[bp]}px)`)
@@ -8566,14 +7923,14 @@ function useBreakpoint() {
       queries.forEach((mql) => mql.removeEventListener("change", handleChange));
     };
   }, []);
-  const isAbove = React49.useCallback(
+  const isAbove = React47.useCallback(
     (bp) => {
       if (breakpoint === null) return false;
       return bpIndex(breakpoint) >= bpIndex(bp);
     },
     [breakpoint]
   );
-  const isBelow = React49.useCallback(
+  const isBelow = React47.useCallback(
     (bp) => {
       if (breakpoint === null) return true;
       return bpIndex(breakpoint) < bpIndex(bp);
@@ -8591,10 +7948,10 @@ function useBreakpoint() {
 }
 
 // src/country-select.tsx
-var React50 = __toESM(require("react"), 1);
+var React48 = __toESM(require("react"), 1);
 var PopoverPrimitive5 = __toESM(require("@radix-ui/react-popover"), 1);
-var import_lucide_react41 = require("lucide-react");
-var import_jsx_runtime75 = require("react/jsx-runtime");
+var import_lucide_react40 = require("lucide-react");
+var import_jsx_runtime73 = require("react/jsx-runtime");
 var COUNTRIES = [
   { code: "US", name: "United States", flag: "\u{1F1FA}\u{1F1F8}", dialCode: "+1" },
   { code: "GB", name: "United Kingdom", flag: "\u{1F1EC}\u{1F1E7}", dialCode: "+44" },
@@ -8627,7 +7984,7 @@ var COUNTRIES = [
   { code: "ID", name: "Indonesia", flag: "\u{1F1EE}\u{1F1E9}", dialCode: "+62" },
   { code: "TH", name: "Thailand", flag: "\u{1F1F9}\u{1F1ED}", dialCode: "+66" }
 ];
-var CountrySelect = React50.forwardRef(
+var CountrySelect = React48.forwardRef(
   ({
     value,
     onValueChange,
@@ -8636,21 +7993,21 @@ var CountrySelect = React50.forwardRef(
     disabled = false,
     className
   }, ref) => {
-    const [open, setOpen] = React50.useState(false);
-    const [search, setSearch] = React50.useState("");
-    const searchRef = React50.useRef(null);
-    const selected = React50.useMemo(
+    const [open, setOpen] = React48.useState(false);
+    const [search, setSearch] = React48.useState("");
+    const searchRef = React48.useRef(null);
+    const selected = React48.useMemo(
       () => COUNTRIES.find((c) => c.code === value),
       [value]
     );
-    const filtered = React50.useMemo(() => {
+    const filtered = React48.useMemo(() => {
       const q = search.trim().toLowerCase();
       if (!q) return COUNTRIES;
       return COUNTRIES.filter(
         (c) => c.name.toLowerCase().includes(q) || c.code.toLowerCase().includes(q) || c.dialCode.includes(q)
       );
     }, [search]);
-    React50.useEffect(() => {
+    React48.useEffect(() => {
       if (open) {
         const id = setTimeout(() => searchRef.current?.focus(), 0);
         return () => clearTimeout(id);
@@ -8658,8 +8015,8 @@ var CountrySelect = React50.forwardRef(
         setSearch("");
       }
     }, [open]);
-    return /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(PopoverPrimitive5.Root, { open, onOpenChange: setOpen, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(PopoverPrimitive5.Trigger, { asChild: true, children: /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(PopoverPrimitive5.Root, { open, onOpenChange: setOpen, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(PopoverPrimitive5.Trigger, { asChild: true, children: /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(
         "button",
         {
           ref,
@@ -8677,13 +8034,13 @@ var CountrySelect = React50.forwardRef(
             className
           ),
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("span", { className: "flex min-w-0 items-center gap-2.5", children: selected ? /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(import_jsx_runtime75.Fragment, { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("span", { className: "text-base leading-none", "aria-hidden": "true", children: selected.flag }),
-              /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("span", { className: "truncate", children: selected.name }),
-              showDialCode && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("span", { className: "shrink-0 text-muted-foreground", children: selected.dialCode })
-            ] }) : /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("span", { children: placeholder }) }),
-            /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
-              import_lucide_react41.ChevronDown,
+            /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("span", { className: "flex min-w-0 items-center gap-2.5", children: selected ? /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(import_jsx_runtime73.Fragment, { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("span", { className: "text-base leading-none", "aria-hidden": "true", children: selected.flag }),
+              /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("span", { className: "truncate", children: selected.name }),
+              showDialCode && /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("span", { className: "shrink-0 text-muted-foreground", children: selected.dialCode })
+            ] }) : /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("span", { children: placeholder }) }),
+            /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+              import_lucide_react40.ChevronDown,
               {
                 className: cn(
                   "h-4 w-4 shrink-0 text-muted-foreground opacity-70 transition-transform duration-pg-fast ease-pg-standard",
@@ -8695,7 +8052,7 @@ var CountrySelect = React50.forwardRef(
           ]
         }
       ) }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(PopoverPrimitive5.Portal, { children: /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(ScrollLockTakeover, { children: /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(
+      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(PopoverPrimitive5.Portal, { children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(ScrollLockTakeover, { children: /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(
         PopoverPrimitive5.Content,
         {
           align: "start",
@@ -8707,9 +8064,9 @@ var CountrySelect = React50.forwardRef(
           ),
           onOpenAutoFocus: (e) => e.preventDefault(),
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)("div", { className: "flex items-center gap-2 border-b border-border px-3 py-2.5", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(import_lucide_react41.Search, { className: "h-4 w-4 shrink-0 text-muted-foreground", "aria-hidden": "true" }),
-              /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)("div", { className: "flex items-center gap-2 border-b border-border px-3 py-2.5", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(import_lucide_react40.Search, { className: "h-4 w-4 shrink-0 text-muted-foreground", "aria-hidden": "true" }),
+              /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
                 "input",
                 {
                   ref: searchRef,
@@ -8724,26 +8081,26 @@ var CountrySelect = React50.forwardRef(
                   "aria-label": "Search countries"
                 }
               ),
-              search && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
+              search && /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
                 "button",
                 {
                   type: "button",
                   onClick: () => setSearch(""),
                   className: "shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-pg-fast ease-pg-standard",
                   "aria-label": "Clear search",
-                  children: /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("svg", { width: "14", height: "14", viewBox: "0 0 14 14", fill: "none", "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("path", { d: "M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round" }) })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("svg", { width: "14", height: "14", viewBox: "0 0 14 14", fill: "none", "aria-hidden": "true", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("path", { d: "M10.5 3.5L3.5 10.5M3.5 3.5L10.5 10.5", stroke: "currentColor", strokeWidth: "1.5", strokeLinecap: "round" }) })
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
               "div",
               {
                 role: "listbox",
                 "aria-label": "Countries",
                 className: "max-h-64 overflow-y-auto p-1",
-                children: filtered.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("div", { className: "py-6 text-center text-sm text-muted-foreground", children: "No countries found" }) : filtered.map((country) => {
+                children: filtered.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("div", { className: "py-6 text-center text-sm text-muted-foreground", children: "No countries found" }) : filtered.map((country) => {
                   const isSelected = country.code === value;
-                  return /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(
+                  return /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(
                     "button",
                     {
                       role: "option",
@@ -8761,11 +8118,11 @@ var CountrySelect = React50.forwardRef(
                         isSelected && "bg-muted/60"
                       ),
                       children: [
-                        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("span", { className: "text-base leading-none", "aria-hidden": "true", children: country.flag }),
-                        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("span", { className: "flex-1 truncate text-foreground", children: country.name }),
-                        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("span", { className: "shrink-0 text-xs text-muted-foreground", children: country.dialCode }),
-                        isSelected && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
-                          import_lucide_react41.Check,
+                        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("span", { className: "text-base leading-none", "aria-hidden": "true", children: country.flag }),
+                        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("span", { className: "flex-1 truncate text-foreground", children: country.name }),
+                        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)("span", { className: "shrink-0 text-xs text-muted-foreground", children: country.dialCode }),
+                        isSelected && /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+                          import_lucide_react40.Check,
                           {
                             className: "h-3.5 w-3.5 shrink-0 text-primary",
                             "aria-hidden": "true"
@@ -8787,9 +8144,9 @@ var CountrySelect = React50.forwardRef(
 CountrySelect.displayName = "CountrySelect";
 
 // src/icon-button.tsx
-var import_lucide_react42 = require("lucide-react");
+var import_lucide_react41 = require("lucide-react");
 var import_react17 = require("react");
-var import_jsx_runtime76 = require("react/jsx-runtime");
+var import_jsx_runtime74 = require("react/jsx-runtime");
 var variantClasses4 = {
   primary: `bg-primary text-primary-foreground border border-primary ${elevation.control} hover:bg-[var(--primary-hover)]`,
   secondary: `bg-muted text-foreground border border-border ${elevation.control} hover:bg-muted/85 dark:bg-muted/35 dark:text-foreground dark:border-border dark:hover:bg-muted/55`,
@@ -8829,7 +8186,7 @@ var IconButton = (0, import_react17.forwardRef)(
     "aria-label": ariaLabel,
     ...props
   }, ref) => {
-    return /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(
       "button",
       {
         ref,
@@ -8847,7 +8204,7 @@ var IconButton = (0, import_react17.forwardRef)(
           className
         ),
         ...props,
-        children: isLoading ? /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(import_lucide_react42.Loader2, { className: cn("animate-spin", iconSizeClasses[size]) }) : children
+        children: isLoading ? /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(import_lucide_react41.Loader2, { className: cn("animate-spin", iconSizeClasses[size]) }) : children
       }
     );
   }
@@ -8855,11 +8212,11 @@ var IconButton = (0, import_react17.forwardRef)(
 IconButton.displayName = "IconButton";
 
 // src/time-picker.tsx
-var React51 = __toESM(require("react"), 1);
+var React49 = __toESM(require("react"), 1);
 var import_react_dom2 = require("react-dom");
 var import_react_remove_scroll3 = require("react-remove-scroll");
-var import_lucide_react43 = require("lucide-react");
-var import_jsx_runtime77 = require("react/jsx-runtime");
+var import_lucide_react42 = require("lucide-react");
+var import_jsx_runtime75 = require("react/jsx-runtime");
 function pad2(n) {
   return String(n).padStart(2, "0");
 }
@@ -8893,11 +8250,11 @@ function ScrollColumn({
   renderItem,
   getKey
 }) {
-  const containerRef = React51.useRef(null);
-  const debounceRef = React51.useRef(null);
-  const programmaticRef = React51.useRef(false);
+  const containerRef = React49.useRef(null);
+  const debounceRef = React49.useRef(null);
+  const programmaticRef = React49.useRef(false);
   const selectedIndex = items.findIndex((item) => getKey(item) === getKey(selected));
-  const scrollToIndex = React51.useCallback(
+  const scrollToIndex = React49.useCallback(
     (index, behavior = "smooth") => {
       const el = containerRef.current;
       if (!el) return;
@@ -8913,10 +8270,10 @@ function ScrollColumn({
     },
     []
   );
-  React51.useEffect(() => {
+  React49.useEffect(() => {
     if (selectedIndex >= 0) scrollToIndex(selectedIndex, "instant");
   }, []);
-  React51.useEffect(() => {
+  React49.useEffect(() => {
     if (selectedIndex >= 0) scrollToIndex(selectedIndex, "smooth");
   }, [selectedIndex]);
   function handleScroll() {
@@ -8931,8 +8288,8 @@ function ScrollColumn({
       scrollToIndex(clamped, "smooth");
     }, 80);
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)("div", { className: "relative flex flex-col items-center", style: { width: 64 }, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)("div", { className: "relative flex flex-col items-center", style: { width: 64 }, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
       "div",
       {
         className: "pointer-events-none absolute left-0 right-0 rounded-lg bg-primary/10",
@@ -8943,7 +8300,7 @@ function ScrollColumn({
         }
       }
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(
       "div",
       {
         ref: containerRef,
@@ -8956,10 +8313,10 @@ function ScrollColumn({
           msOverflowStyle: "none"
         },
         children: [
-          Array.from({ length: PAD }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime77.jsx)("div", { style: { height: ITEM_H } }, `pad-top-${i}`)),
+          Array.from({ length: PAD }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("div", { style: { height: ITEM_H } }, `pad-top-${i}`)),
           items.map((item) => {
             const isSelected = getKey(item) === getKey(selected);
-            return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+            return /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
               "div",
               {
                 onClick: () => {
@@ -8979,7 +8336,7 @@ function ScrollColumn({
               getKey(item)
             );
           }),
-          Array.from({ length: PAD }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime77.jsx)("div", { style: { height: ITEM_H } }, `pad-bot-${i}`))
+          Array.from({ length: PAD }).map((_, i) => /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("div", { style: { height: ITEM_H } }, `pad-bot-${i}`))
         ]
       }
     )
@@ -8987,7 +8344,7 @@ function ScrollColumn({
 }
 var PANEL_W = 224;
 var PANEL_H = 220;
-var TimePicker = React51.forwardRef(
+var TimePicker = React49.forwardRef(
   ({
     value,
     onValueChange,
@@ -8998,17 +8355,17 @@ var TimePicker = React51.forwardRef(
     className
   }, ref) => {
     const parsed = parseHHMM(value);
-    const [hour, setHour] = React51.useState(() => {
+    const [hour, setHour] = React49.useState(() => {
       if (!parsed) return use24Hour ? 0 : 12;
       if (use24Hour) return parsed.h;
       return parsed.h % 12 === 0 ? 12 : parsed.h % 12;
     });
-    const [minute, setMinute] = React51.useState(() => parsed?.m ?? 0);
-    const [period, setPeriod] = React51.useState(() => {
+    const [minute, setMinute] = React49.useState(() => parsed?.m ?? 0);
+    const [period, setPeriod] = React49.useState(() => {
       if (!parsed) return "AM";
       return parsed.h < 12 ? "AM" : "PM";
     });
-    React51.useEffect(() => {
+    React49.useEffect(() => {
       const p = parseHHMM(value);
       if (p) {
         setMinute(p.m);
@@ -9020,12 +8377,12 @@ var TimePicker = React51.forwardRef(
         }
       }
     }, [value]);
-    const [open, setOpen] = React51.useState(false);
-    const [panelPos, setPanelPos] = React51.useState({ top: 0, left: 0 });
-    const [mounted, setMounted] = React51.useState(false);
-    const triggerRef = React51.useRef(null);
-    const panelRef = React51.useRef(null);
-    React51.useEffect(() => {
+    const [open, setOpen] = React49.useState(false);
+    const [panelPos, setPanelPos] = React49.useState({ top: 0, left: 0 });
+    const [mounted, setMounted] = React49.useState(false);
+    const triggerRef = React49.useRef(null);
+    const panelRef = React49.useRef(null);
+    React49.useEffect(() => {
       setMounted(true);
     }, []);
     function openPanel() {
@@ -9046,7 +8403,7 @@ var TimePicker = React51.forwardRef(
         setOpen(true);
       });
     }
-    React51.useEffect(() => {
+    React49.useEffect(() => {
       if (!open) return;
       function handler(e) {
         const inTrigger = triggerRef.current?.contains(e.target);
@@ -9082,7 +8439,7 @@ var TimePicker = React51.forwardRef(
       e.stopPropagation();
       onValueChange("");
     }
-    const panel = open ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(import_react_remove_scroll3.RemoveScroll, { allowPinchZoom: true, children: /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(
+    const panel = open ? /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(import_react_remove_scroll3.RemoveScroll, { allowPinchZoom: true, children: /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(
       "div",
       {
         ref: panelRef,
@@ -9103,24 +8460,24 @@ var TimePicker = React51.forwardRef(
           pointerEvents: "auto"
         },
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)("div", { className: "flex items-center gap-1.5 border-b border-border px-4 py-2.5", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(import_lucide_react43.Clock, { className: "size-3.5 text-muted-foreground" }),
-            /* @__PURE__ */ (0, import_jsx_runtime77.jsx)("span", { className: "text-[13px] font-medium text-muted-foreground", children: value ? displayTime2(value, use24Hour) : "\u2014" })
+          /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)("div", { className: "flex items-center gap-1.5 border-b border-border px-4 py-2.5", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(import_lucide_react42.Clock, { className: "size-3.5 text-muted-foreground" }),
+            /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("span", { className: "text-[13px] font-medium text-muted-foreground", children: value ? displayTime2(value, use24Hour) : "\u2014" })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(
             "div",
             {
               className: "flex items-center justify-around px-2 pt-2 pb-0.5",
               style: { paddingLeft: 8, paddingRight: use24Hour ? 8 : 8 },
               children: [
-                /* @__PURE__ */ (0, import_jsx_runtime77.jsx)("span", { className: "w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: "Hr" }),
-                /* @__PURE__ */ (0, import_jsx_runtime77.jsx)("span", { className: "w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: "Min" }),
-                !use24Hour && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)("span", { className: "w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: "AM/PM" })
+                /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("span", { className: "w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: "Hr" }),
+                /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("span", { className: "w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: "Min" }),
+                !use24Hour && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("span", { className: "w-16 text-center text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70", children: "AM/PM" })
               ]
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)("div", { className: "flex items-center justify-around px-2 pb-3", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)("div", { className: "flex items-center justify-around px-2 pb-3", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
               ScrollColumn,
               {
                 items: hours,
@@ -9130,8 +8487,8 @@ var TimePicker = React51.forwardRef(
                 getKey: (h) => h
               }
             ),
-            /* @__PURE__ */ (0, import_jsx_runtime77.jsx)("div", { className: "text-[18px] font-light text-muted-foreground/50 pb-0.5", children: ":" }),
-            /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("div", { className: "text-[18px] font-light text-muted-foreground/50 pb-0.5", children: ":" }),
+            /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
               ScrollColumn,
               {
                 items: minutes,
@@ -9141,9 +8498,9 @@ var TimePicker = React51.forwardRef(
                 getKey: (m) => m
               }
             ),
-            !use24Hour && /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(import_jsx_runtime77.Fragment, { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime77.jsx)("div", { className: "w-px self-stretch bg-border mx-1" }),
-              /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+            !use24Hour && /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(import_jsx_runtime75.Fragment, { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("div", { className: "w-px self-stretch bg-border mx-1" }),
+              /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
                 ScrollColumn,
                 {
                   items: ["AM", "PM"],
@@ -9163,9 +8520,9 @@ var TimePicker = React51.forwardRef(
       if (typeof ref === "function") ref(el);
       else if (ref) ref.current = el;
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)("div", { className: cn("relative", className), children: [
-      label && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)("p", { className: "mb-1.5 text-sm font-medium text-foreground", children: label }),
-      /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)("div", { className: cn("relative", className), children: [
+      label && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)("p", { className: "mb-1.5 text-sm font-medium text-foreground", children: label }),
+      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(
         "button",
         {
           ref: mergeRef,
@@ -9182,8 +8539,8 @@ var TimePicker = React51.forwardRef(
             disabled && "cursor-not-allowed opacity-50"
           ),
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(import_lucide_react43.Clock, { className: "size-[1.0625rem] shrink-0 text-muted-foreground" }),
-            /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(import_lucide_react42.Clock, { className: "size-[1.0625rem] shrink-0 text-muted-foreground" }),
+            /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
               "span",
               {
                 className: cn(
@@ -9193,14 +8550,14 @@ var TimePicker = React51.forwardRef(
                 children: value ? displayTime2(value, use24Hour) : placeholder
               }
             ),
-            value && !disabled ? /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
-              import_lucide_react43.X,
+            value && !disabled ? /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
+              import_lucide_react42.X,
               {
                 className: "size-3.5 shrink-0 text-muted-foreground hover:text-foreground transition-colors duration-150",
                 onClick: handleClear
               }
-            ) : /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
-              import_lucide_react43.ChevronDown,
+            ) : /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
+              import_lucide_react42.ChevronDown,
               {
                 className: cn(
                   "size-[1.0625rem] shrink-0 text-muted-foreground transition-transform duration-150",
@@ -9211,15 +8568,15 @@ var TimePicker = React51.forwardRef(
           ]
         }
       ),
-      mounted && panel && (0, import_react_dom2.createPortal)(/* @__PURE__ */ (0, import_jsx_runtime77.jsx)(ScrollLockTakeover, { children: panel }), document.body)
+      mounted && panel && (0, import_react_dom2.createPortal)(/* @__PURE__ */ (0, import_jsx_runtime75.jsx)(ScrollLockTakeover, { children: panel }), document.body)
     ] });
   }
 );
 TimePicker.displayName = "TimePicker";
 
 // src/heading.tsx
-var React52 = __toESM(require("react"), 1);
-var import_jsx_runtime78 = require("react/jsx-runtime");
+var React50 = __toESM(require("react"), 1);
+var import_jsx_runtime76 = require("react/jsx-runtime");
 var headingSizeClasses = {
   xs: "text-sm font-semibold",
   sm: "text-base font-semibold",
@@ -9242,7 +8599,7 @@ var defaultSizeForLevel = {
   5: "xs",
   6: "xs"
 };
-var Heading = React52.forwardRef(
+var Heading = React50.forwardRef(
   ({
     level = 2,
     as,
@@ -9254,7 +8611,7 @@ var Heading = React52.forwardRef(
   }, ref) => {
     const Tag2 = as ?? `h${level}`;
     const resolvedSize = size ?? defaultSizeForLevel[level] ?? "md";
-    return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(
       Tag2,
       {
         ref,
@@ -9287,7 +8644,7 @@ var textColorClasses = {
   primary: "text-primary",
   disabled: "text-muted-foreground opacity-50"
 };
-var Text = React52.forwardRef(
+var Text = React50.forwardRef(
   ({
     as: Tag2 = "p",
     size = "sm",
@@ -9298,7 +8655,7 @@ var Text = React52.forwardRef(
     children,
     ...props
   }, ref) => {
-    return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(
       Tag2,
       {
         ref,
@@ -9327,7 +8684,7 @@ var metricTrendClasses = {
   down: "text-red-600",
   neutral: "text-foreground"
 };
-var MetricText = React52.forwardRef(
+var MetricText = React50.forwardRef(
   ({
     size = "md",
     trend = "neutral",
@@ -9337,7 +8694,7 @@ var MetricText = React52.forwardRef(
     children,
     ...props
   }, ref) => {
-    return /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(
       "span",
       {
         ref,
@@ -9349,9 +8706,9 @@ var MetricText = React52.forwardRef(
         ),
         ...props,
         children: [
-          prefix != null && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)("span", { className: "mr-0.5 text-[0.75em] font-medium opacity-70", children: prefix }),
+          prefix != null && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)("span", { className: "mr-0.5 text-[0.75em] font-medium opacity-70", children: prefix }),
           children,
-          suffix != null && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)("span", { className: "ml-0.5 text-[0.75em] font-medium opacity-70", children: suffix })
+          suffix != null && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)("span", { className: "ml-0.5 text-[0.75em] font-medium opacity-70", children: suffix })
         ]
       }
     );
@@ -9360,8 +8717,8 @@ var MetricText = React52.forwardRef(
 MetricText.displayName = "MetricText";
 
 // src/progress-indicator.tsx
-var React53 = __toESM(require("react"), 1);
-var import_jsx_runtime79 = require("react/jsx-runtime");
+var React51 = __toESM(require("react"), 1);
+var import_jsx_runtime77 = require("react/jsx-runtime");
 var dotSizeMap = {
   sm: {
     base: "h-1.5 w-1.5",
@@ -9376,10 +8733,10 @@ var dotSizeMap = {
     active: "h-2.5 w-8"
   }
 };
-var ProgressIndicator = React53.forwardRef(
+var ProgressIndicator = React51.forwardRef(
   ({ className, selectedIndex, values, size = "md", onChange, ...props }, ref) => {
-    const containerRef = React53.useRef(null);
-    const handleKeyDown = React53.useCallback(
+    const containerRef = React51.useRef(null);
+    const handleKeyDown = React51.useCallback(
       (e) => {
         if (!onChange) return;
         if (e.key === "ArrowRight") {
@@ -9395,7 +8752,7 @@ var ProgressIndicator = React53.forwardRef(
       [onChange, selectedIndex, values.length]
     );
     const sizes3 = dotSizeMap[size];
-    return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
       "div",
       {
         ref,
@@ -9407,7 +8764,7 @@ var ProgressIndicator = React53.forwardRef(
         ...props,
         children: values.map((label, index) => {
           const isActive = index === selectedIndex;
-          return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
+          return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
             "button",
             {
               type: "button",
@@ -9437,10 +8794,10 @@ var ProgressIndicator = React53.forwardRef(
 ProgressIndicator.displayName = "ProgressIndicator";
 
 // src/visually-hidden.tsx
-var React54 = __toESM(require("react"), 1);
-var import_jsx_runtime80 = require("react/jsx-runtime");
-var VisuallyHidden = React54.forwardRef(
-  ({ as: Component = "span", focusable = false, className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(
+var React52 = __toESM(require("react"), 1);
+var import_jsx_runtime78 = require("react/jsx-runtime");
+var VisuallyHidden = React52.forwardRef(
+  ({ as: Component = "span", focusable = false, className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
     Component,
     {
       ref,
@@ -9456,7 +8813,7 @@ VisuallyHidden.displayName = "VisuallyHidden";
 
 // src/filter-chips.tsx
 var import_react18 = require("react");
-var import_lucide_react44 = require("lucide-react");
+var import_lucide_react43 = require("lucide-react");
 
 // src/format-datetime.ts
 var MONTHS_SHORT = [
@@ -9543,7 +8900,7 @@ function formatMonthLabel(monthKey2) {
 }
 
 // src/filter-chips.tsx
-var import_jsx_runtime81 = require("react/jsx-runtime");
+var import_jsx_runtime79 = require("react/jsx-runtime");
 var POPOVER_FIT = "flex max-h-[var(--radix-popover-content-available-height)] flex-col overflow-hidden";
 var FILTER_SCROLL_AREA = "min-h-0 flex-1 overflow-y-auto";
 var FilterChipGroupContext = (0, import_react18.createContext)(null);
@@ -9597,7 +8954,7 @@ function FilterChipGroup({
     () => ({ openKey, setOpen, consumeHandoff }),
     [openKey, setOpen, consumeHandoff]
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(FilterChipGroupContext.Provider, { value, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("div", { className: cn("flex flex-wrap items-center gap-2", className), children }) });
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(FilterChipGroupContext.Provider, { value, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("div", { className: cn("flex flex-wrap items-center gap-2", className), children }) });
 }
 function useFilterChipState(key, controlled) {
   const group = (0, import_react18.useContext)(FilterChipGroupContext);
@@ -9628,7 +8985,7 @@ function FilterChipShell({
   children,
   className
 }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
     "div",
     {
       className: cn(
@@ -9645,7 +9002,7 @@ function FilterChipClearButton({
   label,
   onClick
 }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
     Button,
     {
       type: "button",
@@ -9654,22 +9011,22 @@ function FilterChipClearButton({
       "aria-label": `Clear ${label} filter`,
       onClick,
       className: "h-auto min-h-0 shrink-0 rounded-full border border-transparent px-2 py-1 text-primary/70 hover:text-primary",
-      children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(import_lucide_react44.X, { className: "h-3 w-3" })
+      children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(import_lucide_react43.X, { className: "h-3 w-3" })
     }
   );
 }
-var FilterChipLabelTrigger = (0, import_react18.forwardRef)(({ label, active, count, className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+var FilterChipLabelTrigger = (0, import_react18.forwardRef)(({ label, active, count, className, ...props }, ref) => /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
   Button,
   {
     ref,
     type: "button",
     variant: "ghost",
     size: "sm",
-    leftIcon: !active ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "flex h-3.5 w-3.5 items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(import_lucide_react44.Plus, { className: "h-3 w-3" }) }) : void 0,
-    rightIcon: active ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "flex h-3.5 items-center justify-center", children: count != null && count > 0 ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold tabular-nums text-primary", children: count }) : (
+    leftIcon: !active ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "flex h-3.5 w-3.5 items-center justify-center", children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(import_lucide_react43.Plus, { className: "h-3 w-3" }) }) : void 0,
+    rightIcon: active ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "flex h-3.5 items-center justify-center", children: count != null && count > 0 ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold tabular-nums text-primary", children: count }) : (
       /* Drawn the way Badge draws its dot: the same size-1.5 rounded
          fill in the primary accent. A state marker, not a count. */
-      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "size-1.5 rounded-full bg-primary", "aria-hidden": true })
+      /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "size-1.5 rounded-full bg-primary", "aria-hidden": true })
     ) }) : void 0,
     className: cn(
       "h-auto min-h-0 shrink-0 rounded-full border border-transparent py-1",
@@ -9688,7 +9045,7 @@ function FilterChipActions({
   applyDisabled,
   hideClear
 }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
     "div",
     {
       className: cn(
@@ -9696,7 +9053,7 @@ function FilterChipActions({
         hideClear ? "justify-end" : "justify-between"
       ),
       children: [
-        hideClear ? null : /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        hideClear ? null : /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           Button,
           {
             type: "button",
@@ -9708,7 +9065,7 @@ function FilterChipActions({
             children: "Clear"
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           Button,
           {
             type: "button",
@@ -9740,7 +9097,7 @@ function FilterChip({
     open: controlledOpen,
     onOpenChange: controlledOnOpenChange
   });
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
     Popover,
     {
       open,
@@ -9749,8 +9106,8 @@ function FilterChip({
         if (next) onOpen?.();
       },
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(FilterChipShell, { active, children: [
-          active && onClear ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(FilterChipShell, { active, children: [
+          active && onClear ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
             FilterChipClearButton,
             {
               label,
@@ -9760,9 +9117,9 @@ function FilterChip({
               }
             }
           ) : null,
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(FilterChipLabelTrigger, { label, active, count }) })
+          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(FilterChipLabelTrigger, { label, active, count }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           PopoverContent,
           {
             align,
@@ -9808,7 +9165,7 @@ function SelectFilterChip({
   const toggle = (value) => setDraft(
     (prev) => prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
     FilterChip,
     {
       chipKey: key,
@@ -9830,7 +9187,7 @@ function SelectFilterChip({
         setDraftInvert(false);
       },
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           FilterChipPanel,
           {
             options: visible,
@@ -9845,7 +9202,7 @@ function SelectFilterChip({
             invertLabel
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           FilterChipActions,
           {
             onClear: () => {
@@ -9878,8 +9235,8 @@ function FilterChipPanel({
   onInvertChange,
   invertLabel
 }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("div", { className: "flex min-h-0 w-60 flex-1 flex-col", children: [
-    query !== void 0 ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("div", { className: "shrink-0 border-b border-border p-2", children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("div", { className: "flex min-h-0 w-60 flex-1 flex-col", children: [
+    query !== void 0 ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("div", { className: "shrink-0 border-b border-border p-2", children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
       Input,
       {
         value: query,
@@ -9888,12 +9245,12 @@ function FilterChipPanel({
         className: "h-8 text-[12.5px]"
       }
     ) }) : null,
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("div", { className: cn("max-h-64 space-y-0.5 p-2", FILTER_SCROLL_AREA), children: options.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("p", { className: "px-1 py-4 text-center text-[12.5px] text-muted-foreground", children: emptyText ?? "No matches" }) : options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+    /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("div", { className: cn("max-h-64 space-y-0.5 p-2", FILTER_SCROLL_AREA), children: options.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("p", { className: "px-1 py-4 text-center text-[12.5px] text-muted-foreground", children: emptyText ?? "No matches" }) : options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
       "label",
       {
         className: "flex cursor-pointer items-center gap-2 rounded-md px-1 py-1 text-[12.5px] text-foreground hover:bg-muted/50",
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
             Checkbox,
             {
               checked: draft.includes(option.value),
@@ -9901,14 +9258,14 @@ function FilterChipPanel({
             }
           ),
           option.icon,
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "min-w-0 flex-1 truncate", children: option.label }),
-          option.hint ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "shrink-0 text-[11px] tabular-nums text-muted-foreground", children: option.hint }) : null
+          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "min-w-0 flex-1 truncate", children: option.label }),
+          option.hint ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "shrink-0 text-[11px] tabular-nums text-muted-foreground", children: option.hint }) : null
         ]
       },
       option.value
     )) }),
-    invert !== void 0 ? /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("label", { className: "flex shrink-0 cursor-pointer items-center gap-2 border-t border-border px-3 py-2 text-[12.5px] text-foreground", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+    invert !== void 0 ? /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("label", { className: "flex shrink-0 cursor-pointer items-center gap-2 border-t border-border px-3 py-2 text-[12.5px] text-foreground", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
         Checkbox,
         {
           checked: invert,
@@ -9935,7 +9292,7 @@ function SingleSelectFilterChip({
   const chip = useFilterChipState(key, { open, onOpenChange });
   const isActive = value !== "";
   const chosen = options.find((o) => o.value === value);
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
     FilterChip,
     {
       chipKey: key,
@@ -9945,7 +9302,7 @@ function SingleSelectFilterChip({
       open: chip.open,
       onOpenChange: chip.onOpenChange,
       onClear: clearable ? () => onChange("") : void 0,
-      children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("div", { className: cn("max-h-64 w-52 p-1.5", FILTER_SCROLL_AREA), children: options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+      children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("div", { className: cn("max-h-64 w-52 p-1.5", FILTER_SCROLL_AREA), children: options.map((option) => /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
         Button,
         {
           type: "button",
@@ -9961,7 +9318,7 @@ function SingleSelectFilterChip({
           ),
           children: [
             option.icon,
-            /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "truncate", children: option.label })
+            /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "truncate", children: option.label })
           ]
         },
         option.value
@@ -10027,7 +9384,7 @@ function RangeEndTab({
   active,
   onSelect
 }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
     Button,
     {
       type: "button",
@@ -10038,8 +9395,8 @@ function RangeEndTab({
         "h-auto min-w-0 justify-start rounded-md border px-2.5 py-1.5 text-left",
         active ? "border-primary/60 bg-primary/5 hover:bg-primary/5" : "border-border"
       ),
-      children: /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("span", { className: "flex min-w-0 flex-col items-start gap-0.5", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+      children: /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("span", { className: "flex min-w-0 flex-col items-start gap-0.5", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           "span",
           {
             className: cn(
@@ -10049,7 +9406,7 @@ function RangeEndTab({
             children: label
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           "span",
           {
             className: cn(
@@ -10150,7 +9507,7 @@ function DateRangeFilterChip({
     setRelativeDraft(relative);
     chip.onOpenChange(false);
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
     FilterChip,
     {
       chipKey,
@@ -10173,7 +9530,7 @@ function DateRangeFilterChip({
         setRelativeDraft(EMPTY_RELATIVE_RANGE);
       },
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
           "div",
           {
             className: cn(
@@ -10182,20 +9539,20 @@ function DateRangeFilterChip({
               withTime ? "w-[31.5rem]" : "w-80"
             ),
             children: [
-              supportsRelative ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+              supportsRelative ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                 Tabs,
                 {
                   value: mode,
                   onValueChange: (v) => setMode(v),
-                  children: /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(TabsList, { className: "w-full", children: [
-                    /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(TabsTrigger, { value: "absolute", className: "flex-1", children: "Date range" }),
-                    /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(TabsTrigger, { value: "relative", className: "flex-1", children: "Last\u2026" })
+                  children: /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(TabsList, { className: "w-full", children: [
+                    /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(TabsTrigger, { value: "absolute", className: "flex-1", children: "Date range" }),
+                    /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(TabsTrigger, { value: "relative", className: "flex-1", children: "Last\u2026" })
                   ] })
                 }
               ) : null,
-              isRelative ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("div", { className: "grid grid-cols-2 gap-2", children: RELATIVE_UNITS.map((unit) => /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("label", { className: "space-y-1.5", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "text-[11px] font-medium text-muted-foreground", children: unit.label }),
-                /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+              isRelative ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("div", { className: "grid grid-cols-2 gap-2", children: RELATIVE_UNITS.map((unit) => /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("label", { className: "space-y-1.5", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "text-[11px] font-medium text-muted-foreground", children: unit.label }),
+                /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                   Input,
                   {
                     type: "number",
@@ -10210,9 +9567,9 @@ function DateRangeFilterChip({
                     className: "h-8 text-[12.5px]"
                   }
                 )
-              ] }, unit.key)) }) : /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(import_jsx_runtime81.Fragment, { children: [
-                withTime ? /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("div", { className: "grid grid-cols-2 gap-2", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+              ] }, unit.key)) }) : /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(import_jsx_runtime79.Fragment, { children: [
+                withTime ? /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("div", { className: "grid grid-cols-2 gap-2", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                     RangeEndTab,
                     {
                       label: "Start",
@@ -10222,7 +9579,7 @@ function DateRangeFilterChip({
                       onSelect: () => focusEnd("from")
                     }
                   ),
-                  /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+                  /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                     RangeEndTab,
                     {
                       label: "End",
@@ -10233,8 +9590,8 @@ function DateRangeFilterChip({
                     }
                   )
                 ] }) : null,
-                /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("div", { className: "flex items-start gap-2", children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("div", { className: "w-[296px] shrink-0", children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("div", { className: "flex items-start gap-2", children: [
+                  /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("div", { className: "w-[296px] shrink-0", children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                     Calendar,
                     {
                       mode: "range",
@@ -10255,7 +9612,7 @@ function DateRangeFilterChip({
                       onSelect: (_range, day) => pickDay(toRangeKey(day))
                     }
                   ) }),
-                  withTime ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("div", { className: "flex self-stretch", children: (() => {
+                  withTime ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("div", { className: "flex self-stretch", children: (() => {
                     const clock = activeEnd === "from" ? draftFromTime : draftToTime;
                     const { h, m } = clockParts(clock);
                     const setClock = (nh, nm) => {
@@ -10265,8 +9622,8 @@ function DateRangeFilterChip({
                       );
                     };
                     const pm = h >= 12;
-                    return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(import_jsx_runtime81.Fragment, { children: [
-                      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+                    return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(import_jsx_runtime79.Fragment, { children: [
+                      /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                         TimeColumn,
                         {
                           label: "Hr",
@@ -10278,7 +9635,7 @@ function DateRangeFilterChip({
                           tone: "subtle"
                         }
                       ),
-                      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+                      /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                         TimeColumn,
                         {
                           label: "Min",
@@ -10290,7 +9647,7 @@ function DateRangeFilterChip({
                           tone: "subtle"
                         }
                       ),
-                      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+                      /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                         TimeColumn,
                         {
                           label: "AM/PM",
@@ -10304,14 +9661,14 @@ function DateRangeFilterChip({
                     ] });
                   })() }) : null
                 ] }),
-                withTime ? null : /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("p", { className: "text-[11px] text-muted-foreground", children: isComplete ? draft.from === draft.to ? rangeDayLabel(draft.from) : `${rangeDayLabel(draft.from)} \u2013 ${rangeDayLabel(draft.to)}` : isPartial ? "Pick the other end of the range." : "Pick a start and an end date." }),
-                clocksInvalid ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("p", { className: "text-[11px] text-destructive", children: "The end time must be after the start time." }) : null,
-                outOfRange && outOfRangeHint ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("p", { className: "text-[11px] text-destructive", children: outOfRangeHint }) : null
+                withTime ? null : /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("p", { className: "text-[11px] text-muted-foreground", children: isComplete ? draft.from === draft.to ? rangeDayLabel(draft.from) : `${rangeDayLabel(draft.from)} \u2013 ${rangeDayLabel(draft.to)}` : isPartial ? "Pick the other end of the range." : "Pick a start and an end date." }),
+                clocksInvalid ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("p", { className: "text-[11px] text-destructive", children: "The end time must be after the start time." }) : null,
+                outOfRange && outOfRangeHint ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("p", { className: "text-[11px] text-destructive", children: outOfRangeHint }) : null
               ] })
             ]
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           FilterChipActions,
           {
             onClear: () => {
@@ -10364,7 +9721,7 @@ function MonthRangeFilterChip({
     setAwaitingEnd(false);
   };
   const summary = `${formatMonthLabel(draft.start)} \u2013 ${formatMonthLabel(draft.end)}`;
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
     Popover,
     {
       open: chip.open,
@@ -10377,22 +9734,22 @@ function MonthRangeFilterChip({
         }
       },
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(FilterChipShell, { active: true, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(FilterChipShell, { active: true, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           FilterChipLabelTrigger,
           {
             label: `${label}: ${formatMonthLabel(value.start)} \u2013 ${formatMonthLabel(value.end)}`,
             active: true
           }
         ) }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
           PopoverContent,
           {
             align: "end",
             className: "w-60 p-3",
             onCloseAutoFocus: chip.onCloseAutoFocus,
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("div", { className: "flex items-center justify-between", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("div", { className: "flex items-center justify-between", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                   IconButton,
                   {
                     "aria-label": "Previous year",
@@ -10400,11 +9757,11 @@ function MonthRangeFilterChip({
                     size: "xs",
                     disabled: year <= minYear,
                     onClick: () => setYear((prev) => prev - 1),
-                    children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(import_lucide_react44.ChevronLeft, { className: "h-3.5 w-3.5" })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(import_lucide_react43.ChevronLeft, { className: "h-3.5 w-3.5" })
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "text-[12.5px] font-semibold text-foreground", children: year }),
-                /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "text-[12.5px] font-semibold text-foreground", children: year }),
+                /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                   IconButton,
                   {
                     "aria-label": "Next year",
@@ -10412,17 +9769,17 @@ function MonthRangeFilterChip({
                     size: "xs",
                     disabled: year >= maxYear,
                     onClick: () => setYear((prev) => prev + 1),
-                    children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(import_lucide_react44.ChevronRight, { className: "h-3.5 w-3.5" })
+                    children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(import_lucide_react43.ChevronRight, { className: "h-3.5 w-3.5" })
                   }
                 )
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("div", { className: "mt-2 grid grid-cols-4 gap-1", children: MONTHS_SHORT.map((monthLabel, index) => {
+              /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("div", { className: "mt-2 grid grid-cols-4 gap-1", children: MONTHS_SHORT.map((monthLabel, index) => {
                 const monthValue = monthKey(year, index);
                 const inBounds = monthValue >= bounds.start && monthValue <= bounds.end;
                 const isEdge = monthValue === draft.start || monthValue === draft.end;
                 const isBetween = monthValue > draft.start && monthValue < draft.end;
                 const hasData = monthsWithData.has(monthValue);
-                return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+                return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
                   Button,
                   {
                     type: "button",
@@ -10439,7 +9796,7 @@ function MonthRangeFilterChip({
                     ),
                     children: [
                       monthLabel,
-                      hasData && /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+                      hasData && /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                         "span",
                         {
                           "aria-hidden": true,
@@ -10454,7 +9811,7 @@ function MonthRangeFilterChip({
                   monthValue
                 );
               }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                 "p",
                 {
                   className: "mt-2 truncate text-[11px] text-muted-foreground",
@@ -10462,21 +9819,21 @@ function MonthRangeFilterChip({
                   children: awaitingEnd ? `${formatMonthLabel(draft.start)} \u2013 pick an end month` : summary
                 }
               ),
-              /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Separator, { className: "my-2" }),
-              /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("div", { className: "flex items-center justify-between gap-2", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Separator, { className: "my-2" }),
+              /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("div", { className: "flex items-center justify-between gap-2", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                   Button,
                   {
                     variant: "ghost",
                     size: "sm",
-                    leftIcon: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(import_lucide_react44.X, { className: "h-3 w-3" }),
+                    leftIcon: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(import_lucide_react43.X, { className: "h-3 w-3" }),
                     onClick: reset,
                     disabled: isDefault && draft.start === defaultRange.start && draft.end === defaultRange.end,
                     className: "text-muted-foreground hover:text-foreground",
                     children: "Reset"
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                   Button,
                   {
                     variant: "primary",
@@ -10517,7 +9874,7 @@ function TextFilterChip({
     onChange(draft.trim());
     chip.onOpenChange(false);
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
     FilterChip,
     {
       chipKey: key,
@@ -10532,9 +9889,9 @@ function TextFilterChip({
         setDraft("");
       },
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("div", { className: "w-64 space-y-1.5 p-3", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("p", { className: "text-[11px] font-medium text-muted-foreground", children: fieldLabel ?? `${label} contains` }),
-          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("div", { className: "w-64 space-y-1.5 p-3", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("p", { className: "text-[11px] font-medium text-muted-foreground", children: fieldLabel ?? `${label} contains` }),
+          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
             Input,
             {
               type: "text",
@@ -10551,9 +9908,9 @@ function TextFilterChip({
               className: "h-8 text-[12.5px]"
             }
           ),
-          hint ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("p", { className: "text-[11px] text-muted-foreground", children: hint }) : null
+          hint ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("p", { className: "text-[11px] text-muted-foreground", children: hint }) : null
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           FilterChipActions,
           {
             onClear: () => {
@@ -10583,7 +9940,7 @@ function NumberRangeFilterChip({
   const [draft, setDraft] = (0, import_react18.useState)(value);
   const isActive = !!(value.min || value.max);
   const inverted = !!draft.min && !!draft.max && Number(draft.min) > Number(draft.max);
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
     FilterChip,
     {
       chipKey,
@@ -10598,12 +9955,12 @@ function NumberRangeFilterChip({
         setDraft({ min: "", max: "" });
       },
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("div", { className: "w-56 space-y-3 p-3", children: [
-          ["min", "max"].map((end) => /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("label", { className: "block space-y-1", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "text-[11px] font-medium capitalize text-muted-foreground", children: end }),
-            /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("div", { className: "relative", children: [
-              prefix ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[12.5px] text-muted-foreground", children: prefix }) : null,
-              /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("div", { className: "w-56 space-y-3 p-3", children: [
+          ["min", "max"].map((end) => /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("label", { className: "block space-y-1", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "text-[11px] font-medium capitalize text-muted-foreground", children: end }),
+            /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("div", { className: "relative", children: [
+              prefix ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "pointer-events-none absolute left-2.5 top-1/2 -translate-y-1/2 text-[12.5px] text-muted-foreground", children: prefix }) : null,
+              /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                 Input,
                 {
                   type: "number",
@@ -10615,9 +9972,9 @@ function NumberRangeFilterChip({
               )
             ] })
           ] }, end)),
-          inverted ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("p", { className: "text-[11px] text-destructive", children: "Min must not exceed max." }) : hint ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("p", { className: "text-[11px] text-muted-foreground", children: hint }) : null
+          inverted ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("p", { className: "text-[11px] text-destructive", children: "Min must not exceed max." }) : hint ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("p", { className: "text-[11px] text-muted-foreground", children: hint }) : null
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           FilterChipActions,
           {
             onClear: () => {
@@ -10745,7 +10102,7 @@ function AddFilterMenu({
     }
   };
   const activeCount = filters.filter((f) => (f.activeCount ?? 0) > 0).length;
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
     Popover,
     {
       open,
@@ -10754,16 +10111,16 @@ function AddFilterMenu({
         if (next) setQuery("");
       },
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(FilterChipShell, { active: false, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(FilterChipShell, { active: false, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(PopoverTrigger, { asChild: true, children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
           FilterChipLabelTrigger,
           {
             label,
             active: false,
-            rightIcon: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(import_lucide_react44.SlidersHorizontal, { className: "h-3 w-3" }),
+            rightIcon: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(import_lucide_react43.SlidersHorizontal, { className: "h-3 w-3" }),
             "aria-label": activeCount > 0 ? `${label}. ${activeCount} filters applied.` : label
           }
         ) }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
           PopoverContent,
           {
             align,
@@ -10771,15 +10128,15 @@ function AddFilterMenu({
             onKeyDown,
             onCloseAutoFocus,
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("div", { className: "flex h-10 shrink-0 items-center gap-2 border-b border-border px-3", children: [
-                /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
-                  import_lucide_react44.Search,
+              /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("div", { className: "flex h-10 shrink-0 items-center gap-2 border-b border-border px-3", children: [
+                /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
+                  import_lucide_react43.Search,
                   {
                     className: "size-3.5 shrink-0 text-muted-foreground",
                     "aria-hidden": true
                   }
                 ),
-                /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+                /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                   "input",
                   {
                     autoFocus: true,
@@ -10792,26 +10149,26 @@ function AddFilterMenu({
                   }
                 )
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                 "div",
                 {
                   ref: listRef,
                   id: listId,
                   role: "listbox",
                   className: cn("max-h-80 p-1", FILTER_SCROLL_AREA),
-                  children: rows.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("p", { className: "px-2 py-6 text-center text-[12.5px] text-muted-foreground", children: [
+                  children: rows.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("p", { className: "px-2 py-6 text-center text-[12.5px] text-muted-foreground", children: [
                     "Nothing matches \u201C",
                     query,
                     "\u201D."
                   ] }) : rows.map(
-                    (row, i) => row.kind === "heading" ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+                    (row, i) => row.kind === "heading" ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                       "div",
                       {
                         className: "px-2 pb-1 pt-2 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground",
                         children: row.text
                       },
                       row.id
-                    ) : /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+                    ) : /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
                       "div",
                       {
                         id: `${listId}-${i}`,
@@ -10824,15 +10181,15 @@ function AddFilterMenu({
                           "flex cursor-pointer select-none items-center gap-2 rounded-md px-2 py-1.5 text-[12.5px] text-foreground",
                           i === cursor && "bg-muted"
                         ),
-                        children: row.kind === "value" ? /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(import_jsx_runtime81.Fragment, { children: [
+                        children: row.kind === "value" ? /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(import_jsx_runtime79.Fragment, { children: [
                           row.option.icon,
-                          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "min-w-0 flex-1 truncate", children: row.option.label }),
-                          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "shrink-0 text-[11px] text-muted-foreground", children: row.filter.label })
-                        ] }) : /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(import_jsx_runtime81.Fragment, { children: [
-                          /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "min-w-0 flex-1 truncate", children: row.filter.label }),
-                          row.filter.activeCount ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("span", { className: "shrink-0 rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold tabular-nums text-primary", children: row.filter.activeCount }) : null,
-                          visibleKeys.includes(row.filter.key) ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
-                            import_lucide_react44.Check,
+                          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "min-w-0 flex-1 truncate", children: row.option.label }),
+                          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "shrink-0 text-[11px] text-muted-foreground", children: row.filter.label })
+                        ] }) : /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(import_jsx_runtime79.Fragment, { children: [
+                          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "min-w-0 flex-1 truncate", children: row.filter.label }),
+                          row.filter.activeCount ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("span", { className: "shrink-0 rounded-full bg-primary/15 px-1.5 text-[10px] font-semibold tabular-nums text-primary", children: row.filter.activeCount }) : null,
+                          visibleKeys.includes(row.filter.key) ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
+                            import_lucide_react43.Check,
                             {
                               "aria-label": "Shown in the toolbar",
                               className: "h-3.5 w-3.5 shrink-0 text-primary"
@@ -10861,12 +10218,12 @@ function FilterToolbar({
   return (
     // `items-start` keeps the actions level with the FIRST line once the chips
     // wrap onto a second.
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("div", { className: cn("flex items-start gap-2", className), children: [
-      /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)("div", { className: "flex min-w-0 flex-1 flex-wrap items-center gap-2", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("div", { className: cn("flex items-start gap-2", className), children: [
+      /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)("div", { className: "flex min-w-0 flex-1 flex-wrap items-center gap-2", children: [
         search,
-        chips ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(FilterChipGroup, { className: "contents", children: chips }) : null
+        chips ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(FilterChipGroup, { className: "contents", children: chips }) : null
       ] }),
-      actions ? /* @__PURE__ */ (0, import_jsx_runtime81.jsx)("div", { className: "flex min-h-8 shrink-0 items-center gap-2", children: actions }) : null
+      actions ? /* @__PURE__ */ (0, import_jsx_runtime79.jsx)("div", { className: "flex min-h-8 shrink-0 items-center gap-2", children: actions }) : null
     ] })
   );
 }
@@ -10874,7 +10231,7 @@ function ToolbarButton({
   className,
   ...props
 }) {
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
     Button,
     {
       type: "button",
@@ -10893,7 +10250,7 @@ function ToolbarButton({
 
 // src/calendar-date-chip.tsx
 var import_react19 = require("react");
-var import_jsx_runtime82 = require("react/jsx-runtime");
+var import_jsx_runtime80 = require("react/jsx-runtime");
 var PICK_MODES = [
   { value: "single", label: "Single date" },
   { value: "range", label: "Date range" }
@@ -10973,7 +10330,7 @@ function CalendarDateFilterChip({
     chip.onOpenChange(false);
   };
   const hasDraft = !!presetDraft || !!singleDate || !!range?.from;
-  return /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(
     FilterChip,
     {
       chipKey: key,
@@ -10985,8 +10342,8 @@ function CalendarDateFilterChip({
       onOpen: reseed,
       onClear: clearable ? clear : void 0,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)("div", { className: "w-auto p-3", children: [
-          presets?.length ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)("div", { className: "mb-3 flex flex-wrap gap-1.5", children: presets.map((p) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)("div", { className: "w-auto p-3", children: [
+          presets?.length ? /* @__PURE__ */ (0, import_jsx_runtime80.jsx)("div", { className: "mb-3 flex flex-wrap gap-1.5", children: presets.map((p) => /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(
             Button,
             {
               type: "button",
@@ -11008,7 +10365,7 @@ function CalendarDateFilterChip({
             },
             p.value
           )) }) : null,
-          showModeToggle ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)("div", { className: "mb-3 flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1", children: PICK_MODES.map((m) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+          showModeToggle ? /* @__PURE__ */ (0, import_jsx_runtime80.jsx)("div", { className: "mb-3 flex items-center gap-1 rounded-lg border border-border bg-muted/50 p-1", children: PICK_MODES.map((m) => /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(
             Button,
             {
               type: "button",
@@ -11023,7 +10380,7 @@ function CalendarDateFilterChip({
             },
             m.value
           )) }) : null,
-          mode === "single" && allowSingle ? /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+          mode === "single" && allowSingle ? /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(
             Calendar,
             {
               mode: "single",
@@ -11036,7 +10393,7 @@ function CalendarDateFilterChip({
               },
               className: "bg-transparent p-0"
             }
-          ) : /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+          ) : /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(
             Calendar,
             {
               mode: "range",
@@ -11052,7 +10409,7 @@ function CalendarDateFilterChip({
             }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(
           FilterChipActions,
           {
             onClear: clear,
@@ -11076,7 +10433,6 @@ function CalendarDateFilterChip({
   Alert,
   AlertDescription,
   AlertTitle,
-  AttentionListTemplate,
   Avatar,
   AvatarFallback,
   AvatarGroup,
@@ -11111,14 +10467,7 @@ function CalendarDateFilterChip({
   CardFooter,
   CardHeader,
   CardTitle,
-  CategoryBarChartTemplate,
-  ChartContainer,
-  ChartLegend,
-  ChartLegendContent,
   ChartSkeleton,
-  ChartStyle,
-  ChartTooltip,
-  ChartTooltipContent,
   Checkbox,
   CheckboxSelect,
   CheckboxTree,
@@ -11140,7 +10489,6 @@ function CalendarDateFilterChip({
   DAYS_SHORT,
   DEFAULT_RANGE_FROM_TIME,
   DEFAULT_RANGE_TO_TIME,
-  DashboardAreaChartTemplate,
   DataCardList,
   DataTable,
   DataTableCard,
@@ -11207,7 +10555,6 @@ function CalendarDateFilterChip({
   FormItem,
   FormLabel,
   Grid,
-  GroupedBarChartTemplate,
   Heading,
   Hide,
   IconButton,
@@ -11231,9 +10578,7 @@ function CalendarDateFilterChip({
   MenuDivider,
   MenuItem,
   MenuSection,
-  MetricSparklineCard,
   MetricText,
-  MiniSparklineChartCard,
   MonthRangeFilterChip,
   NumberRangeFilterChip,
   OtpInput,
@@ -11255,7 +10600,6 @@ function CalendarDateFilterChip({
   ProgressTracker,
   RadioGroup,
   RadioGroupItem,
-  RankedBarListTemplate,
   RotatingSearchInput,
   ScrollArea,
   ScrollBar,

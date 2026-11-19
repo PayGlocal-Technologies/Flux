@@ -7,7 +7,7 @@ import {
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@payglocal_ui/flux-ui";
+} from "@payglocal_ui/flux-ui/charts";
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 const chartData = [

@@ -1,7 +1,11 @@
 import { defineConfig } from "tsup";
 
 export default defineConfig({
-  entry: ["src/index.ts"],
+  // Charts are a second entry rather than part of the root barrel: recharts
+  // and its d3 dependencies are ~144 KB gzipped, and a module is the smallest
+  // unit a bundler can split. Folded into `index`, they shipped to every route
+  // of every consuming app that imported so much as a Button.
+  entry: ["src/index.ts", "src/charts.ts"],
   format: ["esm", "cjs"],
   dts: true,
   sourcemap: true,
