@@ -292,42 +292,8 @@ export type { CalendarProps } from "./calendar";
 export type { DateRange } from "react-day-picker";
 export { DatePicker, type DatePickerTimeOptions } from "./date-picker";
 
-// Charts
-export {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-  ChartStyle,
-} from "./chart";
-export type { ChartConfig } from "./chart";
-export {
-  MetricSparklineCard,
-  DashboardAreaChartTemplate,
-  GroupedBarChartTemplate,
-  RankedBarListTemplate,
-  CategoryBarChartTemplate,
-  MiniSparklineChartCard,
-  AttentionListTemplate,
-} from "./chart-templates";
-export type {
-  MetricSparklinePoint,
-  MetricSparklineCardProps,
-  DashboardAreaChartPoint,
-  DashboardAreaChartTemplateProps,
-  GroupedBarSeries,
-  GroupedBarChartTemplateProps,
-  RankedBarItem,
-  RankedBarListTemplateProps,
-  CategoryBarPoint,
-  CategoryBarChartTemplateProps,
-  MiniSparklinePoint,
-  MiniSparklineStat,
-  MiniSparklineChartCardProps,
-  AttentionListItem,
-  AttentionListTemplateProps,
-} from "./chart-templates";
+// Charts — deliberately not re-exported here. They live behind their own entry
+// point, `@payglocal_ui/flux-ui/charts`; see src/charts.ts for the reasoning.
 
 // Toast
 export { Toaster, toast } from "./sonner";

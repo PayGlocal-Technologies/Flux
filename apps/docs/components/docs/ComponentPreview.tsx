@@ -28,7 +28,6 @@ import {
   Alert,
   AlertDescription,
   AlertTitle,
-  AttentionListTemplate,
   Avatar,
   AvatarFallback,
   AvatarGroup,
@@ -125,9 +124,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-  CategoryBarChartTemplate,
   CurrencyAmountInput,
-  DashboardAreaChartTemplate,
   DataTable,
   type Column,
   DatePicker,
@@ -137,15 +134,11 @@ import {
   DialogTitle,
   DialogTrigger,
   EmptyState,
-  GroupedBarChartTemplate,
   Inline,
-  MetricSparklineCard,
-  MiniSparklineChartCard,
   PageHeader,
   Popover,
   PopoverContent,
   PopoverTrigger,
-  RankedBarListTemplate,
   Select,
   SelectContent,
   SelectItem,
@@ -164,6 +157,17 @@ import {
   TooltipTrigger,
   toast,
 } from "@payglocal_ui/flux-ui";
+// Chart templates moved to their own entry point in flux 0.4.0 so that recharts
+// stays out of the root barrel; see packages/flux-ui/src/charts.ts.
+import {
+  AttentionListTemplate,
+  CategoryBarChartTemplate,
+  DashboardAreaChartTemplate,
+  GroupedBarChartTemplate,
+  MetricSparklineCard,
+  MiniSparklineChartCard,
+  RankedBarListTemplate,
+} from "@payglocal_ui/flux-ui/charts";
 import { ButtonPlayground } from "@/components/docs/playgrounds/ButtonPlayground";
 import { CalendarPlayground } from "@/components/docs/playgrounds/CalendarPlayground";
 import { CardPlayground } from "@/components/docs/playgrounds/CardPlayground";

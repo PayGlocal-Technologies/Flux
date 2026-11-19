@@ -84,7 +84,7 @@ export const COMPONENT_DOC_PAGES: ComponentDocPage[] = [
   ChartTooltip,
   ChartTooltipContent,
   type ChartConfig,
-} from "@payglocal_ui/flux-ui";
+} from "@payglocal_ui/flux-ui/charts";
 import { Bar, BarChart, XAxis } from "recharts";`,
     usageSnippet: `const config = {
   sales: { label: "Sales", color: "var(--chart-1)" },
@@ -112,7 +112,7 @@ import { Bar, BarChart, XAxis } from "recharts";`,
   CategoryBarChartTemplate,
   MiniSparklineChartCard,
   AttentionListTemplate,
-} from "@payglocal_ui/flux-ui";`,
+} from "@payglocal_ui/flux-ui/charts";`,
     usageSnippet: `// Compose templates with your data; each component is a styled card + chart.
 <DashboardAreaChartTemplate
   title="Gross volume"
